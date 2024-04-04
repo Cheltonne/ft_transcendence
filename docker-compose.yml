@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+
+        #________________________________________#
+        #|                                      |#
+        #|                NGINX                 |#
+        #|______________________________________|#
+
+    nginx:
+        build: ./srcs/nginx
+        ports:
+            - 8080:80
+        restart: always
+
+        #________________________________________#
+        #|                                      |#
+        #|             1,2...DJANGO!            |#
+        #|______________________________________|#
+
+    django:
+        build: ./srcs/django
+        restart: always
+
+        #________________________________________#
+        #|                                      |#
+        #|               POSTGRE                |#
+        #|______________________________________|#
+
+    db:
+        image: postgres
+        restart: always
+        environment:
+           POSTGRES_PASSWORD: example
