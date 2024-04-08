@@ -44,5 +44,3 @@ services:
             - POSTGRES_PORT=${POSTGRES_PORT}
         depends_on:
             - postgres
-        command: python manage.py migrate && python manage.py runserver 0.0.0.0:8000
-        restart: always
