@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /usr/src/app
 
 RUN apt update && \
-    apt install -y libpq-dev gcc && \
+    #apt install -y libpq-dev gcc && \
     apt install -y --no-install-recommends python3 python3-pip && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
