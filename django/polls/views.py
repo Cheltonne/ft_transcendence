@@ -6,4 +6,6 @@ def kauserie(request):
 
 def grosse_kauserie_view(request):
     return render(request, 'grosse_kauserie.html')
-# Create your views here.
+
+def jam(request):
+    return HtppResponse("Welcome to the new stage of sound and entertainment.")
