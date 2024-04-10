@@ -15,7 +15,7 @@ services:
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
         healthcheck:
             test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
-            interval: 10s
+            interval: 5s
             timeout: 3s
             retries: 3
 
@@ -50,3 +50,5 @@ services:
         depends_on:
             postgres:
                condition: service_healthy
+        volumes:
+        - ./django/templates:/usr/src/app/templates
