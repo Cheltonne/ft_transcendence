@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "polls.apps.PollsConfig",
+    "game.apps.GameConfig",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -109,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-fra'
 
 TIME_ZONE = 'UTC'
 
@@ -127,3 +128,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_TRUSTED_ORIGINS = ['https://fftactics','https://localhost:4343']

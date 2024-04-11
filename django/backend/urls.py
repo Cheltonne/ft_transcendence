@@ -18,9 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from polls.views import grosse_kauserie_view
+from game.views import save_score
 
 urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
 	path("polls/", include("polls.urls")),
+    path("save-score/", include("game.urls")),
 ]

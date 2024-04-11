@@ -27,7 +27,7 @@ services:
     nginx:
         build: ./nginx
         ports:
-            - 8080:80
+            - 4343:443
         depends_on:
             - django
         restart: always
@@ -51,4 +51,4 @@ services:
             postgres:
                condition: service_healthy
         volumes:
-        - ./django/templates:/usr/src/app/templates
+        - ./django:/usr/src/app
