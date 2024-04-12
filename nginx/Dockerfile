@@ -1,5 +1,4 @@
 FROM 	nginx
-COPY 	html /usr/share/nginx/html
 COPY 	custom.conf /etc/nginx/nginx.conf
 RUN     mkdir /etc/nginx/ssl
 RUN		openssl req -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \                                                                                                           

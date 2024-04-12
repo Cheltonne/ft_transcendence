@@ -1,8 +1,5 @@
--- Create database
 CREATE DATABASE ${POSTGRES_DB};
 
--- Create user
 CREATE USER ${POSTGRES_USER} WITH ENCRYPTED PASSWORD ${POSTGRES_PASSWORD};
 
--- Grant privileges to the user for the database
 GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DBZ} TO ${POSTGRES_USER};

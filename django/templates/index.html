@@ -29,6 +29,28 @@ body {
 			opacity: 1;
 			font-size: 4.2rem;
 		}
+		navbar-btn:hover {
+            background-color: #45a049; /* Darker green color on hover */
+        }
+        .lyrics-container {
+            position: relative;
+            background-color: #97a4e8;
+            height: 50vh; /* Adjust height to take up around half of the vertical space */
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            overflow: hidden;
+            padding: 20px; /* Adjust padding as needed */
+        }
+        .lyrics {
+            position: absolute;
+            top: 50%; /* Start from bottom */
+            left: 50%; /* Move to the horizontal center */
+            transform: translateX(-50%); /* Adjust for half of the element's width */
+            animation: scroll-up 12s linear infinite; /* Adjust speed as needed */
+            opacity: 1;
+            font-size: 4.2rem;
+        }
 		@keyframes scroll-up {
 			0% { top: 100%; opacity: 1; }
 			100% { top: -100%; opacity: 0; }
@@ -58,6 +80,10 @@ body {
 		</style>
 	</head>
 	<body>
+		<div class="navbar">
+        	<div class="navbar-title">world.execute(me)</div>
+        	<button class="navbar-btn" onclick="showLoginSignup()">Login/Signup</button>
+    	</div>
 		<div class="lyrics-container">
 			<div class="lyrics">
 				<p>Switch on the power line</br>
@@ -168,7 +194,7 @@ body {
         if (/^\d+$/.test(scoreInput)) {
             // Send the score to Django via AJAX
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "/save-score/", true);
+            xhr.open("POST", "game/save-score/", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -186,6 +212,22 @@ body {
             alert("Please enter a valid integer score.");
         }
     });
+
+	function showLoginSignup() {
+            // Reload the page with AJAX and show login/signup page
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "game/login-signup/", true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        document.documentElement.innerHTML = xhr.responseText;
+                    } else {
+                        console.error("Failed to load login/signup page:", xhr.status);
+                    }
+                }
+            };
+            xhr.send();
+        }
 </script>
 	</body>
 </html>
