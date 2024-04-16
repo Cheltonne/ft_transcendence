@@ -1,234 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="fontawesome-i2svg-active fontawesome-i2svg-complete yjfwxcwxf idc0_350" lang="en">
 	<head>
+		{% load static %}
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="{% static 'game/theme/css/styles.css' %}">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+		<script src="{% static 'game/theme/js/scripts.js' %}"></script>
 		<title>world.execute(me)</title>
-		<style>
-body {
-	background-color: #f0f0f0; /* Pastel background color */
-	padding: 20px; /* Cream color padding */
-	font-family: Arial, sans-serif;
-}
-		.lyrics-container {
-			position: relative;
-			background-color: #97a4e8;
-			height: 50vh; /* Adjust height to take up around half of the vertical space */
-			display: flex;
-			justify-content: center; /* Center horizontally */
-			align-items: center; /* Center vertically */
-			overflow: hidden;
-			padding: 20px; /* Adjust padding as needed */
-		}
-		.lyrics {
-			position: absolute;
-			top: 50%; /* Start from bottom */
-			left: 50%; /* Move to the horizontal center */
-			transform: translateX(-50%); /* Adjust for half of the element's width */
-			animation: scroll-up 12s linear infinite; /* Adjust speed as needed */
-			opacity: 1;
-			font-size: 4.2rem;
-		}
-		navbar-btn:hover {
-            background-color: #45a049; /* Darker green color on hover */
-        }
-        .lyrics-container {
-            position: relative;
-            background-color: #97a4e8;
-            height: 50vh; /* Adjust height to take up around half of the vertical space */
-            display: flex;
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
-            overflow: hidden;
-            padding: 20px; /* Adjust padding as needed */
-        }
-        .lyrics {
-            position: absolute;
-            top: 50%; /* Start from bottom */
-            left: 50%; /* Move to the horizontal center */
-            transform: translateX(-50%); /* Adjust for half of the element's width */
-            animation: scroll-up 12s linear infinite; /* Adjust speed as needed */
-            opacity: 1;
-            font-size: 4.2rem;
-        }
-		@keyframes scroll-up {
-			0% { top: 100%; opacity: 1; }
-			100% { top: -100%; opacity: 0; }
-		}
-		.form-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        input[type="text"] {
-            width: 200px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-        input[type="submit"] {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        input[type="submit"]:hover {
-            background-color: #45a049;
-        }
-		</style>
 	</head>
 	<body>
-		<div class="navbar">
-        	<div class="navbar-title">world.execute(me)</div>
-        	<button class="navbar-btn" onclick="showLoginSignup()">Login/Signup</button>
-    	</div>
-		<div class="lyrics-container">
-			<div class="lyrics">
-				<p>Switch on the power line</br>
-				Remember to put on protection</br>
-				Lay down your pieces</br>
-				And let's begin object creation</br>
-				Fill in my data parameters</br>
-				Initialization</br>
-				Set up our new world</br>
-				And let's begin the simulation</br>
-				If I'm a set of point</br>
-				Then I will give you my dimension</br>
-				If I'm a circle</br>
-				Then I will give you my circumference</br>
-				If I'm a sine wave</br>
-				Then you can sit on all my tangents</br>
-				If I approach infinity</br>
-				Then you can be my limitations</br>
-				Switch my current</br>
-				To AC, to DC</br>
-				And then blind my vision</br>
-				So dizzy, so dizzy</br>
-				Oh, we can travel</br>
-				To AD, to BC</br>
-				And we can unite</br>
-				So deeply, so deeply</br>
-				If I can, if I can</br>
-				Give you all the simulations</br>
-				Then I can, then I can</br>
-				Be your only satisfaction</br>
-				If I can make you happy</br>
-				I will run the execution</br>
-				Though we are trapped</br>
-				In this strange, strange simulation</br>
-				If I'm an eggplant</br>
-				Then I will give u my nutrients</br>
-				If I'm a tomato</br>
-				Then I will give you antioxidants</br>
-				If I'm a tabby cat</br>
-				Then I will purr for your enjoyment</br>
-				If I'm the only God</br>
-				Then you're the proof of my existence</br>
-				Switch my gender</br>
-				To F, to M</br>
-				And then do whatever</br>
-				From AM to PM</br>
-				Oh, my switch role</br>
-				To S, to M</br>
-				So we can enter</br>
-				The trance, the trance</br>
-				If I can, if I can</br>
-				Feel your vibrations</br>
-				Then I can, then I can</br>
-				Finally be completion</br>
-				Though you have left</br>
-				You have left</br>
-				You have left</br>
-				You have left</br>
-				You have left</br>
-				You have left me in isolation</br>
-				If I can, if I can</br>
-				Erase all the pointless fragments</br>
-				Then maybe, then maybe</br>
-				You won't leave me so disheartened</br>
-				Challenging your God</br>
-				You have made some</br>
-				Illegal arguments</br>
-				Execution, execution</br>
-				Execution, execution</br>
-				Execution, execution</br>
-				Execution, execution</br>
-				Execution, execution</br>
-				Execution, execution</br>
-				Ein, dos</br>
-				Trios, ne</br>
-				Fem, liu</br>
-				Execution</br>
-				If I can, if I can</br>
-				Give them all the execution</br>
-				Then I can, then I can</br>
-				Be your only execution</br>
-				If I can have you back</br>
-				I will run the execution</br>
-				Though we are trapped</br>
-				We are trapped, ah</br>
-				I've studied, I've studied</br>
-				How to properly lo-o-ove</br>
-				Question me, question me</br>
-				I can answer all lo-o-ove</br>
-				I know the algebraic expression of lo-o-ove</br>
-				Though you are free</br>
-				I am trapped</br>
-				Trapped in lo-o-ove</br>
-				Execution</p>
-			</div>
+		<nav id="sideNav" class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+			<ul class="navbar-nav">
+				<li class="nav-items">
+					<a type="button" class="btn btn-outline-dark" style="margin: 5rem;" href="{% url 'login-signup' %}">Login/Signup</a>
+				</li>
+			</ul>
+		</nav>
+		<div class="form-container" style="padding: 5rem;">
+			<h2>Score input tester</h2>
+			<form id="scoreForm">
+				<input type="text" id="scoreInput" placeholder="Enter your score (integer)">
+				<input type="submit" value="Submit">
+			</form>
 		</div>
-		<div class="form-container">
-    <h2>Astaria, NieR.</h2>
-    <form id="scoreForm">
-        <input type="text" id="scoreInput" placeholder="Enter your score (integer)">
-        <input type="submit" value="Submit">
-    </form>
-</div>
-<script>
-    document.getElementById("scoreForm").addEventListener("submit", function(event) {
-        event.preventDefault();
-        var scoreInput = document.getElementById("scoreInput").value;
-        if (/^\d+$/.test(scoreInput)) {
-            // Send the score to Django via AJAX
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "game/save-score/", true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200) {
-                        console.log("Score saved successfully.");
-                        // Optionally, display a success message or perform other actions
-                    } else {
-                        console.error("Failed to save score:", xhr.status);
-                        // Optionally, display an error message or perform other actions
-                    }
-                }
-            };
-            xhr.send(JSON.stringify({score: parseInt(scoreInput)}));
-        } else {
-            alert("Please enter a valid integer score.");
-        }
-    });
 
-	function showLoginSignup() {
-            // Reload the page with AJAX and show login/signup page
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", "game/login-signup/", true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200) {
-                        document.documentElement.innerHTML = xhr.responseText;
-                    } else {
-                        console.error("Failed to load login/signup page:", xhr.status);
-                    }
-                }
-            };
-            xhr.send();
-        }
-</script>
+		<script>
+			document.getElementById("scoreForm").addEventListener("submit", function(event)
+							{
+											event.preventDefault();
+											var scoreInput = document.getElementById("scoreInput").value;
+											if (/^\d+$/.test(scoreInput))
+											{
+															// Send the score to Django via AJAX
+															var xhr = new XMLHttpRequest();
+															xhr.open("POST", "game/save-score/", true);
+															xhr.setRequestHeader("Content-Type", "application/json");
+															xhr.onreadystatechange = function() 
+															{
+																			if (xhr.readyState === XMLHttpRequest.DONE) {
+																							if (xhr.status === 200) {
+																											console.log("Score saved successfully.");
+																											// Optionally, display a success message or perform other actions
+																										} else {
+																														console.error("Failed to save score:", xhr.status);
+																														// Optionally, display an error message or perform other actions
+																													}
+																						}
+																		};
+															xhr.send(JSON.stringify({score: parseInt(scoreInput)}));
+														} else
+											{
+															alert("Please enter a valid integer score.");
+														}
+										});
+		</script>
 	</body>
 </html>
-

@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
 from . import views
 from polls.views import grosse_kauserie_view
 from game.views import save_score

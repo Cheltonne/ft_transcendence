@@ -1,6 +1,5 @@
 import json
-from .models import Score
-from .models import CustomUser
+from .models import Score, CustomUser
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
@@ -11,30 +10,31 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 def render_login_signup(request):
 	return render(request, 'login-signup.html')
 
+@csrf_exempt
 def signup(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('home')
+            return redirect('index')
     else:
         form = CustomUserCreationForm()
     return render(request, 'signup.html', {'form': form})
 
-def signin(request):
+def login(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, request.POST)
         if form.is_valid():
             login(request, form.get_user())
-            return redirect('home')
+            return redirect('login-signup')
     else:
         form = CustomAuthenticationForm()
     return render(request, 'signin.html', {'form': form})
 
-def signout(request):
+def logout(request):
     logout(request)
-    return redirect('home')
+    return redirect('login')
 
 @csrf_exempt
 def save_score(request):

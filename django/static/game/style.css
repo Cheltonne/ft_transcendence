@@ -1,0 +1,67 @@
+body {
+	background-color: #f0f0f0; /* Pastel background color */
+	padding: 20px; /* Cream color padding */
+	font-family: Arial, sans-serif;
+}
+		.lyrics-container {
+			position: relative;
+			background-color: #97a4e8;
+			height: 50vh; /* Adjust height to take up around half of the vertical space */
+			display: flex;
+			justify-content: center; /* Center horizontally */
+			align-items: center; /* Center vertically */
+			overflow: hidden;
+			padding: 20px; /* Adjust padding as needed */
+		}
+		.lyrics {
+			position: absolute;
+			top: 50%; /* Start from bottom */
+			left: 50%; /* Move to the horizontal center */
+			transform: translateX(-50%); /* Adjust for half of the element's width */
+			animation: scroll-up 12s linear infinite; /* Adjust speed as needed */
+			opacity: 1;
+			font-size: 4.2rem;
+		}
+		navbar-btn:hover {
+			background-color: #45a049; /* Darker green color on hover */
+		}
+		.lyrics-container {
+			position: relative;
+			background-color: #97a4e8;
+			height: 50vh; /* Adjust height to take up around half of the vertical space */
+			display: flex;
+			justify-content: center; /* Center horizontally */
+			align-items: center; /* Center vertically */
+			overflow: hidden;
+			padding: 20px; /* Adjust padding as needed */
+		}
+		.lyrics {
+			position: absolute;
+			top: 50%; /* Start from bottom */
+			left: 50%; /* Move to the horizontal center */
+			transform: translateX(-50%); /* Adjust for half of the element's width */
+			opacity: 1;
+			font-size: 4.2rem;
+		}
+		.form-container {
+			text-align: center;
+			margin-top: 20px;
+		}
+
+		input[type="text"] {
+			width: 200px;
+			padding: 10px;
+			margin-bottom: 10px;
+		}
+
+		input[type="submit"] {
+			padding: 10px 20px;
+			background-color: #4CAF50;
+			color: white;
+			border: none;
+			cursor: pointer;
+		}
+
+		input[type="submit"]:hover {
+			background-color: #45a049;
+		}
