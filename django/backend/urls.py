@@ -18,12 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from . import views
-from polls.views import grosse_kauserie_view
 from game.views import save_score
+from django.views.generic.base import TemplateView
 
 urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
-	path("polls/", include("polls.urls")),
     path("game/", include("game.urls")),
+    path("accounts/", include("accounts.urls")),
+	path("accounts/", include("django.contrib.auth.urls")),
 ]

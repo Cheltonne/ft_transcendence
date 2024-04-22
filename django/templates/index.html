@@ -15,7 +15,7 @@
 		<nav id="sideNav" class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
 			<ul class="navbar-nav">
 				<li class="nav-items">
-					<a type="button" class="btn btn-outline-dark" style="margin: 5rem;" href="{% url 'login-signup' %}">Login/Signup</a>
+					<id="loginButton" a type="button" class="btn btn-outline-dark" style="margin: 5rem;" href="{% url 'login' %}">Login</a>
 				</li>
 			</ul>
 		</nav>
@@ -26,36 +26,6 @@
 				<input type="submit" value="Submit">
 			</form>
 		</div>
-
-		<script>
-			document.getElementById("scoreForm").addEventListener("submit", function(event)
-							{
-											event.preventDefault();
-											var scoreInput = document.getElementById("scoreInput").value;
-											if (/^\d+$/.test(scoreInput))
-											{
-															// Send the score to Django via AJAX
-															var xhr = new XMLHttpRequest();
-															xhr.open("POST", "game/save-score/", true);
-															xhr.setRequestHeader("Content-Type", "application/json");
-															xhr.onreadystatechange = function() 
-															{
-																			if (xhr.readyState === XMLHttpRequest.DONE) {
-																							if (xhr.status === 200) {
-																											console.log("Score saved successfully.");
-																											// Optionally, display a success message or perform other actions
-																										} else {
-																														console.error("Failed to save score:", xhr.status);
-																														// Optionally, display an error message or perform other actions
-																													}
-																						}
-																		};
-															xhr.send(JSON.stringify({score: parseInt(scoreInput)}));
-														} else
-											{
-															alert("Please enter a valid integer score.");
-														}
-										});
-		</script>
 	</body>
+	<script src="{% static 'scripts.js'  %}"></script>
 </html>
