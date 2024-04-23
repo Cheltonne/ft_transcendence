@@ -1,7 +1,8 @@
-<!-- signin.html -->
+<!DOCTYPE html>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Sign In</button>
+    	<a href="{% url 'signup' %}">Don't and have account yet? :unamused:</a>
 </form>
 

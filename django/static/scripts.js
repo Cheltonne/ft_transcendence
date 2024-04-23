@@ -1,23 +1,55 @@
-function checkAuthStatus() {
-	// Make an AJAX request to the server to check if the user is authenticated
-	// You can use Django's {% url %} template tag to generate the URL for the AJAX request
-	// For example:
-	// var url = "{% url 'check_auth_status' %}";
-	// Replace 'check_auth_status' with the name of the view that checks the authentication status
-	// Once you receive the response, update the login button and navbar accordingly
-	// For demonstration purposes, I'll assume the response is a JSON object with a 'authenticated' field
-	var isAuthenticated = true;  // Replace this with the actual value from the server response
+var userInfo = {};
 
-	// Update the login button and navbar based on the authentication status
-	var loginButton = document.getElementById('loginButton');
-	var loginHeading = document.getElementById('loginHeading');
-	if (isAuthenticated) {
-		loginButton.innerText = "Logout";
-		loginHeading.innerText = "Welcome, Username";  // Replace 'Username' with the actual username
-	} else {
-		loginButton.value = "Login";
-		loginHeading.innerText = "Login";
-	}
+function getUserInfo()
+{
+    $.ajax({
+        url: "accounts/get-user-info/",
+        type: 'GET',
+        dataType: 'json',
+        success: function(response)
+        {
+            if ('username' in response)
+            {
+                userInfo.username = response.username;
+                console.log('User information retrieved:', userInfo);
+            }
+            else
+            {
+                console.error('Error:', response.error);
+            }
+        },
+        error: function(xhr, status, error)
+        {
+            console.error('Failed to retrieve user information:', error);
+        }
+    });
+}
+
+function checkAuthStatus()
+{
+    $.ajax(
+    {
+        url: "accounts/check-auth",
+        type: 'GET',
+        dataType: 'json',
+        success: function(response)
+        {
+            if (response.authenticated)
+            {
+                loginButton.innerText = "Logout";
+                loginHeading.innerText = "Welcome, " + userInfo.username;
+            }
+            else
+            {
+                loginButton.innerText = "Login";
+                loginHeading.innerText = "Login";
+            }
+        },
+        error: function(xhr, status, error)
+        {
+            console.error("Failed to check authentication status lmao:", error);
+        }
+    });
 }
 
 document.getElementById("scoreForm").addEventListener("submit", function(event)
@@ -32,21 +64,27 @@ document.getElementById("scoreForm").addEventListener("submit", function(event)
 			xhr.setRequestHeader("Content-Type", "application/json");
 			xhr.onreadystatechange = function()
 			{
-				if (xhr.readyState === XMLHttpRequest.DONE) {
-					if (xhr.status === 200) {
+				if (xhr.readyState === XMLHttpRequest.DONE)
+                {
+					if (xhr.status === 200)
+                    {
 						console.log("Score saved successfully.");
-						// Optionally, display a success message or perform other actions
-					} else {
+					}
+                    else
+                    {
 						console.error("Failed to save score:", xhr.status);
-						// Optionally, display an error message or perform other actions
 					}
 				}
 			};
 			xhr.send(JSON.stringify({score: parseInt(scoreInput)}));
-		} else
+		}
+        else
 		{
 			alert("Please enter a valid integer score.");
 		}
 	});
 
-window.onload = checkAuthStatus();
+$(document).ready(function() {
+    getUserInfo();
+    checkAuthStatus();
+});
