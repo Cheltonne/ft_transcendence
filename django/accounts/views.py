@@ -10,46 +10,47 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.http import JsonResponse
 
 def index(request):
-    return render(request, 'index.html')
+	return render(request, 'index.html')
 
 def render_login_signup(request):
 	return render(request, 'login-signup.html')
 
 @csrf_exempt
 def user_signup(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            return redirect('index')
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'registration/signup.html', {'form': form})
+	if request.method == 'POST':
+		form = CustomUserCreationForm(request.POST)
+		if form.is_valid():
+			user = form.save()
+			login(request, user);
+			return redirect('index')
+	else:
+		form = CustomUserCreationForm()
+	return render(request, 'registration/signup.html', {'form': form})
 
 def user_login(request):
-    if request.method == 'POST':
-        form = CustomAuthenticationForm(request, request.POST)
-        if form.is_valid():
-            login(request, form.get_user())
-            return redirect('index')
-    else:
-        form = CustomAuthenticationForm()
-    return render(request, 'signin.html', {'form': form})
+	if request.method == 'POST':
+		form = CustomAuthenticationForm(request, request.POST)
+		if form.is_valid():
+			login(request, form.get_user())
+			return redirect('index')
+	else:
+		form = CustomAuthenticationForm()
+	return render(request, 'signin.html', {'form': form})
 
 def user_logout(request):
-    logout(request)
-    return redirect('login')
+	logout(request)
+	return redirect('index')
 
 def check_auth(request):
-    authenticated = request.user.is_authenticated
-    return JsonResponse({'authenticated': authenticated})
+	authenticated = request.user.is_authenticated
+	return JsonResponse({'authenticated': authenticated})
 
 def get_user_info(request):
-    if request.user.is_authenticated:
-        user = request.user
-        user_info = {
-            'username': user.username,
-        }
-        return JsonResponse(user_info)
-    else:
-        return JsonResponse({'error': 'User is not authenticated bruh'})
+	if request.user.is_authenticated:
+		user = request.user
+		user_info = {
+				'username': user.username,
+				}
+		return JsonResponse(user_info)
+	else:
+		return JsonResponse({'error': 'User is not authenticated bruh'})

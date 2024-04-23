@@ -37,12 +37,13 @@ function checkAuthStatus()
             if (response.authenticated)
             {
                 loginButton.innerText = "Logout";
+				loginButton.innerHTML = '<a type="button" id ="loginButton" class="btn btn-outline-dark" style="margin: 5rem;" href="accounts/logout">Logout</a>';
                 loginHeading.innerText = "Welcome, " + userInfo.username;
             }
             else
             {
                 loginButton.innerText = "Login";
-                loginHeading.innerText = "Login";
+                loginHeading.innerText = "Hey anon!";
             }
         },
         error: function(xhr, status, error)
@@ -50,6 +51,7 @@ function checkAuthStatus()
             console.error("Failed to check authentication status lmao:", error);
         }
     });
+	console.log("Finished executing checkAuthStatus().");
 }
 
 document.getElementById("scoreForm").addEventListener("submit", function(event)
@@ -87,4 +89,5 @@ document.getElementById("scoreForm").addEventListener("submit", function(event)
 $(document).ready(function() {
     getUserInfo();
     checkAuthStatus();
+	console.log("Finished executing all JS functions.");
 });
