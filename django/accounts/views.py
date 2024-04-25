@@ -12,13 +12,10 @@ from django.http import JsonResponse
 def index(request):
 	return render(request, 'index.html')
 
-def render_login_signup(request):
-	return render(request, 'login-signup.html')
-
 @csrf_exempt
 def user_signup(request):
 	if request.method == 'POST':
-		form = CustomUserCreationForm(request.POST)
+		form = CustomUserCreationForm(request.POST, request.FILES)
 		if form.is_valid():
 			user = form.save()
 			login(request, user);
@@ -35,7 +32,7 @@ def user_login(request):
 			return redirect('index')
 	else:
 		form = CustomAuthenticationForm()
-	return render(request, 'signin.html', {'form': form})
+	return render(request, 'registration/signin.html', {'form': form})
 
 def user_logout(request):
 	logout(request)
