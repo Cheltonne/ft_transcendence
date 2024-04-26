@@ -7,7 +7,9 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
-from django.http import JsonResponse
+from PIL import Image
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from io import BytesIO
 
 def index(request):
 	return render(request, 'index.html')
@@ -17,7 +19,18 @@ def user_signup(request):
 	if request.method == 'POST':
 		form = CustomUserCreationForm(request.POST, request.FILES)
 		if form.is_valid():
-			user = form.save()
+			user = form.save(commit=False)
+			if 'profile_picture' in request.FILES:
+				image_file = request.FILES['profile_picture']
+				resized_image = resize_image(image_file, 500)
+				# Save the resized image to memory
+				output = BytesIO()
+				resized_image.save(output, format='JPEG', quality=75)
+				output.seek(0)
+				# Replace the original image file with the resized image
+				user.profile_picture = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % image_file.name.split('.')[0],\
+							'image/jpeg', output.tell(), None)
+			user.save()
 			login(request, user);
 			return redirect('index')
 	else:
@@ -47,7 +60,17 @@ def get_user_info(request):
 		user = request.user
 		user_info = {
 				'username': user.username,
+				'profile_picture': user.profile_picture.url,
 				}
 		return JsonResponse(user_info)
 	else:
-		return JsonResponse({'error': 'User is not authenticated bruh'})
+		return JsonResponse({'error': 'User is not authenticated.'})
+
+def resize_image(image_file, max_width):
+	image = Image.open(image_file)
+	original_width, original_height = image.size
+	aspect_ratio = original_width / original_height
+	new_height = int(max_width / aspect_ratio)
+	resized_image = image.resize((max_width, new_height), Image.LANCZOS)
+
+	return resized_image

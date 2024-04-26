@@ -11,6 +11,7 @@ function getUserInfo()
             if ('username' in response)
             {
                 userInfo.username = response.username;
+                userInfo.profile_picture = response.profile_picture;
                 console.log('User information retrieved:', userInfo);
             }
             else
