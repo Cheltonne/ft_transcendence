@@ -26,7 +26,6 @@ def user_signup(request):
 				# Save the resized image to memory
 				output = BytesIO()
 				resized_image.save(output, format='JPEG', quality=75)
-				output.seek(0)
 				# Replace the original image file with the resized image
 				user.profile_picture = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % image_file.name.split('.')[0],\
 							'image/jpeg', output.tell(), None)
