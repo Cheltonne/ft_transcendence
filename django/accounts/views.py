@@ -22,10 +22,20 @@ def user_signup(request):
 			user = form.save(commit=False)
 			if 'profile_picture' in request.FILES:
 				image_file = request.FILES['profile_picture']
-				resized_image = resize_image(image_file, 500)
+				img = Image.open(image_file)
+				print(img.mode)
+				if img.mode in ('P', 'RGBA'):
+					img = img.convert('RGB')
+					output = BytesIO()
+					img.save(output, format='JPEG')
+					output.seek(0)
+					resized_image = resize_image(output, 500)
+				else :
+					resized_image = resize_image(image_file, 500)
 				# Save the resized image to memory
 				output = BytesIO()
 				resized_image.save(output, format='JPEG', quality=75)
+				output.seek(0)
 				# Replace the original image file with the resized image
 				user.profile_picture = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % image_file.name.split('.')[0],\
 							'image/jpeg', output.tell(), None)
@@ -49,10 +59,6 @@ def user_login(request):
 def user_logout(request):
 	logout(request)
 	return redirect('index')
-
-def check_auth(request):
-	authenticated = request.user.is_authenticated
-	return JsonResponse({'authenticated': authenticated})
 
 def get_user_info(request):
 	if request.user.is_authenticated:

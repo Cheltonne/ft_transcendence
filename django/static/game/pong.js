@@ -1,9 +1,10 @@
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 3;
+const MAX_ROUNDS = 2;
 var RequestFrame = false;
 let currentRound = 1;
 var ReDrawStatic = true;
+var gameEnding = false;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth / 2;
@@ -43,6 +44,7 @@ class PongBall {
         this.trailLength = 10;
         this.trailOpacity = 0.1;
         this.trailPositions = [];
+        this.goal = false;
     }
 
     CheckEdge() {
@@ -86,7 +88,7 @@ class PongBall {
         this.pos.y += this.velocity.y;
         this.CheckEdge();
 
-        let player = (this.pos.x < canvas.width / 2) ? Paddle1 : Paddle2;
+        let player = (this.pos.x < canvas.width / 2) ? Paddle2 : Paddle1;
 
         if (this.collision(player)) {
             this.LastHit = null;
@@ -104,17 +106,30 @@ class PongBall {
                 this.speed += 0.1;
         }
 
-        if (this.pos.x <= 0) {
-            Paddle1.score++;
-            this.left = true;
-            this.resetBall();
-            RequestFrame = false;
-
-        } else if (this.pos.x >= canvas.width) {
+        if (this.pos.x <= 0 && this.goal == false) {
+            this.goal = true;
             Paddle2.score++;
-            this.left = false;
+            this.left = true;
+            ReDrawStatic = true;
             this.resetBall();
-            RequestFrame = false;
+            if (Paddle1.score == 5)
+            {
+                gameEnding = true;
+            }
+            this.goal = false;
+
+        } else if (this.pos.x >= canvas.width && this.goal == false) {
+            this.goal = true;
+            Paddle1.score++;
+            this.left = false;
+            ReDrawStatic = true;
+            this.resetBall();
+            if (Paddle2.score == 5)
+            {
+                gameEnding = true;
+            }
+            this.goal = false;
+
         }
     }
 
@@ -144,8 +159,8 @@ class PongPaddle {
 }
 
 let Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
-let Paddle1 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
-let Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+let Paddle1 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+let Paddle2 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
 
 function drawStaticElements() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -159,9 +174,9 @@ function drawStaticElements() {
             canvas.height / 2 + 15
         );
     }
-    
-    ctx.fillText(Paddle1.score, 100, 50);
+
     ctx.fillText(Paddle2.score, canvas.width - 130, 50);
+    ctx.fillText(Paddle1.score, 100, 50);
     ReDrawStatic == false;
 }
 
@@ -194,14 +209,63 @@ function GameLoop(timestamp) {
         Paddle1.update();
         Paddle2.update();
         draw();
+        
+        console.log("Player 1 score:", Paddle1.score);
+        console.log("Player 2 score:", Paddle2.score);
+        
+        if (Paddle1.score >= MAX_ROUNDS || Paddle2.score >= MAX_ROUNDS) {
+            console.log("Game Ending condition met");
+            RequestFrame = false;   
+            GameEndingScreen();
+            return;
+        }
+        
         requestAnimationFrame(GameLoop);
     }
 }
 
+function sendScoreToDjango(score) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "game/save-score/", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                console.log("Score saved successfully.");
+            } else {
+                console.error("Failed to save score:", xhr.status);
+            }
+        }
+    };
+    xhr.send(JSON.stringify({ score: parseInt(score) }));
+}
+
+function GameEndingScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '36px sans-serif';
+
+    let winner = (Paddle1.score > Paddle2.score) ? "Player 1" : "Player 2";
+    ctx.fillText(`${winner} wins!`, canvas.width / 5, canvas.height / 6 + 130);
+    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
+    ctx.fillText("Repress to launch another round", canvas.width / 5, canvas.height / 3 + 130);
+
+    sendScoreToDjango(Paddle1.score);
+
+    Paddle1.score = 0;
+    Paddle2.score = 0;
+}
+
 draw();
 canvas.onclick = () => {
+    console.log("Canvas clicked");
+    if (!RequestFrame && gameEnding) {
+        GameEndingScreen();
+        gameEnding = false;
+    }
     if (!RequestFrame) {
         RequestFrame = true;
-        GameLoop();
+        requestAnimationFrame(GameLoop);
     }
 };
