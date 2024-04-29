@@ -51,6 +51,7 @@ def user_login(request):
 		form = CustomAuthenticationForm(request, request.POST)
 		if form.is_valid():
 			login(request, form.get_user())
+			request.session['is_authenticated'] = True  # Set flag in session
 			return redirect('index')
 	else:
 		form = CustomAuthenticationForm()

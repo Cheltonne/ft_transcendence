@@ -1,15 +1,17 @@
 from django.db import models
+from accounts.models import CustomUser
 
 class Match(models.Model):
 	player = models.ForeignKey(CustomUser, related_name='matches', on_delete=models.CASCADE)
 	alias = models.TextField(blank=True, max_length=15)
-	user_score = models.IntegerField()
-	alias_score = models.IntegerField()
+	user_score = models.IntegerField(null=True, blank=True)
+	alias_score = models.IntegerField(null=True, blank=True)
 	winner = models.ForeignKey(CustomUser, related_name='matches_won', on_delete=models.CASCADE, null=True, blank=True)
 
-	def save(self, *args, **kwargs):
-        if self.user_score > self.alias_score:
-            self.winner = self.player
-        else:
-            self.winner = None  # No winner if scores are equal or opponent wins
-        super().save(*args, **kwargs)
+	def set_winner(self):
+		if self.user_score > self.alias_score:
+			self.winner = self.player
+			print(self.winner)
+		else:
+			print('No winner!')
+			self.winner = None
