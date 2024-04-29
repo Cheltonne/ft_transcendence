@@ -60,10 +60,6 @@ def user_logout(request):
 	logout(request)
 	return redirect('index')
 
-def check_auth(request):
-	authenticated = request.user.is_authenticated
-	return JsonResponse({'authenticated': authenticated})
-
 def get_user_info(request):
 	if request.user.is_authenticated:
 		user = request.user

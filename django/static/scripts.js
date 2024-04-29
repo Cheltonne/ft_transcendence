@@ -13,30 +13,6 @@ function getUserInfo()
                 userInfo.username = response.username;
                 userInfo.profile_picture = response.profile_picture;
                 console.log('User information retrieved:', userInfo);
-            }
-            else
-            {
-                console.error('Error:', response.error);
-            }
-        },
-        error: function(xhr, status, error)
-        {
-            console.error('Failed to retrieve user information:', error);
-        }
-    });
-}
-
-function checkAuthStatus()
-{
-    $.ajax(
-    {
-        url: "accounts/check-auth",
-        type: 'GET',
-        dataType: 'json',
-        success: function(response)
-        {
-            if (response.authenticated)
-            {
                 loginButton.innerText = "Logout";
 				loginButton.innerHTML = '<a type="button" id ="loginButton" class="btn btn-outline-dark" style="margin: 5rem;" href="accounts/logout">Logout</a>';
                 loginHeading.innerText = "Welcome, " + userInfo.username;
@@ -44,13 +20,14 @@ function checkAuthStatus()
             }
             else
             {
+                console.error('Error:', response.error);
                 loginButton.innerText = "Login";
                 loginHeading.innerText = "Hey anon!";
             }
         },
         error: function(xhr, status, error)
         {
-            console.error("Failed to check authentication status:", error);
+            console.error('Failed to retrieve user information:', error);
         }
     });
 }
@@ -89,5 +66,4 @@ document.getElementById("scoreForm").addEventListener("submit", function(event)
 
 $(document).ready(function() {
     getUserInfo();
-    checkAuthStatus();
 });
