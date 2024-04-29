@@ -22,7 +22,16 @@ def user_signup(request):
 			user = form.save(commit=False)
 			if 'profile_picture' in request.FILES:
 				image_file = request.FILES['profile_picture']
-				resized_image = resize_image(image_file, 500)
+				img = Image.open(image_file)
+				print(img.mode)
+				if img.mode in ('P', 'RGBA'):
+					img = img.convert('RGB')
+					output = BytesIO()
+					img.save(output, format='JPEG')
+					output.seek(0)
+					resized_image = resize_image(output, 500)
+				else :
+					resized_image = resize_image(image_file, 500)
 				# Save the resized image to memory
 				output = BytesIO()
 				resized_image.save(output, format='JPEG', quality=75)
