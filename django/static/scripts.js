@@ -1,4 +1,6 @@
 var userInfo = {};
+const hamMenu = document.querySelector(".ham-menu");
+const menu = document.querySelector(".off-screen-menu");
 
 function getUserInfo()
 {
@@ -32,7 +34,7 @@ function getUserInfo()
     });
 }
 
-document.getElementById("scoreForm").addEventListener("submit", function(event)
+/* document.getElementById("scoreForm").addEventListener("submit", function(event)
 	{
 		event.preventDefault();
 		var scoreInput = document.getElementById("scoreInput").value;
@@ -61,6 +63,32 @@ document.getElementById("scoreForm").addEventListener("submit", function(event)
         else
 		{
 			alert("Please enter a valid integer score.");
+		}
+	}); */
+
+	function toggleMenu() {
+		menu.classList.toggle("active");
+		hamMenu.classList.toggle("active");
+	}
+	
+	document.addEventListener("click", function(event) {
+		if (menu.classList.contains("active") && !event.target.closest(".off-screen-menu")) {
+			toggleMenu();
+		}
+	});
+	
+	hamMenu.addEventListener("click", () =>
+		{
+			toggleMenu();
+			event.stopImmediatePropagation()
+		}
+	);
+	
+	document.addEventListener("keydown", function(event) {
+		if (event.key === "m" || event.code === "KeyM") {
+			hamMenu.classList.toggle("active");
+			menu.classList.toggle("active");
+			console.log("The 'm' key was pressed!");
 		}
 	});
 
