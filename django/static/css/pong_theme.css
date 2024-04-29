@@ -32,6 +32,10 @@ canvas {
 	margin: 5rem auto;
 }
 
+.hidden {
+	display: none;
+}
+
 .logo {
 	vertical-align: middle;
 	display: flex;

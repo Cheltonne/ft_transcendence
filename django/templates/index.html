@@ -10,15 +10,13 @@
 	</head>
 	<body>
 		{% include 'navbar.html' %}
-		<canvas id="myCanvas"></canvas>
+		<div id="index-content">
+			<canvas id="myCanvas"></canvas>
+		</div>
+		<div id="signin-content" class="hidden">
+			{% include 'registration/signin.html'  %}
+		</div>
 	</body>
 	<script src="{% static 'scripts.js'  %}"></script>
 	<script src="{% static 'game/pong.js'  %}"></script>
 </html>
-<!-- <div class="form-container" style="padding: 5rem;">
-	<h2>Score input tester</h2>
-	<form id="scoreForm">
-	<input type="text" id="scoreInput" placeholder="Enter your score (integer)">
-	<input type="submit" value="Submit">
-	</form>
-	</div> --!>

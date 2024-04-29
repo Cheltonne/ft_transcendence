@@ -8,7 +8,6 @@
 		<title>world.execute(me)</title>
 	</head>
 	<body>
-		{% include 'navbar.html' %}
 		<form method="post">
 			<h1>Sign in</h1>
 			{% csrf_token %}
@@ -17,6 +16,4 @@
 			<a href="{% url 'signup' %}">Don't and have account yet?😒</a>
 		</form>
 	</body>
-	<script src="{% static 'scripts.js'  %}"></script>
-	<script src="{% static 'game/pong.js'  %}"></script>
 </html>
