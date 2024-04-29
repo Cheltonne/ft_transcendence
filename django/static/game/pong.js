@@ -224,7 +224,7 @@ function GameLoop(timestamp) {
     }
 }
 
-function sendScoreToDjango(score) {
+function sendScoreToDjango(score, score2) {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "game/save-score/", true);
     xhr.setRequestHeader("Content-Type", "application/json");
@@ -237,7 +237,7 @@ function sendScoreToDjango(score) {
             }
         }
     };
-    xhr.send(JSON.stringify({ score: parseInt(score) }));
+    xhr.send(JSON.stringify({ user_score: parseInt(score), alias_score: parseInt(score2)}));
 }
 
 function GameEndingScreen() {
@@ -251,7 +251,7 @@ function GameEndingScreen() {
     ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
     ctx.fillText("Repress to launch another round", canvas.width / 5, canvas.height / 3 + 130);
 
-    sendScoreToDjango(Paddle1.score);
+    sendScoreToDjango(Paddle1.score, Paddle2.score);
 
     Paddle1.score = 0;
     Paddle2.score = 0;

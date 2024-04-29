@@ -8,8 +8,9 @@ from django.views.decorators.csrf import csrf_exempt
 def save_score(request):
 	if request.method == 'POST':
 		data = json.loads(request.body)
-		score_value = data.get('score')
-		if score_value is not None:
+		alias_value = data.get('alias_score')
+		user_score = data.get('user_score')
+		if alias_value is not None:
 			# Save the score to the database
 			score = Score.objects.create(score=score_value)
 			return JsonResponse({'message': 'Score saved successfully.'})
