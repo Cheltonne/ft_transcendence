@@ -53,6 +53,7 @@ def user_login(request):
 		form = CustomAuthenticationForm(request, request.POST)
 		if form.is_valid():
 			login(request, form.get_user())
+			request.session['is_authenticated'] = True  # Set flag in session
 			return redirect('index')
 	else:
 		form = CustomAuthenticationForm()
@@ -72,6 +73,12 @@ def get_user_info(request):
 		return JsonResponse(user_info)
 	else:
 		return JsonResponse({'error': 'User is not authenticated.'})
+
+def check_authenticated(request):
+    if request.user.is_authenticated:
+        return JsonResponse({'authenticated': True})
+    else:
+        return JsonResponse({'authenticated': False})
 
 def resize_image(image_file, max_width):
 	image = Image.open(image_file)

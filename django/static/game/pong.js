@@ -6,6 +6,12 @@ let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
 
+const checkAuthenticated = async () => {
+    const response = await fetch('/accounts/check-authenticated/');
+    const data = await response.json();
+    return data.authenticated;
+};
+
 function resizeCanvas() {
     canvas.width = window.innerWidth / 2;
     canvas.height = window.innerHeight / 2;
@@ -209,35 +215,18 @@ function GameLoop(timestamp) {
         Paddle1.update();
         Paddle2.update();
         draw();
-        
+       /* 
         console.log("Player 1 score:", Paddle1.score);
         console.log("Player 2 score:", Paddle2.score);
-        
+        */
         if (Paddle1.score >= MAX_ROUNDS || Paddle2.score >= MAX_ROUNDS) {
             console.log("Game Ending condition met");
             RequestFrame = false;   
             GameEndingScreen();
             return;
         }
-        
         requestAnimationFrame(GameLoop);
     }
-}
-
-function sendScoreToDjango(score) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "game/save-score/", true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-            if (xhr.status === 200) {
-                console.log("Score saved successfully.");
-            } else {
-                console.error("Failed to save score:", xhr.status);
-            }
-        }
-    };
-    xhr.send(JSON.stringify({ score: parseInt(score) }));
 }
 
 function GameEndingScreen() {
@@ -250,11 +239,44 @@ function GameEndingScreen() {
     ctx.fillText(`${winner} wins!`, canvas.width / 5, canvas.height / 6 + 130);
     ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
     ctx.fillText("Repress to launch another round", canvas.width / 5, canvas.height / 3 + 130);
-
-    sendScoreToDjango(Paddle1.score);
-
+	createMatch(Paddle1.score, Paddle2.score);
     Paddle1.score = 0;
     Paddle2.score = 0;
+}
+
+async function createMatch(user_score, alias_score) {
+	const isAuthenticated = await checkAuthenticated();
+	if (!isAuthenticated) {
+    console.error("User not authenticated. Cannot create match.");
+    return;
+  }
+
+  const response = await fetch('game/create-match/', {
+    method: 'POST',
+  });
+  const data = await response.json();
+  if (data.match_id) {
+    console.log("Match created with ID:", data.match_id);
+    sendScoreToDjango(user_score, alias_score, data.match_id);
+  } else {
+    console.error("Error creating match");
+  }
+}
+
+function sendScoreToDjango(score, score2, match_id) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "game/save-score/", true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        console.log("Score saved successfully.");
+      } else {
+        console.error("Failed to save score:", xhr.status, xhr.statusText);
+      }
+    }
+  };
+  xhr.send(JSON.stringify({ user_score: score, alias_score: score2, match_id: match_id }));
 }
 
 draw();
