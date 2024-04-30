@@ -5,6 +5,23 @@ const login_button = document.querySelector("#loginButton");
 const index_content = document.querySelector("#index-content");
 const signin_content = document.querySelector("#signin-content");
 const signup_content = document.querySelector("#signup-content");
+const csrftoken = getCookie('csrftoken');
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
 function getUserInfo()
 {
@@ -38,12 +55,20 @@ function getUserInfo()
 	});
 }
 
+const fetchSigninForm = async () => {
+        const response = await fetch('accounts/render-signin-form/');
+		const data = await response.json();
+        const html = data.form;
+        signin_content.innerHTML = html;
+    };
+
 function toggleMenu() {
 	menu.classList.toggle("active");
 	hamMenu.classList.toggle("active");
 }
 
-function showSignin() {
+async function showSignin() {
+	await fetchSigninForm();
 	signin_content.classList.toggle("hidden");
 	index_content.classList.toggle("hidden");
 }

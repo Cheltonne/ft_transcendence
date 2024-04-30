@@ -10,6 +10,8 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from io import BytesIO
+from django.template.loader import render_to_string
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 def index(request):
 	return render(request, 'index.html')
@@ -79,3 +81,15 @@ def resize_image(image_file, max_width):
 	resized_image = image.resize((max_width, new_height), Image.LANCZOS)
 
 	return resized_image
+
+@ensure_csrf_cookie
+def render_signin_form(request):
+	if request.method == "GET":
+		form = CustomAuthenticationForm()
+		context = {
+			"form": form,
+		}
+		template = render_to_string('registration/signin.html', context=context)
+		ret1 = template.replace('\t', '')
+		ret2 = ret1.replace('\n', '')
+		return JsonResponse({"form": ret2})
