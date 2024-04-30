@@ -6,6 +6,12 @@ let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
 
+const checkAuthenticated = async () => {
+    const response = await fetch('/accounts/check-authenticated/');
+    const data = await response.json();
+    return data.authenticated;
+};
+
 function resizeCanvas() {
     canvas.width = window.innerWidth / 2;
     canvas.height = window.innerHeight / 2;
@@ -233,19 +239,14 @@ function GameEndingScreen() {
     ctx.fillText(`${winner} wins!`, canvas.width / 5, canvas.height / 6 + 130);
     ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
     ctx.fillText("Repress to launch another round", canvas.width / 5, canvas.height / 3 + 130);
-	
 	createMatch(Paddle1.score, Paddle2.score);
-
     Paddle1.score = 0;
     Paddle2.score = 0;
 }
 
 async function createMatch(user_score, alias_score) {
-	const isAuthenticated = document.cookie.split(';').some(cookie => {
-    const [key, value] = cookie.trim().split('=');
-    return key === 'is_authenticated' && value === 'true';  // Check for flag and value
-  });
-	if (isAuthenticated) {
+	const isAuthenticated = await checkAuthenticated();
+	if (!isAuthenticated) {
     console.error("User not authenticated. Cannot create match.");
     return;
   }

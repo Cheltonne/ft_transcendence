@@ -72,6 +72,12 @@ def get_user_info(request):
 	else:
 		return JsonResponse({'error': 'User is not authenticated.'})
 
+def check_authenticated(request):
+    if request.user.is_authenticated:
+        return JsonResponse({'authenticated': True})
+    else:
+        return JsonResponse({'authenticated': False})
+
 def resize_image(image_file, max_width):
 	image = Image.open(image_file)
 	original_width, original_height = image.size
