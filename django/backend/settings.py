@@ -138,3 +138,4 @@ MEDIA_URL = '/media/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CSRF_TRUSTED_ORIGINS = ['https://fftactics','https://localhost:4343']
+CSRF_COOKIE_SECURE = True

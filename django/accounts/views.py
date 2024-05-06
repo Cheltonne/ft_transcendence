@@ -16,7 +16,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 def index(request):
 	return render(request, 'index.html')
 
-@csrf_exempt
 def user_signup(request):
 	if request.method == 'POST':
 		form = CustomUserCreationForm(request.POST, request.FILES)

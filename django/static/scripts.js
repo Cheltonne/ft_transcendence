@@ -37,7 +37,7 @@ function getUserInfo()
 				userInfo.profile_picture = response.profile_picture;
 				console.log('User information retrieved:', userInfo);
 				loginButton.innerText = "Logout";
-				loginButton.innerHTML = '<a type="button" id ="loginButton" class="btn btn-outline-dark" style="margin: 5rem;" href="accounts/logout">Logout</a>';
+				loginButton.innerHTML = '<a id ="loginButton" class="button" href="accounts/logout">Logout</a>';
 				loginHeading.innerText = "Welcome, " + userInfo.username;
 				$('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
 			}
@@ -55,10 +55,17 @@ function getUserInfo()
 	});
 }
 
-const fetchSigninForm = async () => {
-        const response = await fetch('accounts/render-signin-form/');
+const fetchViewContent = async (url) => {
+        const response = await fetch(url, {
+		headers: { 'X-CSRFToken': csrftoken }
+		});
+		if (!response.ok) {
+			console.log(`Error fetching Signin Form data: ${response.status	}`);
+		}
 		const data = await response.json();
         const html = data.form;
+		const state = { form: data.form }; // Store relevant state
+  		history.pushState(state, null, url); // Update history with state and URL
         signin_content.innerHTML = html;
     };
 
@@ -68,7 +75,7 @@ function toggleMenu() {
 }
 
 async function showSignin() {
-	await fetchSigninForm();
+	await fetchViewContent('accounts/render-signin-form/');
 	signin_content.classList.toggle("hidden");
 	index_content.classList.toggle("hidden");
 }
