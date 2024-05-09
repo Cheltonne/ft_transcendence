@@ -13,7 +13,6 @@ function getCookie(name) {
         const cookies = document.cookie.split(';');
         for (let i = 0; i < cookies.length; i++) {
             const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
             if (cookie.substring(0, name.length + 1) === (name + '=')) {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
@@ -55,19 +54,24 @@ function getUserInfo()
 	});
 }
 
-const fetchViewContent = async (url) => {
-        const response = await fetch(url, {
-		headers: { 'X-CSRFToken': csrftoken }
-		});
-		if (!response.ok) {
-			console.log(`Error fetching Signin Form data: ${response.status	}`);
-		}
-		const data = await response.json();
-        const html = data.form;
-		const state = { form: data.form }; // Store relevant state
-  		history.pushState(state, null, url); // Update history with state and URL
-        signin_content.innerHTML = html;
-    };
+async function fetchViewContent(url) {
+	const response = await fetch(url, {
+	  method: 'POST',
+	  headers: { 'Content-Type': 'application/json' },
+	  body: JSON.stringify({username: 'your_username', password: 'your_password'}),  // Replace with form data
+	});
+  
+	if (!response.ok) {
+	  console.log(`Error logging in: ${response.status }`);
+	  // Handle login errors (e.g., display error message)
+	} else {
+	  const data = await response.json();
+	  const token = data.token;  // Extract the generated token
+	  // Store the token for subsequent authenticated API requests
+	  // Update application state based on login success (e.g., navigate to a different view)
+	}
+  }
+  
 
 function toggleMenu() {
 	menu.classList.toggle("active");

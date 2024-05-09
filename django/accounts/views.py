@@ -12,6 +12,11 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from io import BytesIO
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from .serializers import LoginSerializer
+
 
 def index(request):
 	return render(request, 'index.html')
@@ -99,3 +104,11 @@ def render_signin_form(request):
 		ret1 = template.replace('\t', '')
 		ret2 = ret1.replace('\n', '')
 		return JsonResponse({"form": ret2})
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]  # Allow unauthenticated requests
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data)
