@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 <html class="fontawesome-i2svg-active fontawesome-i2svg-complete yjfwxcwxf idc0_350" lang="en">
-	<head>
-		{% load static %}
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="stylesheet" href="{% static 'css/pong_theme.css' %}">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-		<title>ft_transcendence</title>
-	</head>
-	<body>
-		{% include 'navbar.html' %}
-		<canvas id="myCanvas"></canvas>
-	</body>
-	<script src="{% static 'scripts.js'  %}"></script>
-	<script src="{% static 'game/pong.js'  %}"></script>
+    <head>  
+        {% load static %}
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{% static 'css/pong_theme.css' %}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <title>ft_transcendence</title>
+    </head>
+    <body>
+        {% include 'navbar.html' %}
+        <div id="canvasContainer" class="canvas-container">
+            <canvas id="myCanvas"></canvas>
+            <div id="aliasContainer" class="alias-container"></div>
+            <div id="button-container" style="top: 60%;">
+                <input type="text" id="textInput" class="text-input" placeholder="p2 enter your alias">
+                <button id="myButton" class="myButton">Enter</button>
+                <button id="retryButton" class="myButton">Retry</button>
+            </div>
+            
+        </div>
+
+    </body>
+    <script src="{% static 'scripts.js'  %}"></script>
+    <script src="{% static 'game/pong.js'  %}"></script>
 </html>
 <!-- <div class="form-container" style="padding: 5rem;">
-	<h2>Score input tester</h2>
-	<form id="scoreForm">
-	<input type="text" id="scoreInput" placeholder="Enter your score (integer)">
-	<input type="submit" value="Submit">
-	</form>
-	</div> --!>
+    <h2>Score input tester</h2>
+    <form id="scoreForm">
+    <input type="text" id="scoreInput" placeholder="Enter your score (integer)">
+    <input type="submit" value="Submit">
+    </form>
+    </div> --!>

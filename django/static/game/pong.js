@@ -1,10 +1,14 @@
 const canvas = document.querySelector('canvas');
+const retryButton = document.getElementById('retryButton');
 const ctx = canvas.getContext("2d");
 const MAX_ROUNDS = 2;
 var RequestFrame = false;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
+let player2Name = 'random';
+var allButtonOk = false;
+
 
 const checkAuthenticated = async () => {
     const response = await fetch('/accounts/check-authenticated/');
@@ -24,6 +28,84 @@ const keysPressed = {};
 
 document.addEventListener('keydown', function(event) {
     keysPressed[event.key] = true;
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Add event listener to the button when the DOM content is loaded
+    var myButton = document.getElementById("myButton");
+    var textInput = document.getElementById("textInput");
+  
+    myButton.addEventListener("click", function() {
+        var alias = textInput.value.trim(); // Define alias here
+        if (alias != "") {
+            // Hide button and input field
+            player2Name = alias;
+            myButton.style.display = "none";
+            textInput.style.display = "none";
+            // Set up the game after entering the alias
+            allButtonOk = true;
+            setupRetryButton();
+            // Show alias
+            $("#aliasContainer").text(alias);
+        } else {
+            // If alias is empty, show an alert
+            alert("Please enter your alias.");
+        }
+    });
+});
+
+
+retryButton.addEventListener("click", function() {
+    console.log("Retry button clicked");
+
+    // Reset game state
+    Ball.resetBall();
+    Paddle1.score = 0;
+    Paddle2.score = 0;
+    RequestFrame = true; // Restart game loop
+    gameEnding = false;
+    ReDrawStatic = true; // Redraw static elements
+    allButtonOk = true; // Allow starting again
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Start game loop immediately after resetting
+    requestAnimationFrame(GameLoop);
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Call setupRetryButton here to set up event listener
+    setupRetryButton();
+});
+
+function setupRetryButton() {
+    // Add event listener to the retry button when the DOM content is loaded
+    var retryButton = document.getElementById("retryButton");
+    
+    // Initially hide the retry button
+    retryButton.style.display = "none";
+
+    retryButton.addEventListener("click", function() {
+        // Clear the canvas and restart the game
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        RequestFrame = true; // Restart game loop
+        gameEnding = false;
+        ReDrawStatic = true; // Redraw static elements
+        allButtonOk = true; // Allow starting again
+        retryButton.style.display = "none";
+    });
+}
+
+  $(document).ready(function() {
+    $("#myButton").click(function() {
+        var alias = $("#textInput").val();
+        if(alias.trim() === "") {
+            alert("Please enter your alias.");
+        } else {
+            $("#aliasContainer").text(alias);
+        }
+    });
 });
 
 document.addEventListener('keyup', function(event) {
@@ -175,11 +257,19 @@ function drawStaticElements() {
     ctx.font = '36px sans-serif';
 
     if (!RequestFrame && currentRound == 1) {
-        ctx.fillText('Press any key to begin',
+        ctx.fillText('click on the canvas to begin',
             canvas.width / 3.5,
             canvas.height / 2 + 15
         );
     }
+
+    //var player1X = canvas.width * 0.25 - ctx.measureText(player1Name).width / 2;
+    //var player2X = canvas.width * 0.75 - ctx.measureText(player2Name).width / 2;
+    //var y = 30;
+  
+    // Render player names
+    //ctx.fillText(player1Name, player1X, y);
+    //ctx.fillText(player2Name, player2X, y);
 
     ctx.fillText(Paddle2.score, canvas.width - 130, 50);
     ctx.fillText(Paddle1.score, 100, 50);
@@ -187,26 +277,31 @@ function drawStaticElements() {
 }
 
 function draw() {
-    if (ReDrawStatic){
+    // Clear the canvas
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw static elements if needed
+    if (ReDrawStatic) {
         drawStaticElements();
     }
-    
+
+    // Draw the ball
     ctx.fillStyle = "#a2c11c";
+    ctx.beginPath();
+    ctx.arc(Ball.pos.x, Ball.pos.y, Ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw the paddles
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
-    if (RequestFrame) {
-        ctx.beginPath();
-        ctx.arc(Ball.pos.x, Ball.pos.y, Ball.radius, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    for (let i = 0; i < Ball.trailPositions.length; i++) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
-        ctx.beginPath();
-        ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    //Draw trails and other dynamic elements
+    //for (let i = 0; i < Ball.trailPositions.length; i++) {
+    //  ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
+    //   ctx.beginPath();
+    //   ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
+     //  ctx.fill();
+    //}
 }
 
 function GameLoop(timestamp) {
@@ -219,13 +314,18 @@ function GameLoop(timestamp) {
         console.log("Player 1 score:", Paddle1.score);
         console.log("Player 2 score:", Paddle2.score);
         */
-        if (Paddle1.score >= MAX_ROUNDS || Paddle2.score >= MAX_ROUNDS) {
+        if (Paddle1.score == MAX_ROUNDS || Paddle2.score == MAX_ROUNDS) {
             console.log("Game Ending condition met");
+           
             RequestFrame = false;   
             GameEndingScreen();
             return;
         }
-        requestAnimationFrame(GameLoop);
+            // requestAnimationFrame(GameLoop);
+
+            setTimeout(() => {
+                requestAnimationFrame(GameLoop);
+            }, 14);
     }
 }
 
@@ -235,18 +335,22 @@ function GameEndingScreen() {
     ctx.fillStyle = '#fff';
     ctx.font = '36px sans-serif';
 
-    let winner = (Paddle1.score > Paddle2.score) ? "Player 1" : "Player 2";
+    let winner = (Paddle1.score > Paddle2.score) ? "Player 1" : player2Name;
     ctx.fillText(`${winner} wins!`, canvas.width / 5, canvas.height / 6 + 130);
     ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
-    ctx.fillText("Repress to launch another round", canvas.width / 5, canvas.height / 3 + 130);
-	createMatch(Paddle1.score, Paddle2.score);
-    Paddle1.score = 0;
-    Paddle2.score = 0;
+    createMatch(Paddle1.score, Paddle2.score);
+
+    // Show the retry button
+    retryButton.style.display = "inline-block";
+
+    // Request animation frame to restart the game loop
+    //requestAnimationFrame(GameLoop);
 }
 
+
 async function createMatch(user_score, alias_score) {
-	const isAuthenticated = await checkAuthenticated();
-	if (!isAuthenticated) {
+    const isAuthenticated = await checkAuthenticated();
+    if (!isAuthenticated) {
     console.error("User not authenticated. Cannot create match.");
     return;
   }
@@ -281,13 +385,19 @@ function sendScoreToDjango(score, score2, match_id) {
 
 draw();
 canvas.onclick = () => {
-    console.log("Canvas clicked");
-    if (!RequestFrame && gameEnding) {
-        GameEndingScreen();
-        gameEnding = false;
-    }
-    if (!RequestFrame) {
-        RequestFrame = true;
-        requestAnimationFrame(GameLoop);
+    if (allButtonOk) {
+        console.log("Canvas clicked");
+        if (!RequestFrame && gameEnding) {
+            GameEndingScreen();
+            gameEnding = false;
+            //allButtonOk = false;
+            // ajoute un Bouton retry pour relancer
+            
+        }
+        if (!RequestFrame) {
+            RequestFrame = true;
+            requestAnimationFrame(GameLoop);
+            allButtonOk = false;
+        }
     }
 };
