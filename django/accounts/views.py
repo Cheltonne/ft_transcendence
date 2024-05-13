@@ -1,5 +1,4 @@
 import json
-from .models import CustomUser
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -8,15 +7,16 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from PIL import Image
+from .models import CustomUser
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from io import BytesIO
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework import serializers, status
+from rest_framework.response import Response
 from .serializers import LoginSerializer
-
 
 def index(request):
 	return render(request, 'index.html')
@@ -38,11 +38,9 @@ def user_signup(request):
 					resized_image = resize_image(output, 500)
 				else :
 					resized_image = resize_image(image_file, 500)
-				# Save the resized image to memory
 				output = BytesIO()
 				resized_image.save(output, format='JPEG', quality=75)
 				output.seek(0)
-				# Replace the original image file with the resized image
 				user.profile_picture = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % image_file.name.split('.')[0],\
 							'image/jpeg', output.tell(), None)
 			user.save()
@@ -112,3 +110,30 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)
+
+class SignInSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+class SignInView(APIView):
+    def get(self, request):
+        form = CustomAuthenticationForm()
+        serializer = SignInSerializer(form)
+        return Respons(serializer.data)
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        label=('Username'),
+        required=True,
+        max_length=15,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Username is required.",
+        },
+    )
