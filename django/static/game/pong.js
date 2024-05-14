@@ -8,13 +8,20 @@ var ReDrawStatic = true;
 var gameEnding = false;
 let player2Name = 'random';
 var allButtonOk = false;
-
+var AI = false;
+let Ball = null;
+let Paddle1 = null;
+let Paddle2 = null;
 
 const checkAuthenticated = async () => {
     const response = await fetch('/accounts/check-authenticated/');
     const data = await response.json();
     return data.authenticated;
 };
+
+function vec2(x, y) {
+    return { x: x, y: y };
+}
 
 function resizeCanvas() {
     canvas.width = window.innerWidth / 2;
@@ -26,76 +33,77 @@ window.addEventListener('resize', resizeCanvas);
 
 const keysPressed = {};
 
+document.addEventListener('keyup', function(event) {
+    delete keysPressed[event.key];
+});
+
+function Bindings(upKey, downKey) {
+    return { up: upKey, down: downKey };
+}
+
 document.addEventListener('keydown', function(event) {
     keysPressed[event.key] = true;
 });
 
 document.addEventListener("DOMContentLoaded", function() {
-    // Add event listener to the button when the DOM content is loaded
     var myButton = document.getElementById("myButton");
     var textInput = document.getElementById("textInput");
+    var retryButton = document.getElementById("retryButton");
   
     myButton.addEventListener("click", function() {
-        var alias = textInput.value.trim(); // Define alias here
+        var alias = textInput.value.trim();
         if (alias != "") {
-            // Hide button and input field
             player2Name = alias;
             myButton.style.display = "none";
             textInput.style.display = "none";
-            // Set up the game after entering the alias
-            allButtonOk = true;
-            setupRetryButton();
-            // Show alias
+            //allButtonOk = true;
+            ModeChoice();
             $("#aliasContainer").text(alias);
         } else {
-            // If alias is empty, show an alert
             alert("Please enter your alias.");
         }
     });
-});
 
-
-retryButton.addEventListener("click", function() {
-    console.log("Retry button clicked");
-
-    // Reset game state
-    Ball.resetBall();
-    Paddle1.score = 0;
-    Paddle2.score = 0;
-    RequestFrame = true; // Restart game loop
-    gameEnding = false;
-    ReDrawStatic = true; // Redraw static elements
-    allButtonOk = true; // Allow starting again
-
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Start game loop immediately after resetting
-    requestAnimationFrame(GameLoop);
-});
-
-document.addEventListener("DOMContentLoaded", function() {
-    // Call setupRetryButton here to set up event listener
-    setupRetryButton();
-});
-
-function setupRetryButton() {
-    // Add event listener to the retry button when the DOM content is loaded
-    var retryButton = document.getElementById("retryButton");
-    
-    // Initially hide the retry button
     retryButton.style.display = "none";
 
     retryButton.addEventListener("click", function() {
-        // Clear the canvas and restart the game
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        RequestFrame = true; // Restart game loop
+        Paddle1.score = 0;
+        Paddle2.score = 0;
+        RequestFrame = false;
         gameEnding = false;
-        ReDrawStatic = true; // Redraw static elements
-        allButtonOk = true; // Allow starting again
+        ReDrawStatic = true;
+        allButtonOk = true;
         retryButton.style.display = "none";
+        LaunchGame();
+    });
+});
+
+function ModeChoice(){
+    var Local = document.getElementById("LocalButton");
+    var AIPlayer = document.getElementById("AIButton");
+
+    Local.style.display = 'inline-block';
+    AIPlayer.style.display = 'inline-block';
+
+    Local.addEventListener("click", function() {
+        allButtonOk = true;
+        console.log("local");
+        AI = false;
+        Local.style.display = 'none';
+        AIPlayer.style.display = 'none';
+        LaunchGame();
+    });
+    AIPlayer.addEventListener("click", function() {
+        allButtonOk = true;
+        console.log("IA");
+        AI = true;
+        Local.style.display = 'none';
+        AIPlayer.style.display = 'none';
+        LaunchGame();
     });
 }
+
 
   $(document).ready(function() {
     $("#myButton").click(function() {
@@ -107,18 +115,6 @@ function setupRetryButton() {
         }
     });
 });
-
-document.addEventListener('keyup', function(event) {
-    delete keysPressed[event.key];
-});
-
-function Bindings(upKey, downKey) {
-    return { up: upKey, down: downKey };
-}
-
-function vec2(x, y) {
-    return { x: x, y: y };
-}
 
 class PongBall {
     constructor(pos) {
@@ -172,11 +168,12 @@ class PongBall {
     }
 
     update() {
+        ctx.clearRect(this.pos.x - this.radius, this.pos.y - this.radius, this.radius * 2, this.radius * 2);
         this.pos.x += this.velocity.x;
         this.pos.y += this.velocity.y;
         this.CheckEdge();
 
-        let player = (this.pos.x < canvas.width / 2) ? Paddle2 : Paddle1;
+        let player = (this.pos.x < canvas.width / 2) ? Paddle1 : Paddle2;
 
         if (this.collision(player)) {
             this.LastHit = null;
@@ -200,10 +197,6 @@ class PongBall {
             this.left = true;
             ReDrawStatic = true;
             this.resetBall();
-            if (Paddle1.score == 5)
-            {
-                gameEnding = true;
-            }
             this.goal = false;
 
         } else if (this.pos.x >= canvas.width && this.goal == false) {
@@ -212,12 +205,7 @@ class PongBall {
             this.left = false;
             ReDrawStatic = true;
             this.resetBall();
-            if (Paddle2.score == 5)
-            {
-                gameEnding = true;
-            }
             this.goal = false;
-
         }
     }
 
@@ -238,17 +226,114 @@ class PongPaddle {
 
     update() {
         if (keysPressed[this.keys.up] && this.pos.y > 0) {
+            ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
             this.pos.y -= this.velocity;
         }
         if (keysPressed[this.keys.down] && this.pos.y + this.height < canvas.height) {
+            ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
             this.pos.y += this.velocity;
         }
     }
 }
 
-let Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
-let Paddle1 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
-let Paddle2 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
+class AIPongPaddle {
+    constructor(pos) {
+        this.pos = pos;
+        this.velocity = 10; 
+        this.width = 10;
+        this.height = 100;
+        this.score = 0;
+        this.prediction = null;
+        this.predictionCounter = 0; // Counter to control prediction frequency
+        this.predictionFrequency = 30; // Adjust this value to change prediction frequency
+    }
+
+    update(ball) {
+        if (((ball.pos.x < this.pos.x) && (ball.velocity.x < 0)) ||
+            ((ball.pos.x > this.pos.x + this.width) && (ball.velocity.x > 0))) {
+            this.stopMovingUp();
+            this.stopMovingDown();
+            return;
+        }
+
+        // Call the predict method with the appropriate time step (dt)
+        this.predictionCounter++;
+
+        // Call predict method only when prediction counter reaches the frequency threshold
+        if (this.predictionCounter >= this.predictionFrequency) {
+            this.predict(ball);
+            this.predictionCounter = 0; // Reset prediction counter
+        }
+
+        if (this.prediction) {
+            if (this.prediction.y < (this.pos.y + this.height / 2 - 5) && this.pos.y > 0) {
+                this.stopMovingDown();
+                this.moveUp();
+            } else if (this.prediction.y > (this.pos.y + this.height / 2 + 5) && this.pos.y + this.height < canvas.height) {
+                this.stopMovingUp();
+                this.moveDown();
+            } else {
+                this.stopMovingUp();
+                this.stopMovingDown();
+            }
+        }
+    }
+
+    predict(ball) {
+        let predictedPos = { x: ball.pos.x, y: ball.pos.y };
+        let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
+    
+        for (let i = 0; i < 100; i++) {
+            predictedPos.x += predictedVelocity.x;
+            predictedPos.y += predictedVelocity.y;
+    
+            if (predictedPos.y - ball.radius < 0 || predictedPos.y + ball.radius > canvas.height) {
+                predictedVelocity.y *= -1;
+            }
+    
+            if (predictedPos.x + ball.radius > canvas.width || predictedPos.x > this.pos.x) {
+                break; // Stop the prediction loop if the ball's predicted position exceeds the paddle's position
+            }
+        }
+    
+        this.prediction = predictedPos;
+    }
+
+    stopMovingUp() {
+        this.velocity = 0;
+    }
+
+    stopMovingDown() {
+        this.velocity = 0;
+    }
+
+    moveUp() {
+        this.velocity = 10; 
+        ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
+        this.pos.y -= this.velocity;
+    }
+
+    moveDown() {
+        this.velocity = 10; 
+        ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
+        this.pos.y += this.velocity;
+    }
+}
+
+
+function Players() {
+    Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+    //Paddle1 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+    Paddle1 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
+    if (!AI){
+        Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+    }
+    else {
+        Paddle2 = new AIPongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2))
+    }   
+}
+
+
 
 function drawStaticElements() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -259,17 +344,14 @@ function drawStaticElements() {
     if (!RequestFrame && currentRound == 1) {
         ctx.fillText('click on the canvas to begin',
             canvas.width / 3.5,
-            canvas.height / 2 + 15
+            canvas.height / 2 + 120
+        );
+
+        ctx.fillText('press 2 to play against AI',
+            canvas.width / 3.5,
+            canvas.height / 2 + 160
         );
     }
-
-    //var player1X = canvas.width * 0.25 - ctx.measureText(player1Name).width / 2;
-    //var player2X = canvas.width * 0.75 - ctx.measureText(player2Name).width / 2;
-    //var y = 30;
-  
-    // Render player names
-    //ctx.fillText(player1Name, player1X, y);
-    //ctx.fillText(player2Name, player2X, y);
 
     ctx.fillText(Paddle2.score, canvas.width - 130, 50);
     ctx.fillText(Paddle1.score, 100, 50);
@@ -277,56 +359,52 @@ function drawStaticElements() {
 }
 
 function draw() {
-    // Clear the canvas
-    //ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw static elements if needed
     if (ReDrawStatic) {
         drawStaticElements();
     }
 
-    // Draw the ball
     ctx.fillStyle = "#a2c11c";
     ctx.beginPath();
     ctx.arc(Ball.pos.x, Ball.pos.y, Ball.radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw the paddles
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
+    if (Paddle2.prediction) {
+    ctx.beginPath();
+    ctx.arc(Paddle2.prediction.x, Paddle2.prediction.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+    }
+
     //Draw trails and other dynamic elements
-    //for (let i = 0; i < Ball.trailPositions.length; i++) {
-    //  ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
-    //   ctx.beginPath();
-    //   ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
-     //  ctx.fill();
-    //}
+    for (let i = 0; i < Ball.trailPositions.length; i++) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
+    ctx.beginPath();
+    ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+    }
 }
 
 function GameLoop(timestamp) {
-    if (RequestFrame) {
-        Ball.update();
-        Paddle1.update();
-        Paddle2.update();
-        draw();
-       /* 
-        console.log("Player 1 score:", Paddle1.score);
-        console.log("Player 2 score:", Paddle2.score);
-        */
-        if (Paddle1.score == MAX_ROUNDS || Paddle2.score == MAX_ROUNDS) {
-            console.log("Game Ending condition met");
-           
-            RequestFrame = false;   
-            GameEndingScreen();
-            return;
-        }
-            // requestAnimationFrame(GameLoop);
-
             setTimeout(() => {
+                Ball.update();
+                Paddle1.update();
+                Paddle2.update(Ball);
+                draw();
+        
+                if (Paddle1.score == MAX_ROUNDS || Paddle2.score == MAX_ROUNDS) {
+                    console.log("Game Ending condition met");
+                    GameEnding = true;
+                    RequestFrame = false;   
+                    GameEndingScreen();
+                    return;
+                }
+                    //requestAnimationFrame(GameLoop);
+        
                 requestAnimationFrame(GameLoop);
             }, 14);
-    }
 }
 
 function GameEndingScreen() {
@@ -340,11 +418,7 @@ function GameEndingScreen() {
     ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
     createMatch(Paddle1.score, Paddle2.score);
 
-    // Show the retry button
     retryButton.style.display = "inline-block";
-
-    // Request animation frame to restart the game loop
-    //requestAnimationFrame(GameLoop);
 }
 
 
@@ -383,15 +457,18 @@ function sendScoreToDjango(score, score2, match_id) {
   xhr.send(JSON.stringify({ user_score: score, alias_score: score2, match_id: match_id }));
 }
 
-draw();
-canvas.onclick = () => {
+//canvas.onclick = () => {
+//    LaunchGame();
+//};
+
+function LaunchGame() {
+    Players();
     if (allButtonOk) {
         console.log("Canvas clicked");
+        draw();
         if (!RequestFrame && gameEnding) {
             GameEndingScreen();
             gameEnding = false;
-            //allButtonOk = false;
-            // ajoute un Bouton retry pour relancer
             
         }
         if (!RequestFrame) {
@@ -400,4 +477,4 @@ canvas.onclick = () => {
             allButtonOk = false;
         }
     }
-};
+}
