@@ -243,21 +243,21 @@ class AIPongPaddle {
         this.width = 10;
         this.height = 100;
         this.score = 0;
+        this.Mpredict = null;
         this.prediction = null;
         this.predictionCounter = 0; // Counter to control prediction frequency
-        this.predictionFrequency = 30; // Adjust this value to change prediction frequency
+        this.frameRate = 60; // Assuming a frame rate of 60 frames per second
+        this.predictionFrequency = this.frameRate; // Adjust this value to change prediction frequency
     }
 
     update(ball) {
+        this.predictionCounter++;
         if (((ball.pos.x < this.pos.x) && (ball.velocity.x < 0)) ||
             ((ball.pos.x > this.pos.x + this.width) && (ball.velocity.x > 0))) {
             this.stopMovingUp();
             this.stopMovingDown();
             return;
         }
-
-        // Call the predict method with the appropriate time step (dt)
-        this.predictionCounter++;
 
         // Call predict method only when prediction counter reaches the frequency threshold
         if (this.predictionCounter >= this.predictionFrequency) {
@@ -283,7 +283,7 @@ class AIPongPaddle {
         let predictedPos = { x: ball.pos.x, y: ball.pos.y };
         let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
     
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < this.frameRate; i++) {
             predictedPos.x += predictedVelocity.x;
             predictedPos.y += predictedVelocity.y;
     
@@ -298,6 +298,11 @@ class AIPongPaddle {
     
         this.prediction = predictedPos;
     }
+    // AJOUTE UN TEMPS DE REACTION POUR LE CALCUL QUAND LA BALLE TOUCHE L'AUTRE PADDLE
+    // TU SIMULES TON TEMPS DE CALCUL
+    // IL FAUT QUE TU RENDES APPROXIMATIF LE CALCUL DE LA TRAJECTOIRE DE L'IA
+
+    // JE DOIS CHANGER TOUT CA POUR SIMULER LA BALLE PAR LES KEYS DU JOUEUR
 
     stopMovingUp() {
         this.velocity = 0;
@@ -404,7 +409,7 @@ function GameLoop(timestamp) {
                     //requestAnimationFrame(GameLoop);
         
                 requestAnimationFrame(GameLoop);
-            }, 14);
+            });
 }
 
 function GameEndingScreen() {
