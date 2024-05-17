@@ -10,11 +10,11 @@
 	</head>
 	<body>
 		{% include 'navbar.html' %}
-		<div id="index-content">
+		<div data-view="game" id="index-content">
 			<canvas id="myCanvas"></canvas>
 		</div>
-		<div id="signin-content" class="hidden">
-		</div>
+		<div data-view="signin" id="signin-content" class="hidden"></div>
+		<div data-view="signup" id="signup-content" class="hidden"></div>
 	</body>
 	<script src="{% static 'scripts.js'  %}"></script>
 	<script src="{% static 'game/pong.js'  %}"></script>

@@ -1,19 +1,7 @@
-<!DOCTYPE html>
-<html class="fontawesome-i2svg-active fontawesome-i2svg-complete yjfwxcwxf idc0_350" lang="en">
-	<head>
-		{% load static %}
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="stylesheet" href="{% static 'css/pong_theme.css' %}">
-		<title>world.execute(me)</title>
-	</head>
-	<body>
-		<form method="post" id="signin-form">
-			<h1>Sign in</h1>
-			{% csrf_token %}
-			{{ form.as_p }}
-			<button type="submit">Sign In</button>
-			<a href="{% url 'signup' %}">Don't have an account yet?😒</a>
-		</form>
-	</body>
-</html>
+<form method="post" id="signin-form">
+	<h1>Sign in</h1>
+	{% csrf_token %}
+	{{ form.as_p }}
+	<button type="submit">Sign In</button>
+	<a href="#" id="signupButton">Don't have an account yet?😒</a>
+</form>

@@ -2,26 +2,7 @@ from rest_framework import serializers
 from .models import CustomUser
 from django.contrib.auth import authenticate
 
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
-    token = serializers.CharField(read_only=True)
-
-    def validate(self, data):
-        username = data.get('username')
-        password = data.get('password')
-
-        if username and password:
-            user = authenticate(request=self.context.get('request'), username=username, password=password)
-            if user:
-                data['token'] = 'your_generated_token(user)'  # Replace with token generation logic
-                return data
-            else:
-                raise serializers.ValidationError('Invalid username or password')
-        else:
-            raise serializers.ValidationError('Both username and password are required')
-
-class CustomUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -43,3 +24,20 @@ class CustomUserSerializer(serializers.ModelSerializer):
         instance.profile_picture = validated_data.get('profile_picture', instance.profile_picture)
         instance.save()
         return instance
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        label=('Username'),
+        required=True,
+        max_length=15,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Username is required.",
+        },
+    )
