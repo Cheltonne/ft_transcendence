@@ -1,12 +1,17 @@
 var userInfo = {};
 const hamMenu = document.querySelector(".ham-menu");
 const menu = document.querySelector(".off-screen-menu");
-const login_button = document.querySelector("#loginButton");
+const logo = document.querySelector(".logo");
+const home_button = document.querySelector("#homeButton");
+const button = document.querySelector('.loginButton, .logoutButton');
 const index_content = document.querySelector("#index-content");
 const signin_content = document.querySelector("#signin-content");
 const signup_content = document.querySelector("#signup-content");
-const signinForm = document.getElementById('signin-form');
-const csrftoken = getCookie('csrftoken');
+
+/*	 ___________________________________
+	|									|
+	|		GENERAL PURPOSE FCTS		|
+	|___________________________________| */
 
 function getCookie(cname) {
 	let name = cname + '=';
@@ -34,15 +39,16 @@ function getUserInfo() {
 				userInfo.username = response.username;
 				userInfo.profile_picture = response.profile_picture;
 				console.log('User information retrieved:', userInfo);
-				loginButton.innerText = "Logout";
-				loginButton.innerHTML = '<a id ="loginButton" class="button" href="accounts/logout">Logout</a>';
+				button.innerText = "Logout";
+				button.innerHTML = '<a class="logoutButton" class="button" href="#">Logout</a>';
 				loginHeading.innerText = "Welcome, " + userInfo.username;
 				$('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
 			}
 			else {
 				console.error('Error:', response.error);
-				loginButton.innerText = "Login";
+				button.innerText = "Login";
 				loginHeading.innerText = "Hey anon!";
+				$('#profilePictureContainer').html('');
 			}
 		},
 		error: function (xhr, status, error) {
@@ -51,10 +57,32 @@ function getUserInfo() {
 	});
 }
 
-function toggleMenu() {
-	menu.classList.toggle("active");
-	hamMenu.classList.toggle("active");
-}
+function showToast(message, type = 'info') {
+	const toast = document.createElement('div');
+	toast.classList.add('toast');
+	toast.textContent = message;
+  
+	if (type === 'success') {
+	  toast.classList.add('toast-success');
+	} else if (type === 'error') {
+	  toast.classList.add('toast-error');
+	}
+  
+	const toastContainer = document.querySelector('.toast-container');
+	toastContainer.appendChild(toast);
+  
+	toast.classList.add('show');
+  
+	setTimeout(() => {
+	  toast.classList.remove('show');
+	  toastContainer.removeChild(toast);
+	}, 3000);
+  }
+  
+/*	 ___________________________
+	|							|
+	|	SPA NAVIGATION FCTS		|
+	|___________________________| */
 
 async function fetchViewContent(url, view_choice) {
 	const response = await fetch(url, {
@@ -63,30 +91,72 @@ async function fetchViewContent(url, view_choice) {
 
 	if (!response.ok) {
 		console.log(`Error logging in: ${response.status}`);
-		// Handle login errors (e.g., display error message)
-	} else {
+	}
+	else {
 		const data = await response.json();
-		const token = data.token;  // Extract the generated token
-		if (view_choice == 1) {
-			signin_content.innerHTML = data.form;
-			handleSignInForm();
+		const token = data.token;
+		switch (view_choice) {
+			case 1:
+				signin_content.innerHTML = data.form;
+				handleFormSubmit('signin');
+			case 2:
+				signup_content.innerHTML = data.form;
+				handleFormSubmit('signup');
 		}
-		else if (view_choice == 2) {
-			signup_content.innerHTML = data.form;
-			const event = new Event('submit');
-			handleFormSubmit(event, 'signup');
-		}
+	}
+}
+
+async function handleFormSubmit(formType) {
+	const formElement = document.getElementById(`${formType}-form`);
+	if (!formElement) {
+		console.error(`Form element for "${formType}" not found!`);
+		return;
+	}
+	else {
+		formElement.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const formData = new FormData(formElement);
+			const csrftoken = getCookie('csrftoken');
+			try {
+				const response = await fetch(`/accounts/render-${formType}-form/`, {
+					method: 'POST',
+					credentials: 'include',
+					headers: { 'X-CSRFToken': csrftoken },
+					body: formData,
+				});
+
+				const data = await response.json();
+
+				if (data.success) {
+					if (formType === 'signin') {
+						showView('game');
+						showToast('Successfully logged in!');
+						getUserInfo();
+					} else if (formType === 'signup') {
+						showView('game');
+						showToast('Signup successful!');
+						getUserInfo();
+					} else {
+						console.warn(`Unknown form type: ${formType}`);
+					}
+				} else {
+					showToast(data.message || `Error during ${formType}!`, 'error');
+				}
+			} catch (error) {
+				console.error(`Error during ${formType} submission:`, error);
+			}
+		});
 	}
 }
 
 function showView(viewName) {
 	const allViews = document.querySelectorAll('[data-view]');
-  
+
 	for (const view of allViews) {
-	  const currentView = view.dataset.view;  // Access data-view value
-	  view.classList.toggle('hidden', currentView !== viewName);  // Toggle hidden class
+		const currentView = view.dataset.view;
+		view.classList.toggle('hidden', currentView !== viewName);
 	}
-  }
+}
 
 async function showSignin() {
 	await fetchViewContent('accounts/render-signin-form/', 1);
@@ -101,79 +171,51 @@ async function showSignin() {
 
 async function showSignup() {
 	await fetchViewContent('accounts/render-signup-form/', 2);
-	signin_content.classList.toggle("hidden");
-	signup_content.classList.toggle("hidden");
+	showView('signup');
+	const signin_button = document.querySelector("#signinButton");
+	signin_button.addEventListener("click", () => {
+		showSignin();
+		event.stopImmediatePropagation()
+	}
+	);
 }
 
-async function handleSignInForm() {
-	const signinForm = document.getElementById('signin-form');
+/*	 ___________________________
+	|							|
+	|	  NAVBAR LOGIC FCTS		|
+	|___________________________| */
 
-	if (signinForm) {
-		signinForm.addEventListener('submit', async (event) => {
-			event.preventDefault();
-			const formData = new FormData(signinForm);
-
-			const response = await fetch('accounts/render-signin-form/', {
-				method: 'POST',
-				credentials: 'include',
-				headers: { 'X-CSRFToken': csrftoken },
-				body: formData,
-			})
-			const data = await response.json();
-			if (data.success) {
-
-				showSignin();
-				getUserInfo();
-			}
-			else {
-				alert(data.message || "Login failed!");
-			}
-		});
-	}
-	else {
-		console.error('Sign-in form element not found!');
-	}
+function toggleMenu() {
+	menu.classList.toggle("active");
+	hamMenu.classList.toggle("active");
 }
 
-async function handleFormSubmit(event, formType) {
-	event.preventDefault();
-
-	const formElement = document.getElementById(`${formType}-content`);  // Dynamic form selection
-	if (!formElement) {
-		console.error(`Form element for "${formType}" not found!`);
-		return;
+button.addEventListener('click', (event) => {
+	if (event.target.classList.contains('logoutButton')) {
+		handleLogout();
+		event.stopImmediatePropagation()
 	}
+	else{
+		showSignin();
+		event.stopImmediatePropagation()
+	}
+});
 
-	const formData = new FormData(formElement);
-
-	try {
-		const response = await fetch(`/accounts/render-${formType}-form/`, {
-			method: 'POST',
-			credentials: 'include',
-			headers: { 'X-CSRFToken': csrftoken }, // Include CSRF token
-			body: formData,
-		});
-
-		const data = await response.json();
-
+function handleLogout() {
+	fetch('accounts/logout/')
+	  .then(response => response.json())
+	  .then(data => {
 		if (data.success) {
-			if (formType === 'signin') {
-				showSignin();  // Handle successful signin
-			} else if (formType === 'signup') {
-				// Handle successful signup (e.g., show success message, redirect)
-				alert(data.message || "Signup successful!");
-				// Consider redirecting or showing a success message on the current page
-			} else {
-				console.warn(`Unknown form type: ${formType}`);
-			}
+			toggleMenu();
+			showView('game');
+			getUserInfo();
+			showToast('Successfully logged out!');
 		} else {
-			alert(data.message || `Error during ${formType}!`);
+		  showToast('Error during logout:', data.message || 'Unknown error')
 		}
-	} catch (error) {
-		console.error(`Error during ${formType} submission:`, error);
-	}
-}
-
+	  })
+	  .catch(error => console.error('Error during logout request:', error));
+  }
 
 document.addEventListener("click", function (event) {
 	if (menu.classList.contains("active") && !event.target.closest(".off-screen-menu")) {
@@ -187,12 +229,6 @@ hamMenu.addEventListener("click", () => {
 }
 );
 
-login_button.addEventListener("click", () => {
-	showSignin();
-	event.stopImmediatePropagation()
-}
-);
-
 document.addEventListener("keydown", function (event) {
 	if (event.key === "m" || event.code === "KeyM") {
 		hamMenu.classList.toggle("active");
@@ -200,6 +236,14 @@ document.addEventListener("keydown", function (event) {
 		console.log("The 'm' key was pressed!");
 	}
 });
+
+home_button.addEventListener("click", () => {
+	showView("game");
+})
+
+logo.addEventListener("click", () => {
+	showView("game");
+})
 
 $(document).ready(function () {
 	getUserInfo();

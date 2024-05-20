@@ -202,3 +202,31 @@ form a{
     top: 50%;
     transform: translate(-50%, -50%) rotate(-45deg);
 }
+
+.toast-container {
+	position: fixed;
+	top: 1.5rem;
+	right: 4rem;
+	display: flex;
+	flex-direction: column;
+	z-index: 9999; /* Ensure toasts are above other content */
+  }
+  
+  .toast {
+	background-color: #26532b;
+	color:#c8f1cf;
+	padding: 10px 20px;
+	border-radius: 5px;
+	margin-bottom: 5px;
+	opacity: 0; /* Initially hidden */
+	transition: opacity 0.3s ease-in-out;
+  }
+  
+  .toast.show {
+	opacity: 1; /* Animate toast appearance on show */
+  }
+  
+  .toast-error {
+	background-color: #6f1a07;
+	color:#ccc;
+  }
