@@ -13,6 +13,10 @@ from io import BytesIO
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .serializers import UserSerializer
 
 def index(request):
     return render(request, 'index.html')
@@ -24,13 +28,26 @@ def user_logout(request):
 def get_user_info(request):
     if request.user.is_authenticated:
         user = request.user
+        user_matches = list(user.matches.all().values('alias', 'user_score', 'alias_score', 'winner__username'))
         user_info = {
                 'username': user.username,
                 'profile_picture': user.profile_picture.url,
+                'user_matches': user_matches
                 }
         return JsonResponse(user_info)
     else:
         return JsonResponse({'error': 'User is not authenticated.'})
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, username):
+        try:
+            user = CustomUser.objects.get(username=username)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
 
 def check_authenticated(request):
     if request.user.is_authenticated:
@@ -71,13 +88,13 @@ def render_signin_form(request):
 
 @ensure_csrf_cookie
 def render_signup_form(request):
-  if request.method == "GET":
-    form = CustomUserCreationForm()
-    context = {"form": form}
-    template = render_to_string('registration/signup.html', context=context)
-    return JsonResponse({"form": template})
-  elif request.method == "POST":
-    form = CustomUserCreationForm(request.POST, request.FILES)
+    if request.method == "GET":
+        form = CustomUserCreationForm()
+        context = {"form": form}
+        template = render_to_string('registration/signup.html', context=context)
+        return JsonResponse({"form": template})
+    elif request.method == "POST":
+        form = CustomUserCreationForm(request.POST, request.FILES)
     if form.is_valid():
         user = form.save(commit=False)
         if 'profile_picture' in request.FILES:
@@ -96,10 +113,10 @@ def render_signup_form(request):
                 output.seek(0)
                 user.profile_picture = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % image_file.name.split('.')[0],\
                         'image/jpeg', output.tell(), None)
-        user.save()
-        login(request, user)
-        return JsonResponse({'success': True, 'message': 'Signup successful!'})
+                user.save()
+            login(request, user)
+            return JsonResponse({'success': True, 'message': 'Signup successful!'})
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors.as_json()})
     else:
-        return JsonResponse({'success': False, 'errors': form.errors.as_json()})
-  else:
-    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+      return JsonResponse({'success': False, 'message': 'Invalid request method'})

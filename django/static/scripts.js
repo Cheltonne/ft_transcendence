@@ -7,6 +7,9 @@ const button = document.querySelector('.loginButton, .logoutButton');
 const index_content = document.querySelector("#index-content");
 const signin_content = document.querySelector("#signin-content");
 const signup_content = document.querySelector("#signup-content");
+const userInfoCard = document.getElementById('user-info-card');
+//const showMatchesButton = document.getElementById('show-matches');
+//const matchHistoryOverlay = document.querySelector('.match-history-overlay');
 
 /*	 ___________________________________
 	|									|
@@ -179,6 +182,24 @@ async function showSignup() {
 	}
 	);
 }
+
+/*	 ___________________________
+	|							|
+	|	  USER_PROFILE FCTS		|
+	|___________________________| */
+
+/*
+showMatchesButton.addEventListener('click', () => {
+  userInfoCard.classList.toggle('active'); // Toggle active class for styling
+  // Handle displaying/hiding match history content dynamically here (optional)
+});
+
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.match-history-card') && userInfoCard.classList.contains('active')) {
+    userInfoCard.classList.remove('active');
+  }
+});
+*/
 
 /*	 ___________________________
 	|							|

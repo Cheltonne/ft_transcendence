@@ -230,3 +230,86 @@ form a{
 	background-color: #6f1a07;
 	color:#ccc;
   }
+
+  .user-info-card {
+  display: flex;
+  flex-direction: column;
+  width: 400px; /* Adjust width as needed */
+  margin: 50px auto;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  position: relative; /* Enable positioning for overlay */
+}
+
+.user-info-card img {
+  width: 100%;
+  height: 66%; /* Top third of the card */
+  object-fit: cover; /* Maintain aspect ratio */
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+.user-info-card .username {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: white;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.user-info-card .match-history-link {
+  text-align: center;
+  font-size: 1.2em;
+  margin-top: auto;
+  padding: 15px;
+  cursor: pointer;
+  user-select: none; /* Prevent accidental text selection */
+}
+
+.user-info-card .match-history-link:hover {
+  background-color: rgba(0, 0, 0, 0.3); /* Slight hover effect */
+}
+
+/* Styles for match history overlay */
+.match-history-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* Black veil with opacity */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0; /* Initially hidden */
+  transition: opacity 0.3s ease-in-out; /* Smooth transition */
+}
+
+.user-info-card.active .match-history-overlay {
+  opacity: 1; /* Overlay visible when active */
+}
+
+.match-history-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 80%; /* Adjust width as needed */
+  margin: 0 auto;
+}
+
+.match-history-card {
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.match-history-card .contestants,
+.match-
+
