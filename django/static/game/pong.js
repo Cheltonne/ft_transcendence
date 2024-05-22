@@ -12,13 +12,12 @@ var AI = false;
 let Ball = null;
 let Paddle1 = null;
 let Paddle2 = null;
+let GameStarted = false;
+let lastFrameTime = performance.now();
 
-const checkAuthenticated = async () => {
-    const response = await fetch('/accounts/check-authenticated/');
-    const data = await response.json();
-    return data.authenticated;
-};
-
+////////////////////////////////////////////////////////
+////////////////HTML CSS////////////////////////////////
+////////////////////////////////////////////////////////
 function vec2(x, y) {
     return { x: x, y: y };
 }
@@ -116,27 +115,32 @@ function ModeChoice(){
     });
 });
 
+
+///////////////////////////////////////////////
+//////////////PONG LOGIC///////////////////////
+///////////////////////////////////////////////
 class PongBall {
     constructor(pos) {
         this.pos = pos;
-        this.velocity = vec2(8, 8);
+        this.velocity = vec2(0, 0);
         this.radius = 5;
-        this.speed = 12;
-        this.FirstCollision = false;
+        this.speed = 0.1;
         this.left = null;
         this.LastHit = null;
         this.trailLength = 10;
         this.trailOpacity = 0.1;
         this.trailPositions = [];
         this.goal = false;
+        this.nextPos = false;
+        this.launch = true;
     }
 
-    CheckEdge() {
-        if (this.pos.y + this.radius > canvas.height && this.LastHit !== 1) {
+    CheckEdge(nextPos) {
+        if (nextPos.y + this.radius > canvas.height && this.LastHit !== 1) {
             this.velocity.y *= -1;
             this.LastHit = 1;
         }
-        if (this.pos.y - this.radius < 0 && this.LastHit !== 2) {
+        if (nextPos.y - this.radius < 0 && this.LastHit !== 2) {
             this.velocity.y *= -1;
             this.LastHit = 2;
         }
@@ -144,75 +148,94 @@ class PongBall {
 
     resetBall() {
         if (this.left)
-            this.velocity = vec2(8, 8);
+            this.velocity = vec2(1, 1);
         else
-            this.velocity = vec2(-8, -8);
-        this.speed = 12;
+            this.velocity = vec2(-1, -1);
+        this.speed = 0.1;
         this.pos = vec2(canvas.width / 2, canvas.height / 2);
-        this.FirstCollision = false;
         this.LastHit = null;
+        this.launch = true;
     }
 
-    collision(Paddle) {
+    collision(Paddle, pos) {
         Paddle.Top = Paddle.pos.y;
         Paddle.Bottom = Paddle.pos.y + Paddle.height;
         Paddle.Left = Paddle.pos.x;
         Paddle.Right = Paddle.pos.x + Paddle.width;
-
-        this.top = this.pos.y - this.radius;
-        this.Bottom = this.pos.y + this.radius;
-        this.left = this.pos.x - this.radius;
-        this.right = this.pos.x + this.radius;
-
-        return this.right > Paddle.Left && this.top < Paddle.Bottom && this.left < Paddle.Right && this.Bottom > Paddle.Top;
+    
+        let top = pos.y - this.radius;
+        let bottom = pos.y + this.radius;
+        let left = pos.x - this.radius;
+        let right = pos.x + this.radius;
+    
+        return right > Paddle.Left && top < Paddle.Bottom && left < Paddle.Right && bottom > Paddle.Top;
     }
 
-    update() {
-        ctx.clearRect(this.pos.x - this.radius, this.pos.y - this.radius, this.radius * 2, this.radius * 2);
-        this.pos.x += this.velocity.x;
-        this.pos.y += this.velocity.y;
-        this.CheckEdge();
+    getNextPosition(dt) {
+        return vec2(
+            this.pos.x + this.velocity.x * dt * 1000,
+            this.pos.y + this.velocity.y * dt * 1000
+        );
+    }
+
+    launchBall() {
+        this.goal = false;
+        this.speed = 0.6;
+        let direction = this.left ? 1 : -1;
+        const randomNumber = Math.random() * Math.PI / 4;
+        this.velocity.x = direction * this.speed * Math.cos(randomNumber);
+        this.velocity.y = this.speed * Math.sin(randomNumber);
+        this.launch = false;
+    }
+
+    update(deltaTime) {
+        ctx.clearRect(this.pos.x - this.radius, this.pos.y - this.radius, this.radius * 2, null);
+        this.nextPos = this.getNextPosition(deltaTime);
+        this.CheckEdge(this.nextPos);
 
         let player = (this.pos.x < canvas.width / 2) ? Paddle1 : Paddle2;
 
-        if (this.collision(player)) {
+        if (this.launch){
+            this.launchBall();
+        }
+        if (this.collision(player, this.nextPos)) {
             this.LastHit = null;
             let collidePoint = (this.pos.y - (player.pos.y + player.height / 2));
-            collidePoint = collidePoint / (player.height / 2);
-            let angleRad = (Math.PI / 4) * collidePoint;
-            let direction = (this.pos.x < canvas.width / 2) ? 1 : -1;
-            this.velocity.x = direction * this.speed * Math.cos(angleRad);
-            this.velocity.y = direction * this.speed * Math.sin(angleRad);
-            if (!this.FirstCollision) {
-                this.speed += 4.0;
-                this.FirstCollision = true;
+                collidePoint = collidePoint / (player.height / 2);
+                let angleRad = (Math.PI / 4) * collidePoint;
+                let direction = (this.pos.x < canvas.width / 2) ? 1 : -1;
+                this.velocity.x = direction * this.speed * Math.cos(angleRad);
+                this.velocity.y = direction * this.speed * Math.sin(angleRad);
+                if (this.speed <= 1)
+                    this.speed += 0.02;
+            } else {
+                this.pos = this.nextPos;
             }
-            else
-                this.speed += 0.1;
+    
+            if (this.pos.x <= 0 && this.goal == false) {
+                this.goal = true;
+                Paddle2.score++;
+                console.log("goal 2");
+                this.left = true;
+                ReDrawStatic = true;
+                this.resetBall();
+                this.goal = false;
+    
+            } else if (this.pos.x >= canvas.width && this.goal == false) {
+                this.goal = true;
+                Paddle1.score++;
+                console.log("goal 1");
+                console.log(this.pos.x + " " + this.pos.y);
+                this.left = false;
+                ReDrawStatic = true;
+                this.resetBall();
+                this.goal = false;
+            }
         }
-
-        if (this.pos.x <= 0 && this.goal == false) {
-            this.goal = true;
-            Paddle2.score++;
-            this.left = true;
-            ReDrawStatic = true;
-            this.resetBall();
-            this.goal = false;
-
-        } else if (this.pos.x >= canvas.width && this.goal == false) {
-            this.goal = true;
-            Paddle1.score++;
-            this.left = false;
-            ReDrawStatic = true;
-            this.resetBall();
-            this.goal = false;
+        setVelocity(x){
+            this.velocity.x *= x;
         }
     }
-
-    setVelocity(x) {
-        this.velocity.x *= x;
-    }
-}
 
 class PongPaddle {
     constructor(pos, keys) {
@@ -233,95 +256,6 @@ class PongPaddle {
             ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
             this.pos.y += this.velocity;
         }
-    }
-}
-
-class AIPongPaddle {
-    constructor(pos) {
-        this.pos = pos;
-        this.velocity = 10; 
-        this.width = 10;
-        this.height = 100;
-        this.score = 0;
-        this.Mpredict = null;
-        this.prediction = null;
-        this.predictionCounter = 0; // Counter to control prediction frequency
-        this.frameRate = 60; // Assuming a frame rate of 60 frames per second
-        this.predictionFrequency = this.frameRate; // Adjust this value to change prediction frequency
-    }
-
-    update(ball) {
-        this.predictionCounter++;
-        if (((ball.pos.x < this.pos.x) && (ball.velocity.x < 0)) ||
-            ((ball.pos.x > this.pos.x + this.width) && (ball.velocity.x > 0))) {
-            this.stopMovingUp();
-            this.stopMovingDown();
-            return;
-        }
-
-        // Call predict method only when prediction counter reaches the frequency threshold
-        if (this.predictionCounter >= this.predictionFrequency) {
-            this.predict(ball);
-            this.predictionCounter = 0; // Reset prediction counter
-        }
-
-        if (this.prediction) {
-            if (this.prediction.y < (this.pos.y + this.height / 2 - 5) && this.pos.y > 0) {
-                this.stopMovingDown();
-                this.moveUp();
-            } else if (this.prediction.y > (this.pos.y + this.height / 2 + 5) && this.pos.y + this.height < canvas.height) {
-                this.stopMovingUp();
-                this.moveDown();
-            } else {
-                this.stopMovingUp();
-                this.stopMovingDown();
-            }
-        }
-    }
-
-    predict(ball) {
-        let predictedPos = { x: ball.pos.x, y: ball.pos.y };
-        let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
-    
-        for (let i = 0; i < this.frameRate; i++) {
-            predictedPos.x += predictedVelocity.x;
-            predictedPos.y += predictedVelocity.y;
-    
-            if (predictedPos.y - ball.radius < 0 || predictedPos.y + ball.radius > canvas.height) {
-                predictedVelocity.y *= -1;
-            }
-    
-            if (predictedPos.x + ball.radius > canvas.width || predictedPos.x > this.pos.x) {
-                break; // Stop the prediction loop if the ball's predicted position exceeds the paddle's position
-            }
-        }
-    
-        this.prediction = predictedPos;
-    }
-    // AJOUTE UN TEMPS DE REACTION POUR LE CALCUL QUAND LA BALLE TOUCHE L'AUTRE PADDLE
-    // TU SIMULES TON TEMPS DE CALCUL
-    // IL FAUT QUE TU RENDES APPROXIMATIF LE CALCUL DE LA TRAJECTOIRE DE L'IA
-
-    // JE DOIS CHANGER TOUT CA POUR SIMULER LA BALLE PAR LES KEYS DU JOUEUR
-
-    stopMovingUp() {
-        this.velocity = 0;
-    }
-
-    stopMovingDown() {
-        this.velocity = 0;
-    }
-
-    moveUp() {
-        this.velocity = 10; 
-        ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
-        this.pos.y -= this.velocity;
-    }
-
-    moveDown() {
-        this.velocity = 10; 
-        ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
-        this.pos.y += this.velocity;
     }
 }
 
@@ -392,24 +326,25 @@ function draw() {
     }
 }
 
-function GameLoop(timestamp) {
-            setTimeout(() => {
-                Ball.update();
-                Paddle1.update();
-                Paddle2.update(Ball);
-                draw();
-        
-                if (Paddle1.score == MAX_ROUNDS || Paddle2.score == MAX_ROUNDS) {
-                    console.log("Game Ending condition met");
-                    GameEnding = true;
-                    RequestFrame = false;   
-                    GameEndingScreen();
-                    return;
-                }
-                    //requestAnimationFrame(GameLoop);
-        
-                requestAnimationFrame(GameLoop);
-            });
+function GameLoop() {
+    const currentTime = performance.now();
+    const dt = (currentTime - lastFrameTime) / 1000; // Convert to seconds
+    lastFrameTime = currentTime;
+
+    Ball.update(dt);
+    Paddle1.update();
+    Paddle2.update(Ball, dt);
+    draw();
+
+    if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
+        console.log("Game Ending condition met");
+        gameEnding = true;
+        RequestFrame = false;
+        GameEndingScreen();
+        return;
+    }
+
+    requestAnimationFrame(GameLoop);
 }
 
 function GameEndingScreen() {
@@ -426,6 +361,123 @@ function GameEndingScreen() {
     retryButton.style.display = "inline-block";
 }
 
+function LaunchGame() {
+    Players();
+    if (allButtonOk) {
+        console.log("Canvas clicked");
+        draw();
+        if (!RequestFrame && gameEnding) {
+            GameEndingScreen();
+            gameEnding = false;
+            
+        }
+        if (!RequestFrame) {
+            RequestFrame = true;
+            requestAnimationFrame(GameLoop);
+            allButtonOk = false;
+        }
+    }
+}
+
+//////////////////////////////////////////////
+////////////////AI LOGIC/////////////////////
+/////////////////////////////////////////////
+
+
+class AIPongPaddle {
+    constructor(pos) {
+        this.pos = pos;
+        this.velocity = 10; 
+        this.width = 10;
+        this.height = 100;
+        this.score = 0;
+        this.Mpredict = null;
+        this.prediction = null;
+        this.predictionCounter = 0;
+        this.frameRate = 60;
+        this.predictionFrequency = this.frameRate;
+    }
+
+    update(ball) {
+        this.predictionCounter++;
+        if (((ball.pos.x < this.pos.x) && (ball.velocity.x < 0)) ||
+            ((ball.pos.x > this.pos.x + this.width) && (ball.velocity.x > 0))) {
+            this.stopMovingUp();
+            this.stopMovingDown();
+            return;
+        }
+
+        
+        if (this.predictionCounter >= this.predictionFrequency) {
+            this.predict(ball);
+            this.predictionCounter = 0;
+        }
+
+        if (this.prediction) {
+            if (this.prediction.y < (this.pos.y + this.height / 2 - 5) && this.pos.y > 0) {
+                this.stopMovingDown();
+                this.moveUp();
+            } else if (this.prediction.y > (this.pos.y + this.height / 2 + 5) && this.pos.y + this.height < canvas.height) {
+                this.stopMovingUp();
+                this.moveDown();
+            } else {
+                this.stopMovingUp();
+                this.stopMovingDown();
+            }
+        }
+    }
+
+    predict(ball) {
+        let predictedPos = { x: ball.pos.x, y: ball.pos.y };
+        let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
+    
+        for (let i = 0; i < this.frameRate; i++) {
+            predictedPos.x += predictedVelocity.x;
+            predictedPos.y += predictedVelocity.y;
+    
+            if (predictedPos.y - ball.radius < 0 || predictedPos.y + ball.radius > canvas.height) {
+                predictedVelocity.y *= -1;
+            }
+    
+            if (predictedPos.x + ball.radius > canvas.width || predictedPos.x > this.pos.x) {
+                break; 
+            }
+        }
+    
+        this.prediction = predictedPos;
+    }
+
+    stopMovingUp() {
+        this.velocity = 0;
+    }
+
+    stopMovingDown() {
+        this.velocity = 0;
+    }
+
+    moveUp() {
+        this.velocity = 10; 
+        ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
+        this.pos.y -= this.velocity;
+    }
+
+    moveDown() {
+        this.velocity = 10; 
+        ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
+        this.pos.y += this.velocity;
+    }
+}
+
+////////////////////////////////////////////
+//////////////////DATABASE/////////////////
+///////////////////////////////////////////
+
+
+const checkAuthenticated = async () => {
+    const response = await fetch('/accounts/check-authenticated/');
+    const data = await response.json();
+    return data.authenticated;
+};
 
 async function createMatch(user_score, alias_score) {
     const isAuthenticated = await checkAuthenticated();
@@ -460,26 +512,4 @@ function sendScoreToDjango(score, score2, match_id) {
     }
   };
   xhr.send(JSON.stringify({ user_score: score, alias_score: score2, match_id: match_id }));
-}
-
-//canvas.onclick = () => {
-//    LaunchGame();
-//};
-
-function LaunchGame() {
-    Players();
-    if (allButtonOk) {
-        console.log("Canvas clicked");
-        draw();
-        if (!RequestFrame && gameEnding) {
-            GameEndingScreen();
-            gameEnding = false;
-            
-        }
-        if (!RequestFrame) {
-            RequestFrame = true;
-            requestAnimationFrame(GameLoop);
-            allButtonOk = false;
-        }
-    }
 }
