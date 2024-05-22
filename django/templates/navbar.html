@@ -1,9 +1,12 @@
 {% load static %}
-<div class="off-screen-menu">
+<div id ="navbar" class="off-screen-menu">
 	<ul>
 		<li><div id="profilePictureContainer"></div></li>
 		<li><div id="loginHeading" class="fs-5 fw-semibold" style="color:white;"></div></li>
 		<li><a href="#" id="homeButton">Home</a></li>
+		{% if user.is_authenticated %}
+			<li><a href="#" class="profileButton">My Profile</a></li>
+		{% endif %}
 		<li><a class="button loginButton" href="#">Login</a></li>
 	</ul>
 </div>

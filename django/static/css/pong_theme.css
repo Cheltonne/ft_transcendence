@@ -261,17 +261,18 @@ form a{
   border-radius: 3px;
 }
 
-.user-info-card .match-history-link {
+.match-history-link {
+  color:#5b75a3;
   text-align: center;
-  font-size: 1.2em;
+  font-size: 1.2em;u
   margin-top: auto;
   padding: 15px;
   cursor: pointer;
   user-select: none; /* Prevent accidental text selection */
 }
 
-.user-info-card .match-history-link:hover {
-  background-color: rgba(0, 0, 0, 0.3); /* Slight hover effect */
+.match-history-link:hover {
+  background-color: rgba(0, 132, 83, 0.626); /* Slight hover effect */
 }
 
 /* Styles for match history overlay */

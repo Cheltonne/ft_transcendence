@@ -113,10 +113,12 @@ def render_signup_form(request):
                 output.seek(0)
                 user.profile_picture = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % image_file.name.split('.')[0],\
                         'image/jpeg', output.tell(), None)
-                user.save()
+            user.save()
             login(request, user)
             return JsonResponse({'success': True, 'message': 'Signup successful!'})
         else:
             return JsonResponse({'success': False, 'errors': form.errors.as_json()})
     else:
       return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+render

@@ -1,21 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Info</title>
-</head>
-<body>
   <div class="user-info-card" id="user-info-card">
     <img src="{{ user.profile_picture.url }}" alt="User Profile Picture">
     <div class="username">{{ user.username }}</div>
-    <div class="match-history-link" id="show-matches">See Match History</div>
-
-    <div class="match-history-overlay">
-      <div class="match-history-cards">
-        </div>
+    <div class="match-history-link view-matches-link" >
+      <a id="show-matches">See Match History</a>
+    </div>
+    <div class="match-history-overlay hidden">
+      <div class="match-history-cards"></div>
     </div>
   </div>
-</body>
-</html>
-

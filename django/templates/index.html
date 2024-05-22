@@ -15,7 +15,11 @@
 		</div>
 		<div data-view="signin" id="signin-content" class="hidden"></div>
 		<div data-view="signup" id="signup-content" class="hidden"></div>
-		<div data-view="user-profile" id="user-profile-content" class="hidden"></div>
+		<div data-view="user-profile" id="user-profile-content" class="hidden">
+			{% if user.is_authenticated %}
+				{% include 'accounts/user_profile.html' %}
+			{% endif %}
+		</div>
 		<div class="toast-container"></div>
 	</body>
 	<script src="{% static 'scripts.js'  %}"></script>

@@ -8,8 +8,8 @@ const index_content = document.querySelector("#index-content");
 const signin_content = document.querySelector("#signin-content");
 const signup_content = document.querySelector("#signup-content");
 const userInfoCard = document.getElementById('user-info-card');
-//const showMatchesButton = document.getElementById('show-matches');
-//const matchHistoryOverlay = document.querySelector('.match-history-overlay');
+const userProfileContainer = document.getElementById('user-profile-content');
+const navbar = document.getElementById("navbar");
 
 /*	 ___________________________________
 	|									|
@@ -41,6 +41,7 @@ function getUserInfo() {
 			if ('username' in response) {
 				userInfo.username = response.username;
 				userInfo.profile_picture = response.profile_picture;
+				userInfo.user_matches = response.user_matches;
 				console.log('User information retrieved:', userInfo);
 				button.innerText = "Logout";
 				button.innerHTML = '<a class="logoutButton" class="button" href="#">Logout</a>';
@@ -64,24 +65,24 @@ function showToast(message, type = 'info') {
 	const toast = document.createElement('div');
 	toast.classList.add('toast');
 	toast.textContent = message;
-  
+
 	if (type === 'success') {
-	  toast.classList.add('toast-success');
+		toast.classList.add('toast-success');
 	} else if (type === 'error') {
-	  toast.classList.add('toast-error');
+		toast.classList.add('toast-error');
 	}
-  
+
 	const toastContainer = document.querySelector('.toast-container');
 	toastContainer.appendChild(toast);
-  
+
 	toast.classList.add('show');
-  
+
 	setTimeout(() => {
-	  toast.classList.remove('show');
-	  toastContainer.removeChild(toast);
+		toast.classList.remove('show');
+		toastContainer.removeChild(toast);
 	}, 3000);
-  }
-  
+}
+
 /*	 ___________________________
 	|							|
 	|	SPA NAVIGATION FCTS		|
@@ -188,19 +189,36 @@ async function showSignup() {
 	|	  USER_PROFILE FCTS		|
 	|___________________________| */
 
-/*
-showMatchesButton.addEventListener('click', () => {
-  userInfoCard.classList.toggle('active'); // Toggle active class for styling
-  // Handle displaying/hiding match history content dynamically here (optional)
-});
+userProfileContainer.addEventListener('click', (event) => {
+		if (!event.target.closest('.match-history-card') && userInfoCard.classList.contains('active')) {
+			userInfoCard.classList.remove('active');
+			console.log('BORDELLLLLLLLLLL');
+		} else if (event.target.classList.contains('view-matches-link')) {
+			console.log('G FAIM');
+			userInfoCard.classList.toggle('active');
+		}
+})
 
-document.addEventListener('click', (event) => {
-  if (!event.target.closest('.match-history-card') && userInfoCard.classList.contains('active')) {
-    userInfoCard.classList.remove('active');
+function renderUserProfile(userInfo) {
+	if (userInfo.user_matches) {
+		const matchHistoryCards = userInfoCard.querySelector('.match-history-cards');
+		matchHistoryCards.innerHTML = '';
+		
+  
+	  userInfo.user_matches.forEach(match => {
+		const matchCard = document.createElement('div');
+		matchCard.classList.add('match-history-card');
+  
+		matchCard.innerHTML = `
+		  <p>Opponent: ${match.opponent}</p>
+		  <p>Score: You - ${match.user_score}, Opponent - ${match.opponent_score}</p>
+		`;
+  
+		matchHistoryCards.appendChild(matchCard);
+	  });
+	}
   }
-});
-*/
-
+  
 /*	 ___________________________
 	|							|
 	|	  NAVBAR LOGIC FCTS		|
@@ -216,7 +234,7 @@ button.addEventListener('click', (event) => {
 		handleLogout();
 		event.stopImmediatePropagation()
 	}
-	else{
+	else {
 		showSignin();
 		event.stopImmediatePropagation()
 	}
@@ -224,21 +242,21 @@ button.addEventListener('click', (event) => {
 
 function handleLogout() {
 	fetch('accounts/logout/')
-	  .then(response => response.json())
-	  .then(data => {
-		if (data.success) {
-			toggleMenu();
-			showView('game');
-			getUserInfo();
-			showToast('Successfully logged out!');
-		} else {
-		  showToast('Error during logout:', data.message || 'Unknown error')
-		}
-	  })
-	  .catch(error => console.error('Error during logout request:', error));
-  }
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				toggleMenu();
+				showView('game');
+				getUserInfo();
+				showToast('Successfully logged out!');
+			} else {
+				showToast('Error during logout:', data.message || 'Unknown error')
+			}
+		})
+		.catch(error => console.error('Error during logout request:', error));
+}
 
-document.addEventListener("click", function (event) {
+document.addEventListener("click", (event) => {
 	if (menu.classList.contains("active") && !event.target.closest(".off-screen-menu")) {
 		toggleMenu();
 	}
@@ -264,6 +282,15 @@ home_button.addEventListener("click", () => {
 
 logo.addEventListener("click", () => {
 	showView("game");
+})
+
+navbar.addEventListener('click', (event) => {
+	if (event.target.classList.contains('profileButton')) {
+			event.preventDefault();
+			//fetchViewContent(accounts/);
+			showView('user-profile');
+			renderUserProfile(userInfo);
+	}
 })
 
 $(document).ready(function () {
