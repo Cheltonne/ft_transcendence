@@ -1,22 +1,7 @@
-<!DOCTYPE html>
-<html class="fontawesome-i2svg-active fontawesome-i2svg-complete yjfwxcwxf idc0_350" lang="en">
-	<head>
-		{% load static %}
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="stylesheet" href="{% static 'css/pong_theme.css' %}">
-		<title>world.execute(me)</title>
-	</head>
-	<body>
-		{% include 'navbar.html' %}
-		<form method="POST" enctype="multipart/form-data">
-			<h1>Sign up</h1>
-			{% csrf_token %}
-			{{ form.as_p }}
-			<button type="submit">Okay I Sign Up</button></br>
-			<a href="{% url 'login' %}">Already have account?😒</a>
-		</form>
-	</body>
-	<script src="{% static 'scripts.js' %}"></script>
-	<script src="{% static 'game/pong.js' %}"></script>
-</html>
+<form method="POST" enctype="multipart/form-data" id="signup-form">
+	<h1>Sign up</h1>
+	{% csrf_token %}
+	{{ form.as_p }}
+	<button type="submit">Okay I Sign Up</button></br>
+	<a href="#" id="signinButton">Already have account?😒</a>
+</form>

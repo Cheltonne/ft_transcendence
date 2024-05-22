@@ -1,3 +1,4 @@
 django
 psycopg
 Pillow
+djangorestframework
