@@ -355,8 +355,9 @@ function GameLoop() {
     Ball.update(dt);
     Paddle1.update(dt);
     Paddle2.update(dt);
-    if (AI)
-        AIplayer.update(Ball, Paddle2);
+    if (AI) {
+        AIplayer.update(dt, Ball, Paddle2);
+    }
     draw();
 
     if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
@@ -407,85 +408,100 @@ function GameEndingScreen() {
 /////////////////////////////////////////////
 
 
-class AIPlayer {
-    constructor(pos) {
-        this.pos = pos;
-        this.velocity = 10; 
-        this.width = 10;
-        this.height = 100;
-        this.score = 0;
-        this.Mpredict = null;
-        this.prediction = null;
-        this.predictionCounter = 0;
-        this.frameRate = 60;
-        this.predictionFrequency = this.frameRate;
-    }
-
-    update(ball, Paddle2) {
-        this.predictionCounter++;
-        if (((ball.pos.x < Paddle2.pos.x) && (ball.velocity.x < 0)) ||
-            ((ball.pos.x > Paddle2.pos.x + Paddle2.width) && (ball.velocity.x > 0))) {
-            this.stopMovingUp();
-            this.stopMovingDown();
-            return;
+    class AIPlayer {
+        constructor(pos) {
+            this.pos = pos;
+            this.height = 100;
+            this.prediction = null;
+            this.timeSinceLastPrediction = 0;
+            this.predictionInterval = 1;    
         }
 
-        
-        if (this.predictionCounter >= this.predictionFrequency) {
-            this.predict(ball);
-            this.predictionCounter = 0;
-        }
+        update(dt, ball, Paddle2) {
+            this.timeSinceLastPrediction += dt;
 
-        if (this.prediction) {
-            if (this.prediction.y < (Paddle2.pos.y + Paddle2.height / 2 - 5) && Paddle2.pos.y > 0) {
-                this.stopMovingDown();
-                this.moveUp();
-            } else if (this.prediction.y > (Paddle2.pos.y + Paddle2.height / 2 + 5) && Paddle2.pos.y + Paddle2.height < canvas.height) {
-                this.stopMovingUp();
-                this.moveDown();
-            } else {
+            if (((ball.pos.x < Paddle2.pos.x) && (ball.velocity.x < 0)) ||
+                ((ball.pos.x > Paddle2.pos.x + Paddle2.width) && (ball.velocity.x > 0))) {
                 this.stopMovingUp();
                 this.stopMovingDown();
+                return;
+            }
+
+            if (this.timeSinceLastPrediction >= this.predictionInterval) {
+                this.predict(ball, dt);
+                this.timeSinceLastPrediction = 0;
+            }
+
+            if (this.prediction) {
+                if (this.prediction.y < (Paddle2.pos.y + Paddle2.height / 2 - 10) && Paddle2.pos.y > 0) {
+                    this.stopMovingDown();
+                    this.moveUp();
+                } else if (this.prediction.y > (Paddle2.pos.y + Paddle2.height / 2 + 10) && Paddle2.pos.y + Paddle2.height < canvas.height) {
+                    this.stopMovingUp();
+                    this.moveDown();
+                } else {
+                    this.stopMovingUp();
+                    this.stopMovingDown();
+                }
             }
         }
-    }
 
-    predict(ball) {
-        let predictedPos = { x: ball.pos.x, y: ball.pos.y };
-        let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
-    
-        for (let i = 0; i < this.frameRate; i++) {
-            predictedPos.x += predictedVelocity.x;
-            predictedPos.y += predictedVelocity.y;
-    
-            if (predictedPos.y - ball.radius < 0 || predictedPos.y + ball.radius > canvas.height) {
+        predict(ball, dt) {
+            let predictedPos = { x: ball.pos.x, y: ball.pos.y };
+            let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
+          
+            // Maximum simulation time (adjust as needed)
+            let maxSimulationTime = 1;
+          
+            // Accumulated time for simulation
+            let accumulatedTime = 0;
+          
+            // Loop until simulation time reaches the limit or the ball collides
+            while (accumulatedTime < maxSimulationTime) {
+              // Update position and velocity based on dt and current velocity
+              predictedPos.x += predictedVelocity.x * dt;
+              predictedPos.y += predictedVelocity.y * dt;
+              accumulatedTime += dt;
+          
+              // Handle wall bounces
+              if (predictedPos.y - ball.radius < 0) {
+                predictedPos.y = 2 * ball.radius - predictedPos.y;
                 predictedVelocity.y *= -1;
+              } else if (predictedPos.y + ball.radius > canvas.height) {
+                predictedPos.y = 2 * canvas.height - predictedPos.y - ball.radius;
+                predictedVelocity.y *= -1;
+              }
+          
+              // Check for collision with AI paddle (optional)
+              if (predictedPos.x + ball.radius > this.pos.x &&
+                  predictedPos.x - ball.radius < this.pos.x + this.width &&
+                  predictedPos.y + ball.radius > this.pos.y &&
+                  predictedPos.y - ball.radius < this.pos.y + this.height) {
+                break; // Ball has collided with the AI paddle
+              }
             }
-    
-            if (predictedPos.x + ball.radius > canvas.width || predictedPos.x > this.pos.x) {
-                break; 
-            }
+          
+            this.prediction = predictedPos;
+          } 
+          
+          
+
+        stopMovingUp() {
+            simulateKeyPress("ArrowUp", "keyup");
         }
-    
-        this.prediction = predictedPos;
-    }
 
-    stopMovingUp() {
-        simulateKeyPress("ArrowUp", "keyup");
-    }
+        stopMovingDown() {
+            simulateKeyPress("ArrowDown", "keyup");
+        }
 
-    stopMovingDown() {
-        simulateKeyPress("ArrowDown", "keyup");
-    }
+        moveUp() {
+            simulateKeyPress("ArrowUp", "keydown");
+        }
 
-    moveUp() {
-        simulateKeyPress("ArrowUp", "keydown");
+        moveDown() {
+            simulateKeyPress("ArrowDown", "keydown");
+        }
     }
-
-    moveDown() {
-        simulateKeyPress("ArrowDown", "keydown");
-    }
-}
 
 ////////////////////////////////////////////
 //////////////////DATABASE/////////////////
