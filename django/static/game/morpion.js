@@ -19,13 +19,19 @@ const cellElements = document.querySelectorAll('[data-cell]');
 const winningMessageTextElement = document.querySelector('[data-winning-message-text]');
 const scorePlayer1 = document.getElementById('scorePlayer1');
 const scorePlayer2 = document.getElementById('scorePlayer2');
-const maxGames = 5;
+const maxGames = 3;
 let gamesPlayed = 0;
 let scoreX = 0;
 let scoreO = 0;
 let seriesOver = false;
 let alertShown = false;
 let circleTurn;
+
+const checkAuthenticated = async () => {
+    const response = await fetch('/accounts/check-authenticated/');
+    const data = await response.json();
+    return data.authenticated;
+};
 
 startGame();
 
@@ -66,25 +72,35 @@ function restartGame() {
 // fonction pour gérer le clic sur une case
 function handleClick(e) {
     const cell = e.target;
-    const currentClass = circleTurn ? CIRCLE_CLASS : X_CLASS;
+    let currentClass;
+    if (circleTurn) {
+        currentClass = CIRCLE_CLASS;
+    } else {
+        currentClass = X_CLASS;
+    }
     placeMark(cell, currentClass); 
     if (checkWin(currentClass)) {
         endGame(false);
-    } else if (isDraw()){ 
+    } else if (isDraw()) { 
         endGame(true);
     } else {
         swapTurns();
         setBoardHoverClass();
     };
-} 
+}
 
 // fonction pour gérer la fin de la partie: soit un gagnant, soit un match nul ensuite 
 // on met à jour le score et on vérifie si la série est terminée
 function endGame(draw) {
     if (draw) {
-        winningMessageTextElement.innerText = 'Draw!'
+        winningMessageTextElement.innerText = 'Draw!';
     } else {
-        const winner = circleTurn ? "O" : "X";
+        let winner;
+        if (circleTurn) {
+            winner = "O";
+        } else {
+            winner = "X";
+        }
         winningMessageTextElement.innerText = `${winner}'s Wins!`;
         updateScore(winner);
     }
@@ -100,10 +116,10 @@ function endGame(draw) {
 function updateScore(winner) {
     if (winner === 'X') {
         scoreX++;
-        scorePlayer1.textContent = `Player X: ${scoreX}`;
+        scorePlayer1.textContent = `Player 1: ${scoreX}`;
     } else if (winner === 'O') {
         scoreO++;
-        scorePlayer2.textContent = `Player O: ${scoreO}`;
+        scorePlayer2.textContent = `Player 2: ${scoreO}`;
     }
 }
 
@@ -149,17 +165,56 @@ function checkWin(currentClass) {
 //et ajouter les informations dans la dans la base de données
 function checkSeriesWinner() {
     if (gamesPlayed >= maxGames) {
+        let message;
         if (scoreX > scoreO) {
-            console.log("Series Winner: Player X");
-            // information pour database ici?
+            message = "Series Winner: Player 1";
         } else if (scoreO > scoreX) {
-            console.log("Series Winner: Player O");
-            // information pour database ici
+            message = "Series Winner: Player 2";
         } else {
-            console.log("Series ends in a draw.");
+            message = "Series ends in a draw.";
         }
-        //resetSeries(); // start a new serie??
+        console.log(message);
+        createMatch(scoreX, scoreO);
+        sendScoreToDjango(scoreX, scoreO, "currentMatchId");
+        //resetSeries(); // on recommence ici?
     }
+}
+
+async function createMatch(user_score, alias_score) {
+	const isAuthenticated = await checkAuthenticated();
+	if (!isAuthenticated) {
+    console.error("User not authenticated. Cannot create match.");
+    return;
+  }
+
+  const response = await fetch('pong/create-match/', {
+    method: 'POST',
+  });
+  const data = await response.json();
+  if (data.match_id) {
+    console.log("Match created with ID:", data.match_id);
+    sendScoreToDjango(user_score, alias_score, data.match_id);
+  } else {
+    console.error("Error creating match");
+  }
+}
+
+
+function sendScoreToDjango(scoreX, scoreO, match_id) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "pong/save-score/", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            var status = xhr.status;
+            if (status === 200) {
+                console.log("Score saved successfully.");
+            } else {
+                console.error("Failed to save score:", status, xhr.statusText);
+            }
+        }
+    };
+    xhr.send(JSON.stringify({ user_score: scoreX, alias_score: scoreO, match_id: match_id }));
 }
 
 
@@ -168,8 +223,8 @@ function resetSeries() {
     gamesPlayed = 0;
     scoreX = 0;
     scoreO = 0;
-    scorePlayer1.textContent = 'Player X: 0';
-    scorePlayer2.textContent = 'Player O: 0';
+    scorePlayer1.textContent = 'Player 1';
+    scorePlayer2.textContent = 'Player 2';
     restartGame();
     alertShown = false;
 }
