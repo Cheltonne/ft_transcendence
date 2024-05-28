@@ -10,6 +10,8 @@ const signup_content = document.querySelector("#signup-content");
 const userInfoCard = document.getElementById('user-info-card');
 const userProfileContainer = document.getElementById('user-profile-content');
 const navbar = document.getElementById("navbar");
+const navlist = document.querySelector(".nav-list");
+const navLastChild = navlist.children[navlist.children.length - 1];
 
 /*	 ___________________________________
 	|									|
@@ -34,32 +36,51 @@ function getCookie(cname) {
 
 function getUserInfo() {
 	$.ajax({
-		url: "accounts/get-user-info/",
-		type: 'GET',
-		dataType: 'json',
-		success: function (response) {
-			if ('username' in response) {
-				userInfo.username = response.username;
-				userInfo.profile_picture = response.profile_picture;
-				userInfo.user_matches = response.user_matches;
-				console.log('User information retrieved:', userInfo);
-				button.innerText = "Logout";
-				button.innerHTML = '<a class="logoutButton" class="button" href="#">Logout</a>';
-				loginHeading.innerText = "Welcome, " + userInfo.username;
-				$('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
-			}
-			else {
-				console.error('Error:', response.error);
-				button.innerText = "Login";
-				loginHeading.innerText = "Hey anon!";
-				$('#profilePictureContainer').html('');
-			}
-		},
-		error: function (xhr, status, error) {
-			console.error('Failed to retrieve user information:', error);
+	  url: "accounts/get-user-info/",
+	  type: 'GET',
+	  dataType: 'json',
+	  success: function (response) {
+		if ('username' in response) {
+		  userInfo.username = response.username;
+		  userInfo.profile_picture = response.profile_picture;
+		  userInfo.user_matches = response.user_matches;
+		  console.log('User information retrieved:', userInfo);
+  
+		  // Update UI elements
+		  button.innerText = "Logout";
+		  button.innerHTML = '<a class="logoutButton button" id="loginButton" href="#">Logout</a>';
+		  loginHeading.innerText = "Welcome, " + userInfo.username;
+		  $('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
+  
+		  // Check if profile button already exists
+		  const existingProfileButton = document.querySelector('.profile-button-li');
+  
+		  if (!existingProfileButton) {
+			// Create profile button only if it doesn't exist
+			const profile_btn = document.createElement('li');
+			profile_btn.classList.add('profile-button-li');
+			profile_btn.innerHTML = '<a href="#" class="profileButton">My Profile</a>';
+			navlist.insertBefore(profile_btn, navLastChild);
+		  }
+		} else {
+		  console.error('Error:', response.error);
+		  button.innerText = "Login";
+		  loginHeading.innerText = "Hey anon!";
+		  $('#profilePictureContainer').html('');
+  
+		  // Remove profile button if it exists (optional)
+		  const existingProfileButton = document.querySelector('.profile-button-li');
+		  if (existingProfileButton) {
+			existingProfileButton.parentNode.removeChild(existingProfileButton);
+		  }
 		}
+	  },
+	  error: function (xhr, status, error) {
+		console.error('Failed to retrieve user information:', error);
+	  }
 	});
-}
+  }
+  
 
 function showToast(message, type = 'info') {
 	const toast = document.createElement('div');
@@ -189,36 +210,37 @@ async function showSignup() {
 	|	  USER_PROFILE FCTS		|
 	|___________________________| */
 
-userProfileContainer.addEventListener('click', (event) => {
-		if (!event.target.closest('.match-history-card') && userInfoCard.classList.contains('active')) {
-			userInfoCard.classList.remove('active');
-			console.log('BORDELLLLLLLLLLL');
-		} else if (event.target.classList.contains('view-matches-link')) {
-			console.log('G FAIM');
-			userInfoCard.classList.toggle('active');
-		}
+document.addEventListener('click', (event) => {
+	if (!event.target.closest('.match-history-card') && document.querySelector('.match-history-cards').classList.contains('active')) {
+		document.querySelector('.match-history-cards').classList.remove('active');
+		document.querySelector('.match-history-veil').classList.remove('active');
+	} else if (event.target.classList.contains('view-matches-link')) {
+		console.log('G FAIM');
+		document.querySelector('.match-history-cards').classList.toggle('active');
+		document.querySelector('.match-history-veil').classList.toggle('active');
+	}
 })
 
 function renderUserProfile(userInfo) {
 	if (userInfo.user_matches) {
-		const matchHistoryCards = userInfoCard.querySelector('.match-history-cards');
+		const matchHistoryCards = document.querySelector('.match-history-cards');
 		matchHistoryCards.innerHTML = '';
-		
-  
-	  userInfo.user_matches.forEach(match => {
-		const matchCard = document.createElement('div');
-		matchCard.classList.add('match-history-card');
-  
-		matchCard.innerHTML = `
-		  <p>Opponent: ${match.opponent}</p>
-		  <p>Score: You - ${match.user_score}, Opponent - ${match.opponent_score}</p>
+
+		let i = 0;
+		userInfo.user_matches.forEach(match => {
+			const matchCard = document.createElement('div');
+			matchCard.classList.add('match-history-card');
+			matchCard.innerHTML = `
+			<h1>Match ${++i}</h1>
+			<b> Opponent </b> <p>CPU</p>
+			<b> Winner </b> <p>${match.winner__username === userInfo.username ? match.winner__username : "CPU"}</p>
+			<b> Score </b> <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
 		`;
-  
-		matchHistoryCards.appendChild(matchCard);
-	  });
+			matchHistoryCards.appendChild(matchCard);
+		});
 	}
-  }
-  
+}
+
 /*	 ___________________________
 	|							|
 	|	  NAVBAR LOGIC FCTS		|
@@ -286,10 +308,10 @@ logo.addEventListener("click", () => {
 
 navbar.addEventListener('click', (event) => {
 	if (event.target.classList.contains('profileButton')) {
-			event.preventDefault();
-			//fetchViewContent(accounts/);
-			showView('user-profile');
-			renderUserProfile(userInfo);
+		event.preventDefault();
+		getUserInfo();
+		showView('user-profile');
+		renderUserProfile(userInfo);
 	}
 })
 
