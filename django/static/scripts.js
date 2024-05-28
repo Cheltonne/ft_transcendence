@@ -60,11 +60,12 @@ function getUserInfo() {
         }
 
         if (!(document.querySelector('.match-history-cards'))) {
-          renderTemplate('accounts/', 'user_profile', userProfileContainer);
+          		renderTemplate('accounts/', 'user_profile', userProfileContainer);
         }
       } else {
         console.error('Error:', data.error);
 
+		userInfo = {};
         button.innerText = "Login";
         loginHeading.innerText = "Hey anon!";
         $('#profilePictureContainer').html('');
@@ -74,10 +75,11 @@ function getUserInfo() {
           existingProfileButton.parentNode.removeChild(existingProfileButton);
         }
       }
-      return data;
+		return data;
     })
     .catch(error => {
-      console.error('Failed to retrieve user information:', error);
+      	console.error('Failed to retrieve user information:', error);
+		return false;
     });
 }
 
@@ -266,6 +268,7 @@ function renderUserProfile(userInfo) {
 	|___________________________| */
 
 function toggleMenu() {
+	getUserInfo();
 	menu.classList.toggle("active");
 	hamMenu.classList.toggle("active");
 }
@@ -311,8 +314,7 @@ hamMenu.addEventListener("click", () => {
 
 document.addEventListener("keydown", function (event) {
 	if (event.key === "m" || event.code === "KeyM") {
-		hamMenu.classList.toggle("active");
-		menu.classList.toggle("active");
+		toggleMenu();
 		console.log("The 'm' key was pressed!");
 	}
 });
@@ -328,9 +330,12 @@ logo.addEventListener("click", () => {
 navbar.addEventListener('click', (event) => {
 	if (event.target.classList.contains('profileButton')) {
 		event.preventDefault();
-		getUserInfo()
-		.then(userInfo => renderUserProfile(userInfo))
-		showView('user-profile');
+		getUserInfo();
+		if (userInfo()) {
+			getUserInfo()
+			.then(userInfo => renderUserProfile(userInfo))
+			showView('user-profile');
+		}
 	}
 })
 

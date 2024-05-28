@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 def index(request):
     return render(request, 'index.html')
 
+
 def render_template(request, folder, template_name):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request method.'})
