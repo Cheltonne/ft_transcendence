@@ -5,6 +5,9 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
+def render_game(request):
+    return render(request, 'morpion.html')
+
 @csrf_exempt
 def save_score(request):
 	if request.method == 'POST':

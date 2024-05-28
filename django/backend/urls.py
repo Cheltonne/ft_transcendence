@@ -27,6 +27,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("game/", include("game.urls")),
     path("accounts/", include("accounts.urls")),
+    path("morpion/", include("morpion.urls")),
 	path("accounts/", include("django.contrib.auth.urls")),
 ]
 
