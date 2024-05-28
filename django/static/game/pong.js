@@ -142,7 +142,7 @@ class PongBall {
         this.prevpos = pos;
         this.velocity = vec2(0, 0);
         this.radius = 5;
-        this.speed = 0.1;
+        this.speed = 0.4;
         this.left = null;
         this.LastHit = null;
         this.trailLength = 10;
@@ -151,6 +151,7 @@ class PongBall {
         this.goal = false;
         this.nextPos = false;
         this.launch = true;
+        this.LastCollision = null;
     }
 
     CheckEdge(nextPos) {
@@ -169,7 +170,7 @@ class PongBall {
             this.velocity = vec2(1, 1);
         else
             this.velocity = vec2(-1, -1);
-        this.speed = 0.1;
+        this.speed = 0.3;
         this.pos = vec2(canvas.width / 2, canvas.height / 2);
         this.LastHit = null;
         this.launch = true;
@@ -199,12 +200,13 @@ class PongBall {
 
     launchBall() {
         this.goal = false;
-        this.speed = 0.5;
+        this.speed = 0.4;
         let direction = this.left ? 1 : -1;
         const randomNumber = Math.random() * Math.PI / 4;
         this.velocity.x = direction * this.speed * Math.cos(randomNumber);
         this.velocity.y = this.speed * Math.sin(randomNumber);
         this.launch = false;
+        this.LastCollision = null;
     }
 
     update(deltaTime) {
@@ -216,12 +218,13 @@ class PongBall {
         if (this.launch){
             this.launchBall();
         }
-        if (this.collision(player, this.nextPos)) {
+        if (this.collision(player, this.nextPos) && this.LastCollision !== player) {
+            this.LastCollision = player;
             this.LastHit = null;
-            let collidePoint = (this.pos.y - (player.pos.y + player.height / 2));
+            let collidePoint = (this.nextPos.y - (player.pos.y + player.height / 2));
                 collidePoint = collidePoint / (player.height / 2);
                 let angleRad = (Math.PI / 4) * collidePoint;
-                let direction = (this.pos.x < canvas.width / 2) ? 1 : -1;
+                let direction = (this.nextPos.x < canvas.width / 2) ? 1 : -1;
                 this.velocity.x = direction * this.speed * Math.cos(angleRad);
                 this.velocity.y = direction * this.speed * Math.sin(angleRad);
                 console.log(this.speed);
@@ -331,20 +334,20 @@ function draw() {
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
-    if (Paddle2.prediction) {
+    if (AIplayer.prediction) {
     ctx.beginPath();
-    ctx.arc(Paddle2.prediction.x, Paddle2.prediction.y, 5, 0, Math.PI * 2);
+    ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
     ctx.fillStyle = 'red';
     ctx.fill();
     }
 
     //Draw trails and other dynamic elements
-    //for (let i = 0; i < Ball.trailPositions.length; i++) {
-    //ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
-    //ctx.beginPath();
-    //ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
-    //ctx.fill();
-    //}
+    for (let i = 0; i < Ball.trailPositions.length; i++) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
+    ctx.beginPath();
+    ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+    }
 }
 
 function GameLoop() {
@@ -408,20 +411,24 @@ function GameEndingScreen() {
 /////////////////////////////////////////////
 
 
-    class AIPlayer {
+class AIPlayer {
         constructor(pos) {
             this.pos = pos;
             this.height = 100;
             this.prediction = null;
             this.timeSinceLastPrediction = 0;
-            this.predictionInterval = 1;    
+			this.move = false;
+            this.predictionInterval = 1;
+			this.paddleCenterY = 0;
+			this.inRange = 50;
         }
 
         update(dt, ball, Paddle2) {
+			this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
             this.timeSinceLastPrediction += dt;
 
             if (((ball.pos.x < Paddle2.pos.x) && (ball.velocity.x < 0)) ||
-                ((ball.pos.x > Paddle2.pos.x + Paddle2.width) && (ball.velocity.x > 0))) {
+                ((ball.pos.x > Paddle2.pos.x + Paddle2.width) && (ball.velocity.x > 0))){
                 this.stopMovingUp();
                 this.stopMovingDown();
                 return;
@@ -430,62 +437,49 @@ function GameEndingScreen() {
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
                 this.predict(ball, dt);
                 this.timeSinceLastPrediction = 0;
+				//this.move = true;
+                return;
             }
 
             if (this.prediction) {
-                if (this.prediction.y < (Paddle2.pos.y + Paddle2.height / 2 - 10) && Paddle2.pos.y > 0) {
+                if (this.prediction.y >= Paddle2.pos.y + 25 && this.prediction.y <= Paddle2.pos.y + Paddle2.height - 25) {
+                    this.stopMovingUp();
+                    this.stopMovingDown();
+                } else if (this.prediction.y < this.paddleCenterY  && Paddle2.pos.y > 0) {
                     this.stopMovingDown();
                     this.moveUp();
-                } else if (this.prediction.y > (Paddle2.pos.y + Paddle2.height / 2 + 10) && Paddle2.pos.y + Paddle2.height < canvas.height) {
+                } else if (this.prediction.y > this.paddleCenterY && Paddle2.pos.y + 50 < canvas.height) {
                     this.stopMovingUp();
                     this.moveDown();
-                } else {
-                    this.stopMovingUp();
-                    this.stopMovingDown();
                 }
+				//this.move = false;
             }
+
+
         }
 
         predict(ball, dt) {
             let predictedPos = { x: ball.pos.x, y: ball.pos.y };
             let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
-          
-            // Maximum simulation time (adjust as needed)
-            let maxSimulationTime = 1;
-          
-            // Accumulated time for simulation
-            let accumulatedTime = 0;
-          
-            // Loop until simulation time reaches the limit or the ball collides
-            while (accumulatedTime < maxSimulationTime) {
-              // Update position and velocity based on dt and current velocity
-              predictedPos.x += predictedVelocity.x * dt;
-              predictedPos.y += predictedVelocity.y * dt;
-              accumulatedTime += dt;
-          
-              // Handle wall bounces
-              if (predictedPos.y - ball.radius < 0) {
-                predictedPos.y = 2 * ball.radius - predictedPos.y;
-                predictedVelocity.y *= -1;
-              } else if (predictedPos.y + ball.radius > canvas.height) {
-                predictedPos.y = 2 * canvas.height - predictedPos.y - ball.radius;
-                predictedVelocity.y *= -1;
-              }
-          
-              // Check for collision with AI paddle (optional)
-              if (predictedPos.x + ball.radius > this.pos.x &&
-                  predictedPos.x - ball.radius < this.pos.x + this.width &&
-                  predictedPos.y + ball.radius > this.pos.y &&
-                  predictedPos.y - ball.radius < this.pos.y + this.height) {
-                break; // Ball has collided with the AI paddle
-              }
+        
+            for (let i = 0; i < 100 ; i++) {
+                predictedPos.x += predictedVelocity.x * dt * 1000;
+                predictedPos.y += predictedVelocity.y * dt * 1000;
+        
+                if (predictedPos.y - ball.radius < 0 || predictedPos.y + ball.radius > canvas.height) {
+                    predictedVelocity.y *= -1;
+                }
+        
+                if (predictedPos.x + ball.radius > canvas.width) {
+                    console.log(i);
+                    break; // Stop the prediction loop if the ball's predicted position exceeds the paddle's position
+                }
             }
-          
+            predictedPos.y += Math.random() + 1 * 25;
+        
             this.prediction = predictedPos;
-          } 
+        }
           
-          
-
         stopMovingUp() {
             simulateKeyPress("ArrowUp", "keyup");
         }
@@ -500,9 +494,8 @@ function GameEndingScreen() {
 
         moveDown() {
             simulateKeyPress("ArrowDown", "keydown");
-        }
     }
-
+}
 ////////////////////////////////////////////
 //////////////////DATABASE/////////////////
 ///////////////////////////////////////////
