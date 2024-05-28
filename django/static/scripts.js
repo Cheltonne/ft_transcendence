@@ -35,52 +35,71 @@ function getCookie(cname) {
 }
 
 function getUserInfo() {
-	$.ajax({
-	  url: "accounts/get-user-info/",
-	  type: 'GET',
-	  dataType: 'json',
-	  success: function (response) {
-		if ('username' in response) {
-		  userInfo.username = response.username;
-		  userInfo.profile_picture = response.profile_picture;
-		  userInfo.user_matches = response.user_matches;
-		  console.log('User information retrieved:', userInfo);
-  
-		  // Update UI elements
-		  button.innerText = "Logout";
-		  button.innerHTML = '<a class="logoutButton button" id="loginButton" href="#">Logout</a>';
-		  loginHeading.innerText = "Welcome, " + userInfo.username;
-		  $('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
-  
-		  // Check if profile button already exists
-		  const existingProfileButton = document.querySelector('.profile-button-li');
-  
-		  if (!existingProfileButton) {
-			// Create profile button only if it doesn't exist
-			const profile_btn = document.createElement('li');
-			profile_btn.classList.add('profile-button-li');
-			profile_btn.innerHTML = '<a href="#" class="profileButton">My Profile</a>';
-			navlist.insertBefore(profile_btn, navLastChild);
-		  }
-		} else {
-		  console.error('Error:', response.error);
-		  button.innerText = "Login";
-		  loginHeading.innerText = "Hey anon!";
-		  $('#profilePictureContainer').html('');
-  
-		  // Remove profile button if it exists (optional)
-		  const existingProfileButton = document.querySelector('.profile-button-li');
-		  if (existingProfileButton) {
-			existingProfileButton.parentNode.removeChild(existingProfileButton);
-		  }
-		}
-	  },
-	  error: function (xhr, status, error) {
-		console.error('Failed to retrieve user information:', error);
-	  }
-	});
-  }
-  
+  console.log("getUserInfo() called.");
+
+  return fetch("accounts/get-user-info/")
+    .then(response => response.json())
+    .then(data => {
+      if ('username' in data) {
+        userInfo.username = data.username;
+        userInfo.profile_picture = data.profile_picture;
+        userInfo.user_matches = data.user_matches;
+        console.log('User information retrieved:', userInfo);
+
+        button.innerText = "Logout";
+        button.innerHTML = '<a class="logoutButton button" id="loginButton" href="#">Logout</a>';
+        loginHeading.innerText = "Welcome, " + userInfo.username;
+        $('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
+
+        const existingProfileButton = document.querySelector('.profile-button-li');
+        if (!existingProfileButton) {
+          const profile_btn = document.createElement('li');
+          profile_btn.classList.add('profile-button-li');
+          profile_btn.innerHTML = '<a href="#" class="profileButton">My Profile</a>';
+          navlist.insertBefore(profile_btn, navLastChild);
+        }
+
+        if (!(document.querySelector('.match-history-cards'))) {
+          renderTemplate('accounts/', 'user_profile', userProfileContainer);
+        }
+      } else {
+        console.error('Error:', data.error);
+
+        button.innerText = "Login";
+        loginHeading.innerText = "Hey anon!";
+        $('#profilePictureContainer').html('');
+
+        const existingProfileButton = document.querySelector('.profile-button-li');
+        if (existingProfileButton) {
+          existingProfileButton.parentNode.removeChild(existingProfileButton);
+        }
+      }
+      return data;
+    })
+    .catch(error => {
+      console.error('Failed to retrieve user information:', error);
+    });
+}
+
+function renderTemplate(folder, template_name, element_to_modify) {
+	const data = { folder: folder, template_name: template_name };
+	const csrftoken = getCookie('csrftoken');
+	const url = `/render-template/${folder}${template_name}/`;
+
+	fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+		body: JSON.stringify(data)
+	})
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				element_to_modify.innerHTML = data.html;
+			} else {
+				console.error('Error rendering template:', data.error);
+			}
+		})
+}
 
 function showToast(message, type = 'info') {
 	const toast = document.createElement('div');
@@ -215,13 +234,13 @@ document.addEventListener('click', (event) => {
 		document.querySelector('.match-history-cards').classList.remove('active');
 		document.querySelector('.match-history-veil').classList.remove('active');
 	} else if (event.target.classList.contains('view-matches-link')) {
-		console.log('G FAIM');
 		document.querySelector('.match-history-cards').classList.toggle('active');
 		document.querySelector('.match-history-veil').classList.toggle('active');
 	}
 })
 
 function renderUserProfile(userInfo) {
+	console.log("renderUserProfile() called.");
 	if (userInfo.user_matches) {
 		const matchHistoryCards = document.querySelector('.match-history-cards');
 		matchHistoryCards.innerHTML = '';
@@ -309,9 +328,9 @@ logo.addEventListener("click", () => {
 navbar.addEventListener('click', (event) => {
 	if (event.target.classList.contains('profileButton')) {
 		event.preventDefault();
-		getUserInfo();
+		getUserInfo()
+		.then(userInfo => renderUserProfile(userInfo))
 		showView('user-profile');
-		renderUserProfile(userInfo);
 	}
 })
 

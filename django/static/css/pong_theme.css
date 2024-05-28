@@ -245,7 +245,7 @@ form a {
 }
 
 #user-profile-content {
-  margin-top: 15rem;
+  margin-top: 10rem;
 }
 
 .user-info-card {
@@ -330,11 +330,13 @@ form a {
 }
 
 .match-history-veil {
-  position: absolute;
+  position: fixed;
   top: 0;
-  bottom: 0;
   left: 0;
   right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
   z-index: -1;

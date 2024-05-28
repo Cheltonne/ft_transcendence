@@ -13,6 +13,7 @@ from io import BytesIO
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate
+from django.template.exceptions import TemplateDoesNotExist
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -37,17 +38,6 @@ def get_user_info(request):
         return JsonResponse(user_info)
     else:
         return JsonResponse({'error': 'User is not authenticated.'})
-
-class UserProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, username):
-        try:
-            user = CustomUser.objects.get(username=username)
-        except CustomUser.DoesNotExist:
-            return Response({'error': 'User not found'}, status=404)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
 
 def check_authenticated(request):
     if request.user.is_authenticated:
@@ -120,5 +110,3 @@ def render_signup_form(request):
             return JsonResponse({'success': False, 'errors': form.errors.as_json()})
     else:
       return JsonResponse({'success': False, 'message': 'Invalid request method'})
-
-render
