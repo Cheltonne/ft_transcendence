@@ -35,53 +35,63 @@ function getCookie(cname) {
 }
 
 function getUserInfo() {
-  console.log("getUserInfo() called.");
+	console.log("getUserInfo() called.");
 
-  return fetch("accounts/get-user-info/")
-    .then(response => response.json())
-    .then(data => {
-      if ('username' in data) {
-        userInfo.username = data.username;
-        userInfo.profile_picture = data.profile_picture;
-        userInfo.user_matches = data.user_matches;
-        console.log('User information retrieved:', userInfo);
-
-        button.innerText = "Logout";
-        button.innerHTML = '<a class="logoutButton button" id="loginButton" href="#">Logout</a>';
-        loginHeading.innerText = "Welcome, " + userInfo.username;
-        $('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
-
-        const existingProfileButton = document.querySelector('.profile-button-li');
-        if (!existingProfileButton) {
-          const profile_btn = document.createElement('li');
-          profile_btn.classList.add('profile-button-li');
-          profile_btn.innerHTML = '<a href="#" class="profileButton">My Profile</a>';
-          navlist.insertBefore(profile_btn, navLastChild);
-        }
-
-        if (!(document.querySelector('.match-history-cards'))) {
-          		renderTemplate('accounts/', 'user_profile', userProfileContainer);
-        }
-      } else {
-        console.error('Error:', data.error);
-
-		userInfo = {};
-        button.innerText = "Login";
-        loginHeading.innerText = "Hey anon!";
-        $('#profilePictureContainer').html('');
-
-        const existingProfileButton = document.querySelector('.profile-button-li');
-        if (existingProfileButton) {
-          existingProfileButton.parentNode.removeChild(existingProfileButton);
-        }
-      }
-		return data;
-    })
-    .catch(error => {
-      	console.error('Failed to retrieve user information:', error);
-		return false;
-    });
+	return fetch("accounts/get-user-info/")
+		.then(response => response.json())
+		.then(data => {
+			if ('username' in data)
+				fillUserData(data);
+			else 
+				clearUserData(data);
+			return data;
+		})
+		.catch(error => {
+			console.error('Failed to retrieve user information:', error);
+			return false;
+		});
 }
+
+function fillUserData(data) {
+	userInfo.username = data.username;
+	userInfo.profile_picture = data.profile_picture;
+	userInfo.user_matches = data.user_matches;
+	console.log('User information retrieved:', userInfo);
+
+	button.innerText = "Logout";
+	button.innerHTML = '<a class="logoutButton button" id="loginButton" href="#">Logout</a>';
+	loginHeading.innerText = "Welcome, " + userInfo.username;
+	profilePictureContainer.innerHTML = '<img src="' + userInfo.profile_picture + '" class="profile-picture">';
+
+	const existingProfileButton = document.querySelector('.profile-button-li');
+	if (!existingProfileButton) {
+		const profile_btn = document.createElement('li');
+		profile_btn.classList.add('profile-button-li');
+		profile_btn.innerHTML = '<a href="#" class="profileButton">My Profile</a>';
+		navlist.insertBefore(profile_btn, navLastChild);
+	}
+	if (!(document.querySelector('.match-history-cards'))) {
+		renderTemplate('accounts/', 'user_profile', userProfileContainer);
+	}
+}
+
+function clearUserData(data) {
+	console.error('Error:', data.error);
+	userInfo = {};
+	button.innerText = "Login";
+	loginHeading.innerText = "Hey anon!";
+	profilePictureContainer.innerHTML = '';
+	const profile_btn = document.querySelector('.profile-button-li');
+	if (profile_btn) {
+		profile_btn.parentNode.removeChild(profile_btn);
+	}
+	const userInfoCard = document.querySelector('.match-history-cards');
+	if (userInfoCard) {
+		console.log("Getting rid of userInfoCard tu connais hein");
+		userInfoCard.parentNode.removeChild(userInfoCard);
+	}
+}
+
 
 function renderTemplate(folder, template_name, element_to_modify) {
 	const data = { folder: folder, template_name: template_name };
@@ -330,12 +340,16 @@ logo.addEventListener("click", () => {
 navbar.addEventListener('click', (event) => {
 	if (event.target.classList.contains('profileButton')) {
 		event.preventDefault();
-		getUserInfo();
-		if (userInfo()) {
-			getUserInfo()
-			.then(userInfo => renderUserProfile(userInfo))
-			showView('user-profile');
-		}
+		getUserInfo()
+			.then(userInfo => {
+				if (userInfo.username)
+				{
+					renderUserProfile(userInfo);
+					showView('user-profile');
+				}
+				else
+					showToast('Please login first.', 'error');
+			})
 	}
 })
 
