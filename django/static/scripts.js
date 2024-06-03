@@ -8,8 +8,10 @@ const index_content = document.querySelector("#index-content");
 const signin_content = document.querySelector("#signin-content");
 const signup_content = document.querySelector("#signup-content");
 const userInfoCard = document.getElementById('user-info-card');
-//const showMatchesButton = document.getElementById('show-matches');
-//const matchHistoryOverlay = document.querySelector('.match-history-overlay');
+const userProfileContainer = document.getElementById('user-profile-content');
+const navbar = document.getElementById("navbar");
+const navlist = document.querySelector(".nav-list");
+const navLastChild = navlist.children[navlist.children.length - 1];
 
 /*	 ___________________________________
 	|									|
@@ -33,55 +35,111 @@ function getCookie(cname) {
 }
 
 function getUserInfo() {
-	$.ajax({
-		url: "accounts/get-user-info/",
-		type: 'GET',
-		dataType: 'json',
-		success: function (response) {
-			if ('username' in response) {
-				userInfo.username = response.username;
-				userInfo.profile_picture = response.profile_picture;
-				console.log('User information retrieved:', userInfo);
-				button.innerText = "Logout";
-				button.innerHTML = '<a class="logoutButton" class="button" href="#">Logout</a>';
-				loginHeading.innerText = "Welcome, " + userInfo.username;
-				$('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
-			}
-			else {
-				console.error('Error:', response.error);
-				button.innerText = "Login";
-				loginHeading.innerText = "Hey anon!";
-				$('#profilePictureContainer').html('');
-			}
-		},
-		error: function (xhr, status, error) {
+	console.log("getUserInfo() called.");
+
+	return fetch("accounts/get-user-info/")
+		.then(response => response.json())
+		.then(data => {
+			if ('username' in data)
+				fillUserData(data);
+			else 
+				clearUserData(data);
+			return data;
+		})
+		.catch(error => {
 			console.error('Failed to retrieve user information:', error);
-		}
-	});
+			return false;
+		});
+}
+
+function fillUserData(data) {
+	userInfo.username = data.username;
+	userInfo.profile_picture = data.profile_picture;
+	userInfo.user_matches = data.user_matches;
+	console.log('User information retrieved:', userInfo);
+
+	button.innerText = "Logout";
+	button.innerHTML = '<a class="logoutButton button" id="loginButton" href="#">Logout</a>';
+	loginHeading.innerText = "Welcome, " + userInfo.username;
+	profilePictureContainer.innerHTML = '<img src="' + userInfo.profile_picture + '" class="profile-picture">';
+
+	const existingProfileButton = document.querySelector('.profile-button-li');
+	if (!existingProfileButton) {
+		const profile_btn = document.createElement('li');
+		profile_btn.classList.add('profile-button-li');
+		profile_btn.innerHTML = '<a href="#" class="profileButton">My Profile</a>';
+		navlist.insertBefore(profile_btn, navLastChild);
+	}
+	if (!(document.querySelector('.match-history-cards'))) {
+		renderTemplate('accounts/', 'user_profile', userProfileContainer);
+	}
+}
+
+function clearUserData(data) {
+	console.error('Error:', data.error);
+	userInfo = {};
+	button.innerText = "Login";
+	loginHeading.innerText = "Hey anon!";
+	profilePictureContainer.innerHTML = '';
+	const profile_btn = document.querySelector('.profile-button-li');
+	if (profile_btn) {
+		profile_btn.parentNode.removeChild(profile_btn);
+	}
+	const matchHistoryCards = document.querySelector('.match-history-cards');
+	if (matchHistoryCards) {
+		console.log("Getting rid of userInfoCard tu connais hein");
+		matchHistoryCards.parentNode.removeChild(matchHistoryCards);
+	}
+	const userInfoCard = document.querySelector('.user-info-card');
+	if (userInfoCard) {
+		console.log("Getting rid of userInfoCard tu connais hein");
+		userInfoCard.parentNode.removeChild(userInfoCard);
+	}
+}
+
+
+function renderTemplate(folder, template_name, element_to_modify) {
+	const data = { folder: folder, template_name: template_name };
+	const csrftoken = getCookie('csrftoken');
+	const url = `/render-template/${folder}${template_name}/`;
+
+	fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+		body: JSON.stringify(data)
+	})
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				element_to_modify.innerHTML = data.html;
+			} else {
+				console.error('Error rendering template:', data.error);
+			}
+		})
 }
 
 function showToast(message, type = 'info') {
 	const toast = document.createElement('div');
 	toast.classList.add('toast');
 	toast.textContent = message;
-  
+
 	if (type === 'success') {
-	  toast.classList.add('toast-success');
+		toast.classList.add('toast-success');
 	} else if (type === 'error') {
-	  toast.classList.add('toast-error');
+		toast.classList.add('toast-error');
 	}
-  
+
 	const toastContainer = document.querySelector('.toast-container');
 	toastContainer.appendChild(toast);
-  
+
 	toast.classList.add('show');
-  
+
 	setTimeout(() => {
-	  toast.classList.remove('show');
-	  toastContainer.removeChild(toast);
+		toast.classList.remove('show');
+		toastContainer.removeChild(toast);
 	}, 3000);
-  }
-  
+}
+
 /*	 ___________________________
 	|							|
 	|	SPA NAVIGATION FCTS		|
@@ -188,18 +246,39 @@ async function showSignup() {
 	|	  USER_PROFILE FCTS		|
 	|___________________________| */
 
-/*
-showMatchesButton.addEventListener('click', () => {
-  userInfoCard.classList.toggle('active'); // Toggle active class for styling
-  // Handle displaying/hiding match history content dynamically here (optional)
-});
-
 document.addEventListener('click', (event) => {
-  if (!event.target.closest('.match-history-card') && userInfoCard.classList.contains('active')) {
-    userInfoCard.classList.remove('active');
-  }
-});
-*/
+	if (!event.target.closest('.match-history-card') && document.querySelector('.match-history-cards').classList.contains('active')) {
+		document.querySelector('.match-history-cards').classList.remove('active');
+		document.querySelector('.match-history-veil').classList.remove('active');
+		const matchHistoryCards = document.querySelector('.match-history-cards');
+		matchHistoryCards.innerHTML = '';
+	} else if (event.target.classList.contains('view-matches-link')) {
+		renderUserProfile(userInfo);
+		document.querySelector('.match-history-cards').classList.toggle('active');
+		document.querySelector('.match-history-veil').classList.toggle('active');
+	}
+})
+
+function renderUserProfile(userInfo) {
+	console.log("renderUserProfile() called.");
+	if (userInfo.user_matches) {
+		const matchHistoryCards = document.querySelector('.match-history-cards');
+		matchHistoryCards.innerHTML = '';
+
+		let i = 0;
+		userInfo.user_matches.forEach(match => {
+			const matchCard = document.createElement('div');
+			matchCard.classList.add('match-history-card');
+			matchCard.innerHTML = `
+			<h1>Match ${++i}</h1>
+			<b> Opponent </b> <p>CPU</p>
+			<b> Winner </b> <p>${match.winner__username === userInfo.username ? match.winner__username : "CPU"}</p>
+			<b> Score </b> <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
+		`;
+			matchHistoryCards.appendChild(matchCard);
+		});
+	}
+}
 
 /*	 ___________________________
 	|							|
@@ -207,6 +286,7 @@ document.addEventListener('click', (event) => {
 	|___________________________| */
 
 function toggleMenu() {
+	getUserInfo();
 	menu.classList.toggle("active");
 	hamMenu.classList.toggle("active");
 }
@@ -216,7 +296,7 @@ button.addEventListener('click', (event) => {
 		handleLogout();
 		event.stopImmediatePropagation()
 	}
-	else{
+	else {
 		showSignin();
 		event.stopImmediatePropagation()
 	}
@@ -224,21 +304,21 @@ button.addEventListener('click', (event) => {
 
 function handleLogout() {
 	fetch('accounts/logout/')
-	  .then(response => response.json())
-	  .then(data => {
-		if (data.success) {
-			toggleMenu();
-			showView('game');
-			getUserInfo();
-			showToast('Successfully logged out!');
-		} else {
-		  showToast('Error during logout:', data.message || 'Unknown error')
-		}
-	  })
-	  .catch(error => console.error('Error during logout request:', error));
-  }
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				toggleMenu();
+				showView('game');
+				getUserInfo();
+				showToast('Successfully logged out!');
+			} else {
+				showToast('Error during logout:', data.message || 'Unknown error')
+			}
+		})
+		.catch(error => console.error('Error during logout request:', error));
+}
 
-document.addEventListener("click", function (event) {
+document.addEventListener("click", (event) => {
 	if (menu.classList.contains("active") && !event.target.closest(".off-screen-menu")) {
 		toggleMenu();
 	}
@@ -252,8 +332,7 @@ hamMenu.addEventListener("click", () => {
 
 document.addEventListener("keydown", function (event) {
 	if (event.key === "m" || event.code === "KeyM") {
-		hamMenu.classList.toggle("active");
-		menu.classList.toggle("active");
+		toggleMenu();
 		console.log("The 'm' key was pressed!");
 	}
 });
@@ -264,6 +343,19 @@ home_button.addEventListener("click", () => {
 
 logo.addEventListener("click", () => {
 	showView("game");
+})
+
+navbar.addEventListener('click', (event) => {
+	if (event.target.classList.contains('profileButton')) {
+		event.preventDefault();
+		getUserInfo()
+			.then(userInfo => {
+				if (userInfo.username)
+					showView('user-profile');
+				else
+					showToast('Please login first.', 'error');
+			})
+	}
 })
 
 $(document).ready(function () {

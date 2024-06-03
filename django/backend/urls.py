@@ -23,11 +23,12 @@ from game.views import save_score
 from django.views.generic.base import TemplateView
 
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('', views.index),
     path('admin/', admin.site.urls),
     path("game/", include("game.urls")),
     path("accounts/", include("accounts.urls")),
 	path("accounts/", include("django.contrib.auth.urls")),
+    path("render-template/<str:folder>/<str:template_name>/", views.render_template, name='render-template'),
 ]
 
 if settings.DEBUG:
