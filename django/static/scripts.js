@@ -85,7 +85,12 @@ function clearUserData(data) {
 	if (profile_btn) {
 		profile_btn.parentNode.removeChild(profile_btn);
 	}
-	const userInfoCard = document.querySelector('.match-history-cards');
+	const matchHistoryCards = document.querySelector('.match-history-cards');
+	if (matchHistoryCards) {
+		console.log("Getting rid of userInfoCard tu connais hein");
+		matchHistoryCards.parentNode.removeChild(matchHistoryCards);
+	}
+	const userInfoCard = document.querySelector('.user-info-card');
 	if (userInfoCard) {
 		console.log("Getting rid of userInfoCard tu connais hein");
 		userInfoCard.parentNode.removeChild(userInfoCard);
@@ -245,7 +250,10 @@ document.addEventListener('click', (event) => {
 	if (!event.target.closest('.match-history-card') && document.querySelector('.match-history-cards').classList.contains('active')) {
 		document.querySelector('.match-history-cards').classList.remove('active');
 		document.querySelector('.match-history-veil').classList.remove('active');
+		const matchHistoryCards = document.querySelector('.match-history-cards');
+		matchHistoryCards.innerHTML = '';
 	} else if (event.target.classList.contains('view-matches-link')) {
+		renderUserProfile(userInfo);
 		document.querySelector('.match-history-cards').classList.toggle('active');
 		document.querySelector('.match-history-veil').classList.toggle('active');
 	}
@@ -343,10 +351,7 @@ navbar.addEventListener('click', (event) => {
 		getUserInfo()
 			.then(userInfo => {
 				if (userInfo.username)
-				{
-					renderUserProfile(userInfo);
 					showView('user-profile');
-				}
 				else
 					showToast('Please login first.', 'error');
 			})
