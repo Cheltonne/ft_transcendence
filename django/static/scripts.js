@@ -7,7 +7,7 @@ const button = document.querySelector('.loginButton, .logoutButton');
 const index_content = document.querySelector("#index-content");
 const signin_content = document.querySelector("#signin-content");
 const signup_content = document.querySelector("#signup-content");
-const userInfoCard = document.getElementById('user-info-card');
+const update_content = document.querySelector("#update-content");
 const userProfileContainer = document.getElementById('user-profile-content');
 const navbar = document.getElementById("navbar");
 const navlist = document.querySelector(".nav-list");
@@ -42,7 +42,7 @@ function getUserInfo() {
 		.then(data => {
 			if ('username' in data)
 				fillUserData(data);
-			else 
+			else
 				clearUserData(data);
 			return data;
 		})
@@ -52,7 +52,7 @@ function getUserInfo() {
 		});
 }
 
-function fillUserData(data) {
+async function fillUserData(data) {
 	userInfo.username = data.username;
 	userInfo.profile_picture = data.profile_picture;
 	userInfo.user_matches = data.user_matches;
@@ -71,7 +71,14 @@ function fillUserData(data) {
 		navlist.insertBefore(profile_btn, navLastChild);
 	}
 	if (!(document.querySelector('.match-history-cards'))) {
-		renderTemplate('accounts/', 'user_profile', userProfileContainer);
+		await renderTemplate('accounts/', 'user_profile', userProfileContainer)
+		.then(() => {
+			if (document.querySelector('.updateButton'))
+				console.log('IVE HACKED INTO THE MAINFRAME IM A BITCOIN BILLIONAIRE');
+			document.querySelector('.updateButton').addEventListener('click', (event) => {
+				showUpdate();
+			})
+		})
 	}
 }
 
@@ -97,13 +104,12 @@ function clearUserData(data) {
 	}
 }
 
-
 function renderTemplate(folder, template_name, element_to_modify) {
 	const data = { folder: folder, template_name: template_name };
 	const csrftoken = getCookie('csrftoken');
 	const url = `/render-template/${folder}${template_name}/`;
 
-	fetch(url, {
+	const promise = fetch(url, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
 		body: JSON.stringify(data)
@@ -112,10 +118,15 @@ function renderTemplate(folder, template_name, element_to_modify) {
 		.then(data => {
 			if (data.success) {
 				element_to_modify.innerHTML = data.html;
+				console.log(`Succesfully modified: ${element_to_modify}`);
 			} else {
 				console.error('Error rendering template:', data.error);
 			}
 		})
+		.catch(error => {
+			console.log(`Error in renderTemplate() fct: ${error}`);
+		})
+		return promise;
 }
 
 function showToast(message, type = 'info') {
@@ -163,6 +174,9 @@ async function fetchViewContent(url, view_choice) {
 			case 2:
 				signup_content.innerHTML = data.form;
 				handleFormSubmit('signup');
+			case 3:
+				update_content.innerHTML = data.form;
+				handleFormSubmit('update');
 		}
 	}
 }
@@ -190,13 +204,23 @@ async function handleFormSubmit(formType) {
 
 				if (data.success) {
 					if (formType === 'signin') {
-						showView('game');
 						showToast('Successfully logged in!');
 						getUserInfo();
-					} else if (formType === 'signup') {
 						showView('game');
+					} else if (formType === 'signup') {
 						showToast('Signup successful!');
 						getUserInfo();
+						showView('game');
+					} else if (formType === 'update') {
+						showToast('Update successful!');
+						getUserInfo();
+						await renderTemplate('accounts/', 'user_profile', userProfileContainer)
+						.then ( () => { 
+							showView('user-profile') 
+							document.querySelector('.updateButton').addEventListener('click', (event) => {
+								showUpdate();
+							})
+						});
 					} else {
 						console.warn(`Unknown form type: ${formType}`);
 					}
@@ -239,6 +263,11 @@ async function showSignup() {
 		event.stopImmediatePropagation()
 	}
 	);
+}
+
+async function showUpdate() {
+	await fetchViewContent('accounts/render-update-form/', 3);
+	showView('update');
 }
 
 /*	 ___________________________
@@ -350,8 +379,9 @@ navbar.addEventListener('click', (event) => {
 		event.preventDefault();
 		getUserInfo()
 			.then(userInfo => {
-				if (userInfo.username)
+				if (userInfo.username) {
 					showView('user-profile');
+				}
 				else
 					showToast('Please login first.', 'error');
 			})
