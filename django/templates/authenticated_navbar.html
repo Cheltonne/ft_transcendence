@@ -1,0 +1,21 @@
+{% load static %}
+<div id ="navbar" class="off-screen-menu">
+	<ul class="nav-list">
+		<li><div id="profilePictureContainer" class='profile-picture'></div></li>
+		<li><div id="loginHeading" class="fs-5 fw-semibold username" style="color:white;"></div></li>
+		<li><a href="#" id="homeButton">Home</a></li>
+		<li class='profile-button-li'><a href="#" class="profileButton">My Profile</a></li>
+		<li><a class="button loginButton" id="logoutButton" href="#">Logout</a></li>
+	</ul>
+</div>
+
+<nav>
+	<div class="logo-container">
+		<a href="#"><img class="logo" src="{% static 'images/logo.png' %}"></a>
+	</div>
+	<div class="ham-menu">
+		<span></span>
+		<span></span>
+		<span></span>
+	</div>
+</nav>
