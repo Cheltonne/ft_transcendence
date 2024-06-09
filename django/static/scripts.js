@@ -6,12 +6,19 @@ import { UserProfileCard } from './web_components/user_profile_card.js';
 import { User, UserObserver } from './observer.js';
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
-const userProfileContainer = document.getElementById('user-profile-content');
 export const user = new User();
+
+const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
 
 export function getUserInfo() {
 	console.log("getUserInfo() called.");
+	if (hamMenu.classList.contains('active') && document.querySelector('.sidebar').classList.contains('active') === false)
+	{
+		hamMenu.classList.toggle('active');
+		console.log('Hacky patch detected :unamused:');
+	}
+
 
 	return fetch("accounts/get-user-info/")
 		.then(response => response.json())

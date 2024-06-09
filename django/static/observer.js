@@ -49,6 +49,13 @@ export class UserObserver extends Observer {
         catch (error){
             console.log('Error while updating profile picture: ', error);
         }
+        try {
+            const profile = document.querySelector('user-profile-card');
+            profile.renderUserProfile(data);
+        }
+        catch (error) {
+            console.log('Error while rendering match history cards: ', error);
+        }
         /*
         if (data.user_matches) {
             this.renderMatches(data.user_matches);

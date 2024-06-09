@@ -86,7 +86,7 @@ export class UserProfileCard extends HTMLElement {
             }
 
             .match-history-cards {
-            display: flex;
+            display:none;
             flex-wrap: wrap;
             justify-content: center;
             width: 100%;
@@ -100,6 +100,7 @@ export class UserProfileCard extends HTMLElement {
 
             .match-history-cards.active {
             opacity: 1;
+            display: flex;
             z-index: 43;
             }
 
@@ -109,7 +110,6 @@ export class UserProfileCard extends HTMLElement {
             border-radius: 5px;
             background-color: rgb(240, 240, 240);
             color: #12151a;
-            display:flex;
             flex-direction: column;
             }
 
@@ -171,8 +171,6 @@ export class UserProfileCard extends HTMLElement {
             if (!event.target.closest('.match-history-card') && this.shadowRoot.querySelector('.match-history-cards').classList.contains('active')) {
                 this.shadowRoot.querySelector('.match-history-cards').classList.remove('active');
                 this.shadowRoot.querySelector('.match-history-veil').classList.remove('active');
-                const matchHistoryCards = this.shadowRoot.querySelector('.match-history-cards');
-                matchHistoryCards.innerHTML = '';
             } else if (event.target.classList.contains('view-matches-link')) {
                 this.shadowRoot.querySelector('.match-history-cards').classList.toggle('active');
                 this.shadowRoot.querySelector('.match-history-veil').classList.toggle('active');
@@ -180,15 +178,15 @@ export class UserProfileCard extends HTMLElement {
         })
     }
 
-    renderUserProfile() {
+    renderUserProfile(userInfo) {
         console.log("renderUserProfile() called.");
         if (userInfo.user_matches) {
-            const matchHistoryCards = document.querySelector('.match-history-cards');
+            const matchHistoryCards = this.shadowRoot.querySelector('.match-history-cards');
             matchHistoryCards.innerHTML = '';
 
             let i = 0;
             userInfo.user_matches.forEach(match => {
-                const matchCard = document.createElement('div');
+                const matchCard = this.shadowRoot.ownerDocument.createElement('div');
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
 			<h1>Match ${++i}</h1>
