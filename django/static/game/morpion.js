@@ -71,6 +71,7 @@ function restartGame() {
 
 // fonction pour gérer le clic sur une case
 function handleClick(e) {
+    if (seriesOver) return;
     const cell = e.target;
     let currentClass;
     if (circleTurn) {
