@@ -15,6 +15,7 @@ const board = document.getElementById('board');
 const winningMessageElement = document.getElementById('winningMessage');
 const restartButton = document.getElementById('restartButton');
 const newGameButton = document.getElementById('newGame');
+const newGameWithComputerButton = document.getElementById('newGameWithComputer');
 const cellElements = document.querySelectorAll('[data-cell]');
 const winningMessageTextElement = document.querySelector('[data-winning-message-text]');
 const scorePlayer1 = document.getElementById('scorePlayer1');
@@ -26,6 +27,7 @@ let scoreO = 0;
 let seriesOver = false;
 let alertShown = false;
 let circleTurn;
+let isAI = false;
 
 const checkAuthenticated = async () => {
     const response = await fetch('/accounts/check-authenticated/');
@@ -45,7 +47,14 @@ restartButton.addEventListener('click', function() {
         alertShown = true;
     }
 });
-newGameButton.addEventListener('click', startGame);
+newGameButton.addEventListener('click', function() {
+    isAI = false;
+    startGame();
+});
+newGameWithComputerButton.addEventListener('click', function() {
+    isAI = true;
+    startGame();
+});
 
 // fonction pour choisir le type de jeu : soit 5 parties, soit une nouvelle partie
 function startGame() {
@@ -87,6 +96,9 @@ function handleClick(e) {
     } else {
         swapTurns();
         setBoardHoverClass();
+        if (isAI && circleTurn) {
+            setTimeout(makeAIMove, 300);
+        }
     };
 }
 
@@ -227,5 +239,108 @@ function resetSeries() {
     scorePlayer1.textContent = 'Player 1';
     scorePlayer2.textContent = 'Player 2';
     restartGame();
+    seriesOver = false;
     alertShown = false;
+}
+
+// Fonction pour faire jouer l'IA (heuristique simple)
+function makeAIMove() {
+    // verifie si l'IA peut gagner au prochain tour et gagne
+    for (let combination of WINNING_COMBINATIONS) {
+        const [a, b, c] = combination;
+        if (cellElements[a].classList.contains(CIRCLE_CLASS) &&
+            cellElements[b].classList.contains(CIRCLE_CLASS) &&
+            !cellElements[c].classList.contains(X_CLASS) &&
+            !cellElements[c].classList.contains(CIRCLE_CLASS)) {
+            placeMark(cellElements[c], CIRCLE_CLASS);
+            if (checkWin(CIRCLE_CLASS)) {
+                endGame(false);
+                return;
+            }
+        }
+        if (cellElements[a].classList.contains(CIRCLE_CLASS) &&
+            cellElements[c].classList.contains(CIRCLE_CLASS) &&
+            !cellElements[b].classList.contains(X_CLASS) &&
+            !cellElements[b].classList.contains(CIRCLE_CLASS)) {
+            placeMark(cellElements[b], CIRCLE_CLASS);
+            if (checkWin(CIRCLE_CLASS)) {
+                endGame(false);
+                return;
+            }
+        }
+        if (cellElements[b].classList.contains(CIRCLE_CLASS) &&
+            cellElements[c].classList.contains(CIRCLE_CLASS) &&
+            !cellElements[a].classList.contains(X_CLASS) &&
+            !cellElements[a].classList.contains(CIRCLE_CLASS)) {
+            placeMark(cellElements[a], CIRCLE_CLASS);
+            if (checkWin(CIRCLE_CLASS)) {
+                endGame(false);
+                return;
+            }
+        }
+    }
+
+    //Verifie si le joueur peut gagner au prochain tour et le bloque
+    for (let combination of WINNING_COMBINATIONS) {
+        const [a, b, c] = combination;
+        if (cellElements[a].classList.contains(X_CLASS) &&
+            cellElements[b].classList.contains(X_CLASS) &&
+            !cellElements[c].classList.contains(X_CLASS) &&
+            !cellElements[c].classList.contains(CIRCLE_CLASS)) {
+            placeMark(cellElements[c], CIRCLE_CLASS);
+            swapTurns();
+            setBoardHoverClass();
+            return;
+        }
+        if (cellElements[a].classList.contains(X_CLASS) &&
+            cellElements[c].classList.contains(X_CLASS) &&
+            !cellElements[b].classList.contains(X_CLASS) &&
+            !cellElements[b].classList.contains(CIRCLE_CLASS)) {
+            placeMark(cellElements[b], CIRCLE_CLASS);
+            swapTurns();
+            setBoardHoverClass();
+            return;
+        }
+        if (cellElements[b].classList.contains(X_CLASS) &&
+            cellElements[c].classList.contains(X_CLASS) &&
+            !cellElements[a].classList.contains(X_CLASS) &&
+            !cellElements[a].classList.contains(CIRCLE_CLASS)) {
+            placeMark(cellElements[a], CIRCLE_CLASS);
+            swapTurns();
+            setBoardHoverClass();
+            return;
+        }
+    }
+
+    // prend la case centrale si elle est vide
+    const centerCell = cellElements[4];
+    if (!centerCell.classList.contains(X_CLASS) && !centerCell.classList.contains(CIRCLE_CLASS)) {
+        placeMark(centerCell, CIRCLE_CLASS);
+        swapTurns();
+        setBoardHoverClass();
+        return;
+    }
+
+    // prend un coin si possible (rend l'IA plus difficile à battre)
+   /* const corners = [cellElements[0], cellElements[2], cellElements[6], cellElements[8]];
+    for (let corner of corners) {
+        if (!corner.classList.contains(X_CLASS) && !corner.classList.contains(CIRCLE_CLASS)) {
+            placeMark(corner, CIRCLE_CLASS);
+            swapTurns();
+            setBoardHoverClass();
+            return;
+        }
+    }*/
+
+    // prend une case aléatoire
+    const emptyCells = [...cellElements].filter(cell => {
+        return !cell.classList.contains(X_CLASS) && !cell.classList.contains(CIRCLE_CLASS);
+    });
+
+    if (emptyCells.length > 0) {
+        const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        placeMark(randomCell, CIRCLE_CLASS);
+        swapTurns();
+        setBoardHoverClass();
+    }
 }
