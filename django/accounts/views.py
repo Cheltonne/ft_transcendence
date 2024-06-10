@@ -22,6 +22,17 @@ from .serializers import UserSerializer
 def index(request):
     return render(request, 'index.html')
 
+from django.shortcuts import redirect
+
+def logout_required(function):
+    def wrap(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return JsonResponse({ 'response: "You\'re already logged in!"' })
+        else:
+            return function(request, *args, **kwargs)
+    return wrap
+
+
 def user_logout(request):
     logout(request)
     return JsonResponse({'success': True, 'message': 'Logged out successfully!'})
@@ -54,6 +65,7 @@ def resize_image(image_file, max_width):
 
     return resized_image
 
+@logout_required
 @ensure_csrf_cookie
 def render_signin_form(request):
     if request.method == "GET":
@@ -76,6 +88,7 @@ def render_signin_form(request):
         context = {"form": form}
         return render(request, "registration/signin.html", context)
 
+@logout_required
 @ensure_csrf_cookie
 def render_signup_form(request):
     if request.method == "GET":
@@ -113,6 +126,7 @@ def render_signup_form(request):
     else:
       return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
+@login_required
 @ensure_csrf_cookie
 def render_update_form(request):
     if request.method == "GET":

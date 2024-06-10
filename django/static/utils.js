@@ -1,7 +1,8 @@
 import { getUserInfo } from './scripts.js';
 import { menu, hamMenu } from './scripts.js';
+import { showView } from './views.js';
 
-export function getCookie(cname) {
+export function getCookie(cname) { // to get CSRF cookie (necessary for forms)
 	let name = cname + '=';
 	let decodedCookie = decodeURIComponent(document.cookie);
 	let ca = decodedCookie.split(';');
@@ -17,7 +18,7 @@ export function getCookie(cname) {
 	return "";
 }
 
-export function showToast(message, type = 'info') {
+export function showToast(message, type = 'info') { //show toast notification on top right, besides hamburger menu button
 	const toast = document.createElement('div');
 	toast.classList.add('toast');
 	toast.textContent = message;
@@ -42,5 +43,36 @@ export function showToast(message, type = 'info') {
 export function toggleMenu() {
 	getUserInfo();
 	menu.classList.toggle("active");
-	hamMenu.classList.toggle("active");
+	if (menu.classList.contains('active') && hamMenu.classList.contains('active') === false)
+		hamMenu.classList.toggle("active");
+	else if (menu.classList.contains('active') === false && hamMenu.classList.contains('active'))
+		hamMenu.classList.toggle("active");
+}
+
+export function handleError(message, view='pong')
+{
+	showToast(message, 'error');
+	showView(view);
+}
+
+export function handleLogout() {
+	fetch('accounts/logout/')
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				toggleMenu();
+				showView('pong');
+				getUserInfo();
+				showToast('Successfully logged out!');
+			} else {
+				showToast('Error during logout:', data.message || 'Unknown error')
+			}
+		})
+		.catch(error => console.error('Error during logout request:', error));
+}
+
+export async function userIsAuthenticated() {
+	const response = await fetch('accounts/check-authenticated/');
+	const data = await response.json();
+	return data.authenticated;
 }

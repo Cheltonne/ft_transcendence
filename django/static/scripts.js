@@ -1,9 +1,9 @@
-import { getCookie, toggleMenu } from './utils.js';
-import { fetchViewContent, showView, renderTemplate } from './views.js';
+import { toggleMenu, userIsAuthenticated } from './utils.js';
+import { showView } from './views.js';
 import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
 import { UserProfileCard } from './web_components/user_profile_card.js';
-import { User, UserObserver } from './observer.js';
+import { User } from './observer.js';
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
 export const user = new User();
@@ -13,12 +13,6 @@ const logo = document.querySelector(".logo");
 
 export function getUserInfo() {
 	console.log("getUserInfo() called.");
-	if (hamMenu.classList.contains('active') && document.querySelector('.sidebar').classList.contains('active') === false)
-	{
-		hamMenu.classList.toggle('active');
-		console.log('Hacky patch detected :unamused:');
-	}
-
 
 	return fetch("accounts/get-user-info/")
 		.then(response => response.json())
@@ -45,36 +39,32 @@ async function fillUserData(data) {
 	console.log('Finished updating User object\'s data');
 }
 
-document.addEventListener("click", (event) => {
+document.addEventListener("click", (event) => {	//close sidebar if click detected outside of it
 	if (menu.classList.contains("active") && !event.target.closest(".sidebar")) {
 		toggleMenu();
 	}
 });
 
-hamMenu.addEventListener("click", (event) => {
+hamMenu.addEventListener("click", (event) => {	//"hamburger menu" button -> three lines icon to open sidebar
 	toggleMenu();
 	event.stopImmediatePropagation()
 }
 );
 
-document.addEventListener("keydown", function (event) {
+document.addEventListener("keydown", function (event) { //open sidebar by pressing M on the keyboard
 	if (event.key === "m" || event.code === "KeyM") {
 		toggleMenu();
 		console.log("The 'm' key was pressed!");
 	}
 });
 
-logo.addEventListener("click", () => {
-	showView("game");
+logo.addEventListener("click", () => { //click logo to go back to pong view
+	showView("pong");
 })
 
-async function userIsAuthenticated() {
-	const response = await fetch('accounts/check-authenticated/');
-	const data = await response.json();
-	return data.authenticated;
-}
 
-async function loadNavbar() {
+
+async function loadNavbar() { //always serve correct version of sidebar
 	const navbarContainer = document.getElementById('navbar');
 	const isAuthenticated = await userIsAuthenticated();
 

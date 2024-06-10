@@ -50,33 +50,12 @@ export class UserObserver extends Observer {
             console.log('Error while updating profile picture: ', error);
         }
         try {
-            const profile = document.querySelector('user-profile-card');
+            const profile = document.querySelector('user-profile-view');
             profile.renderUserProfile(data);
         }
         catch (error) {
             console.log('Error while rendering match history cards: ', error);
         }
-        /*
-        if (data.user_matches) {
-            this.renderMatches(data.user_matches);
-        }
-    }
-    renderMatches(matches) {
-        const matchHistoryCards = this.elements.match_history_cards;
-        matchHistoryCards.innerHTML = '';
-        
-        matches.forEach((match, index) => {
-            const matchCard = document.createElement('div');
-            matchCard.classList.add('match-history-card');
-            matchCard.innerHTML = `
-                <h1>Match ${index + 1}</h1>
-                <b>Opponent</b> <p>CPU</p>
-                <b>Winner</b> <p>${match.winner__username === data.username ? match.winner__username : "CPU"}</p>
-                <b>Score</b> <p>${data.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
-            `;
-            matchHistoryCards.appendChild(matchCard);
-        });
-    */
     }
 }
 
