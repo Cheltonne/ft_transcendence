@@ -29,7 +29,6 @@ export class UserObserver extends Observer {
 
     update(data) {
         try{
-            console.log('updating username...');
             this.elements.username.forEach(element => {
                 element.innerText = `Welcome, ${data.username}!`;
             })
@@ -38,7 +37,6 @@ export class UserObserver extends Observer {
             console.log('Error while updating username: ', error);
         }
         try{
-            console.log('updating profile picture...');
             if (data.profile_picture)
                 this.elements.profile_picture.forEach(element => {
                     element.innerHTML = data.profile_picture;
@@ -80,5 +78,32 @@ export class User extends Subject {
 
     getObservers() {
         return (this.observers);
+    }
+}
+
+export class History extends Subject{
+    constructor() {
+        super();
+        this.state = {currentView : ''};
+    }
+
+    pushState(state){
+        this.state = state;
+        this.notifyObservers(this.state);
+    }
+}
+
+export class HistoryObserver extends Observer {
+    constructor() {
+        if (HistoryObserver._instance) {
+            return HistoryObserver._instance; 
+        }
+        super();
+        HistoryObserver._instance = this;
+    }
+
+    update(state) {
+        console.log('new URL would be:', state.currentView);
+        history.pushState(state, '', state.currentView);
     }
 }

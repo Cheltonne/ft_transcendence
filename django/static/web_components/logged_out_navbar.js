@@ -1,5 +1,5 @@
 import { getUserInfo } from '../scripts.js'
-import { showView, showForm } from '../views.js'
+import { navigateTo } from '../views.js'
 
 export class LoggedOutNavbar extends HTMLElement {
   constructor() {
@@ -26,13 +26,16 @@ export class LoggedOutNavbar extends HTMLElement {
     styleLink.setAttribute('rel', 'stylesheet');
     styleLink.setAttribute('href', 'static/css/sidebar.css'); 
     this.shadowRoot.appendChild(styleLink);
-    this.home.addEventListener("click", () => {
-            showView('pong');
+    this.home.addEventListener("click", (event) => {
+      event.preventDefault();
+      navigateTo('pong', 1);
+      event.stopImmediatePropagation();
     });
 
     this.login.addEventListener('click', (event) => {
-        showForm('signin');
-        event.stopImmediatePropagation();
+      event.preventDefault();
+      navigateTo('signin', 2);
+      event.stopImmediatePropagation();
     });
   }
 

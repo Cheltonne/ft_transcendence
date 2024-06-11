@@ -3,8 +3,7 @@ import {
     user
 } from '../scripts.js'
 import {
-    showView,
-    showForm
+    navigateTo
 } from '../views.js'
 import {
     User,
@@ -48,10 +47,8 @@ export class UserProfileCard extends HTMLElement {
         user_observer = new UserObserver(elements);
         user.addObserver(user_observer);
         this.shadowRoot.querySelector('.updateButton').addEventListener('click', (event) => {
-            showForm('update');
+            navigateTo('update', 2);
         });
-        console.log('User information retrieved:', elements);
-
         this.shadowRoot.addEventListener('click', (event) => {
             if (!event.target.closest('.match-history-card') && this.shadowRoot.querySelector('.match-history-cards').classList.contains('active')) {
                 this.shadowRoot.querySelector('.match-history-cards').classList.remove('active');

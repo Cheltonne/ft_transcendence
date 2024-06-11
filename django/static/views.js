@@ -1,8 +1,30 @@
 import { userIsAuthenticated, getCookie, showToast, toggleMenu, handleError } from './utils.js';
-import { getUserInfo, hamMenu } from './scripts.js';
+import { getUserInfo, historyObserver, hist } from './scripts.js';
 import { SigninForm } from './web_components/signin_form.js';
 import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
+const authRequiredViews = ['user-profile'];
+const nonAuthViews = ['signin', 'signup'];
+
+async function historyNavigation(viewName, type) {
+    const isAuthenticated = await userIsAuthenticated();
+	console.log('History navigation called, isAuth =', isAuthenticated);
+
+    if (authRequiredViews.includes(viewName) && !isAuthenticated) {
+        handleError('You need to be logged in to access this view.');
+        return ;
+    }
+    if (nonAuthViews.includes(viewName) && isAuthenticated) {
+        handleError('You are already logged in.');
+        return ;
+    }
+
+    if (type === 1) {
+        showView(viewName);
+    } else {
+        showForm(viewName);
+    }
+}
 
 export async function handleFormSubmit(formType) {
 	const formComponent = document.querySelector(`${formType}-form`);
@@ -32,14 +54,14 @@ export async function handleFormSubmit(formType) {
 						getUserInfo()
 							.then(data => {
 								if (userIsAuthenticated())
-									showView('user-profile');
+									navigateTo('user-profile',);
 								else
 									handleError('You\'re not authenticated anymore!');
 							});
 					} else {
 						showToast(`${formType} succ!`);
 						getUserInfo();
-						showView('pong');
+						navigateTo('pong');
 					}
 				}
 			} catch (error) {
@@ -83,3 +105,18 @@ export function showForm(viewName) {
 	if (sidebar && sidebar.classList.contains('active'))
 		toggleMenu();
 }
+
+export function navigateTo(viewName, type) {
+	history.pushState(viewName, '', viewName);
+	if (type === 1)
+		showView(viewName);
+	else
+	showForm(viewName);
+}
+
+window.addEventListener('popstate', (event) => {
+	console.log('popped state:', event.state);
+	 if (event.state) {
+        historyNavigation(event.state); 
+    }
+});

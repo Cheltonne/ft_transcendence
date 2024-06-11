@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
@@ -29,6 +29,7 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
 	path("accounts/", include("django.contrib.auth.urls")),
     path("render-template/<str:folder>/<str:template_name>/", views.render_template, name='render-template'),
+    re_path(r'^(?!api/)(?!admin/)(?!static/)(?!.*\.(jpg|jpeg|png|gif|svg)$).*$', TemplateView.as_view(template_name='index.html'))
 ]
 
 if settings.DEBUG:

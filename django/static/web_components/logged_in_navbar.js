@@ -1,4 +1,4 @@
-import { showView } from '../views.js';
+import { navigateTo } from '../views.js';
 import { handleLogout } from '../utils.js';
 import { getUserInfo, user } from '../scripts.js';
 import { User, UserObserver } from '../observer.js';
@@ -40,7 +40,7 @@ export class LoggedInNavbar extends HTMLElement {
         user_observer = new UserObserver(elements);
         user.addObserver(user_observer);
         this.home.addEventListener("click", () => {
-            showView('pong');
+            navigateTo('pong', 1);
         });
 
         this.profile.addEventListener('click', (event) => {
@@ -48,12 +48,12 @@ export class LoggedInNavbar extends HTMLElement {
             getUserInfo()
                 .then(userInfo => {
                     if (userInfo.username) {
-                        showView('user-profile');
+                        navigateTo('user-profile', 1);
                     }
                     else
                     {
                         showToast('Please login first.', 'error');
-                        showView('pong');
+                        navigateTo('pong', 1);
                     }
                 })
         })
