@@ -111,6 +111,10 @@ function simulateKeyPress(key, type) {
     document.dispatchEvent(event);
 }
 
+function Bindings(upKey, downKey) {
+    return { up: upKey, down: downKey };
+}
+
 /// simulateKeyPress("ArrowUp", "keydown"); // Simulate pressing the "ArrowUp" key
 /// simulateKeyPress("ArrowDown", "keydown"); // Simulate pressing the "ArrowDown" key
 /// simulateKeyPress("ArrowUp", "keyup"); // Simulate releasing the "ArrowUp" key
@@ -119,12 +123,9 @@ document.addEventListener('keyup', function(event) {
     delete keysPressed[event.key];
 });
 
-function Bindings(upKey, downKey) {
-    return { up: upKey, down: downKey };
-}
 
 document.addEventListener('keydown', function(event) {
-    keysPressed[event.key] = true;
+   keysPressed[event.key] = true;
 });
 
 
@@ -142,7 +143,7 @@ class PongBall {
         this.prevpos = pos;
         this.velocity = vec2(0, 0);
         this.radius = 5;
-        this.speed = 0.4;
+        this.speed = 0.3;
         this.left = null;
         this.LastHit = null;
         this.trailLength = 10;
@@ -200,7 +201,7 @@ class PongBall {
 
     launchBall() {
         this.goal = false;
-        this.speed = 0.4;
+        this.speed = 0.3;
         let direction = this.left ? 1 : -1;
         const randomNumber = Math.random() * Math.PI / 4;
         this.velocity.x = direction * this.speed * Math.cos(randomNumber);
@@ -234,12 +235,12 @@ class PongBall {
             this.velocity.x = direction * this.speed * Math.cos(angleRad);
             this.velocity.y = this.speed * Math.sin(angleRad);
         
-            if (Math.abs(collidePoint) > 0.9) {
-                this.velocity.y = -this.velocity.y;
-            }
-        
-            if (this.speed <= 0.9)
-                this.speed += 0.03;
+            //if (Math.abs(collidePoint) > 0.9) {
+            //    this.velocity.y = -this.velocity.y;
+            //}
+            console.log(this.speed);
+            if (this.speed <= 1.0)
+                this.speed += 0.07;
         } else {
             this.pos = this.nextPos;
         }
@@ -300,7 +301,7 @@ function Players() {
         Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
     }
     else {
-        Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+        Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('F13', 'F14'));
         AIplayer = new AIPlayer(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2))
     }
 }
@@ -491,19 +492,19 @@ class AIPlayer {
         }
           
         stopMovingUp() {
-            simulateKeyPress("ArrowUp", "keyup");
+            simulateKeyPress("F13", "keyup");
         }
 
         stopMovingDown() {
-            simulateKeyPress("ArrowDown", "keyup");
+            simulateKeyPress("F14", "keyup");
         }
 
         moveUp() {
-            simulateKeyPress("ArrowUp", "keydown");
+            simulateKeyPress("F13", "keydown");
         }
 
         moveDown() {
-            simulateKeyPress("ArrowDown", "keydown");
+            simulateKeyPress("F14", "keydown");
     }
 }
 ////////////////////////////////////////////
