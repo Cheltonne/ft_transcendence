@@ -221,18 +221,28 @@ class PongBall {
         if (this.collision(player, this.nextPos) && this.LastCollision !== player) {
             this.LastCollision = player;
             this.LastHit = null;
+        
             let collidePoint = (this.nextPos.y - (player.pos.y + player.height / 2));
-                collidePoint = collidePoint / (player.height / 2);
-                let angleRad = (Math.PI / 4) * collidePoint;
-                let direction = (this.nextPos.x < canvas.width / 2) ? 1 : -1;
-                this.velocity.x = direction * this.speed * Math.cos(angleRad);
-                this.velocity.y = direction * this.speed * Math.sin(angleRad);
-                console.log(this.speed);
-                if (this.speed <= 0.9)
-                    this.speed += 0.03;
-            } else {
-                this.pos = this.nextPos;
+            collidePoint = collidePoint / (player.height / 2);
+        
+            // Calculate the angle in radians
+            let angleRad = (Math.PI / 4) * collidePoint;
+        
+            // Ensure the ball bounces correctly on top/bottom edges
+            let direction = (this.nextPos.x < canvas.width / 2) ? 1 : -1;
+        
+            this.velocity.x = direction * this.speed * Math.cos(angleRad);
+            this.velocity.y = this.speed * Math.sin(angleRad);
+        
+            if (Math.abs(collidePoint) > 0.9) {
+                this.velocity.y = -this.velocity.y;
             }
+        
+            if (this.speed <= 0.9)
+                this.speed += 0.03;
+        } else {
+            this.pos = this.nextPos;
+        }
     
             if (this.pos.x <= 0 && this.goal == false) {
                 this.goal = true;
