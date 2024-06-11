@@ -6,10 +6,11 @@ var RequestFrame = false;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
-let player2Name = 'random';
+let player2Name = 'guest';
 var allButtonOk = false;
 var AI = false;
 let AIplayer = null;
+var userInfo = {username: 'player1'};
 let Ball = null;
 let Paddle1 = null;
 let Paddle2 = null;
@@ -20,14 +21,15 @@ let lastFrameTime = performance.now();
 ////////////////HTML CSS////////////////////////////////
 ////////////////////////////////////////////////////////
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth / 2;
-    canvas.height = window.innerHeight / 2;
+function setCanvasSize() {
+    canvas.width = 960;  // 767 ?
+    canvas.height = 480; 
 }
 
+setCanvasSize();
 
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+//resizeCanvas();
+//window.addEventListener('resize', resizeCanvas);
 
 document.addEventListener("DOMContentLoaded", function() {
     var myButton = document.getElementById("myButton");
@@ -155,6 +157,10 @@ class PongBall {
         this.LastCollision = null;
     }
 
+    resetSpeed() {
+        this.speed = 0.5;
+    }
+
     CheckEdge(nextPos) {
         if (nextPos.y + this.radius > canvas.height && this.LastHit !== 1) {
             this.velocity.y *= -1;
@@ -168,11 +174,17 @@ class PongBall {
 
     resetBall() {
         if (this.left)
+            {
             this.velocity = vec2(1, 1);
+            this.pos = vec2(100, canvas.height / 2);
+            }
         else
+            {
             this.velocity = vec2(-1, -1);
-        this.speed = 0.3;
-        this.pos = vec2(canvas.width / 2, canvas.height / 2);
+            this.pos = vec2(900, canvas.height / 2);
+            }
+
+        this.resetSpeed();
         this.LastHit = null;
         this.launch = true;
     }
@@ -200,14 +212,14 @@ class PongBall {
     }
 
     launchBall() {
-        this.goal = false;
-        this.speed = 0.3;
-        let direction = this.left ? 1 : -1;
-        const randomNumber = Math.random() * Math.PI / 4;
-        this.velocity.x = direction * this.speed * Math.cos(randomNumber);
-        this.velocity.y = this.speed * Math.sin(randomNumber);
-        this.launch = false;
-        this.LastCollision = null;
+            this.goal = false;
+            this.resetSpeed();
+            let direction = this.left ? 1 : -1;
+            const randomNumber = Math.random() * Math.PI / 4;
+            this.velocity.x = direction * this.speed * Math.cos(randomNumber);
+            this.velocity.y = this.speed * Math.sin(randomNumber);
+            this.launch = false;
+            this.LastCollision = null;
     }
 
     update(deltaTime) {
@@ -216,9 +228,10 @@ class PongBall {
 
         let player = (this.pos.x < canvas.width / 2) ? Paddle1 : Paddle2;
 
-        if (this.launch){
+        if (this.launch) {
             this.launchBall();
         }
+
         if (this.collision(player, this.nextPos) && this.LastCollision !== player) {
             this.LastCollision = player;
             this.LastHit = null;
@@ -239,8 +252,8 @@ class PongBall {
             //    this.velocity.y = -this.velocity.y;
             //}
             console.log(this.speed);
-            if (this.speed <= 1.0)
-                this.speed += 0.07;
+            if (this.speed <= 0.9)
+                this.speed += 0.05;
         } else {
             this.pos = this.nextPos;
         }
@@ -345,7 +358,7 @@ function draw() {
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
-    if (AIplayer.prediction) {
+    if (AIplayer && AIplayer.prediction) {
     ctx.beginPath();
     ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
     ctx.fillStyle = 'red';
@@ -408,8 +421,9 @@ function GameEndingScreen() {
 
     ctx.fillStyle = '#fff';
     ctx.font = '36px sans-serif';
+    giveName();
 
-    let winner = (Paddle1.score > Paddle2.score) ? "Player 1" : player2Name;
+    let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
     ctx.fillText(`${winner} wins!`, canvas.width / 5, canvas.height / 6 + 130);
     ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
     createMatch(Paddle1.score, Paddle2.score);
@@ -428,14 +442,14 @@ class AIPlayer {
             this.height = 100;
             this.prediction = null;
             this.timeSinceLastPrediction = 0;
-			this.move = false;
+            this.move = false;
             this.predictionInterval = 1;
-			this.paddleCenterY = 0;
-			this.inRange = 50;
+            this.paddleCenterY = 0;
+            this.inRange = 50;
         }
 
         update(dt, ball, Paddle2) {
-			this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
+            this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
             this.timeSinceLastPrediction += dt;
 
             if (((ball.pos.x < Paddle2.pos.x) && (ball.velocity.x < 0)) ||
@@ -448,7 +462,7 @@ class AIPlayer {
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
                 this.predict(ball, dt);
                 this.timeSinceLastPrediction = 0;
-				//this.move = true;
+                //this.move = true;
                 return;
             }
 
@@ -463,7 +477,7 @@ class AIPlayer {
                     this.stopMovingUp();
                     this.moveDown();
                 }
-				//this.move = false;
+                //this.move = false;
             }
 
 
@@ -511,10 +525,24 @@ class AIPlayer {
 //////////////////DATABASE/////////////////
 ///////////////////////////////////////////
 
+const giveName = async () => {
+    const response = await fetch('accounts/get-user-info/');
+    const data = await response.json();
+    // je recup pas le pseudo du mec ici
+    //player1name =  data.user_info('username');
+    if (data.username) {
+        userInfo.username = data.username;
+      } else {
+        userInfo.username = 'anon';
+      }
+};
 
 const checkAuthenticated = async () => {
     const response = await fetch('/accounts/check-authenticated/');
     const data = await response.json();
+    console.log(data);
+    // je recup pas le pseudo du mec ici
+    //player1name =  data.user_info('username');
     return data.authenticated;
 };
 
