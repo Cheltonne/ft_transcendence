@@ -1,4 +1,4 @@
-import { showView, showForm, handleFormSubmit } from '../views.js';
+import { navigateTo, showForm, handleFormSubmit } from '../views.js';
 import { showToast } from '../utils.js';
 
 export class UpdateForm extends HTMLElement {
@@ -34,7 +34,7 @@ export class UpdateForm extends HTMLElement {
             if (error.response && error.response.status === 500) {
                 console.error("Server error encountered. Cannot redirect.");
             }
-            showView('pong');
+            navigateTo('pong', 1);
 	    }
     }
 

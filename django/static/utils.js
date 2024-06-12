@@ -1,6 +1,6 @@
 import { getUserInfo } from './scripts.js';
 import { menu, hamMenu } from './scripts.js';
-import { showView } from './views.js';
+import { navigateTo } from './views.js';
 
 export function getCookie(cname) { // to get CSRF cookie (necessary for forms)
 	let name = cname + '=';
@@ -52,7 +52,7 @@ export function toggleMenu() {
 export function handleError(message, view='pong')
 {
 	showToast(message, 'error');
-	showView(view);
+	navigateTo(view, 1);
 }
 
 export function handleLogout() {
@@ -61,7 +61,7 @@ export function handleLogout() {
 		.then(data => {
 			if (data.success) {
 				toggleMenu();
-				showView('pong');
+				navigateTo('pong', 1);
 				getUserInfo();
 				showToast('Successfully logged out!');
 			} else {

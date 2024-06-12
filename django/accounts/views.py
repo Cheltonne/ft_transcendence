@@ -40,7 +40,7 @@ def user_logout(request):
 def get_user_info(request):
     if request.user.is_authenticated:
         user = request.user
-        user_matches = list(user.matches.all().values('alias', 'user_score', 'alias_score', 'winner__username'))
+        user_matches = list(user.matches.all().order_by('id').values('alias', 'user_score', 'alias_score', 'winner__username'))
         user_info = {
                 'username': user.username,
                 'profile_picture': user.profile_picture.url,

@@ -1,5 +1,5 @@
 import { toggleMenu, userIsAuthenticated } from './utils.js';
-import { showView } from './views.js';
+import { navigateTo, showView } from './views.js';
 import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
 import { UserProfileCard } from './web_components/user_profile_card.js';
@@ -12,8 +12,6 @@ const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
 
 export function getUserInfo() {
-	console.log("getUserInfo() called.");
-
 	return fetch("accounts/get-user-info/")
 		.then(response => response.json())
 		.then(data => {
@@ -36,7 +34,6 @@ async function fillUserData(data) {
 		userProfileContainer.appendChild(user_profile_card);
 	}
 	user.setUserData(data);
-	console.log('Finished updating User object\'s data');
 }
 
 document.addEventListener("click", (event) => {	//close sidebar if click detected outside of it
@@ -59,10 +56,8 @@ document.addEventListener("keydown", function (event) { //open sidebar by pressi
 });
 
 logo.addEventListener("click", () => { //click logo to go back to pong view
-	showView("pong");
+	navigateTo("pong", 1);
 })
-
-
 
 async function loadNavbar() { //always serve correct version of sidebar
 	const navbarContainer = document.getElementById('navbar');
@@ -92,4 +87,5 @@ async function loadNavbar() { //always serve correct version of sidebar
 $(document).ready(function () {
 	getUserInfo();
 	loadNavbar();
+	history.replaceState('pong', '', 'pong');
 });

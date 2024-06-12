@@ -1,4 +1,4 @@
-import { showView, showForm, handleFormSubmit } from '../views.js';
+import { navigateTo, showForm, handleFormSubmit } from '../views.js';
 import { showToast } from '../utils.js';
 
 export class SignupForm extends HTMLElement {
@@ -29,7 +29,7 @@ export class SignupForm extends HTMLElement {
             handleFormSubmit('signup');
             this.shadowRoot.querySelector("#signinButton").addEventListener("click", (event) => {
                 event.preventDefault();
-                showForm('signin');
+                navigateTo('signin', 2);
             });
         }
         catch (error) {
@@ -38,7 +38,7 @@ export class SignupForm extends HTMLElement {
             if (error.response && error.response.status === 500) {
                 console.error("Server error encountered. Cannot redirect.");
             }
-            showView('pong');
+            navigateTo('pong', 1);
 	    }
     }
 

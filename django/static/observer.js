@@ -29,7 +29,6 @@ export class UserObserver extends Observer {
 
     update(data) {
         try{
-            console.log('updating username...');
             this.elements.username.forEach(element => {
                 element.innerText = `Welcome, ${data.username}!`;
             })
@@ -38,7 +37,6 @@ export class UserObserver extends Observer {
             console.log('Error while updating username: ', error);
         }
         try{
-            console.log('updating profile picture...');
             if (data.profile_picture)
                 this.elements.profile_picture.forEach(element => {
                     element.innerHTML = data.profile_picture;
@@ -50,8 +48,9 @@ export class UserObserver extends Observer {
             console.log('Error while updating profile picture: ', error);
         }
         try {
-            const profile = document.querySelector('user-profile-view');
-            profile.renderUserProfile(data);
+            const userProfileView = document.querySelector('user-profile-view');
+            if (userProfileView)
+                userProfileView.renderUserProfile(data);
         }
         catch (error) {
             console.log('Error while rendering match history cards: ', error);
