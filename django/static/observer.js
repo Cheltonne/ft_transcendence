@@ -48,8 +48,9 @@ export class UserObserver extends Observer {
             console.log('Error while updating profile picture: ', error);
         }
         try {
-            const profile = document.querySelector('user-profile-view');
-            profile.renderUserProfile(data);
+            const userProfileView = document.querySelector('user-profile-view');
+            if (userProfileView)
+                userProfileView.renderUserProfile(data);
         }
         catch (error) {
             console.log('Error while rendering match history cards: ', error);
@@ -78,32 +79,5 @@ export class User extends Subject {
 
     getObservers() {
         return (this.observers);
-    }
-}
-
-export class History extends Subject{
-    constructor() {
-        super();
-        this.state = {currentView : ''};
-    }
-
-    pushState(state){
-        this.state = state;
-        this.notifyObservers(this.state);
-    }
-}
-
-export class HistoryObserver extends Observer {
-    constructor() {
-        if (HistoryObserver._instance) {
-            return HistoryObserver._instance; 
-        }
-        super();
-        HistoryObserver._instance = this;
-    }
-
-    update(state) {
-        console.log('new URL would be:', state.currentView);
-        history.pushState(state, '', state.currentView);
     }
 }

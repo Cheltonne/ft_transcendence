@@ -3,12 +3,10 @@ import { navigateTo, showView } from './views.js';
 import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
 import { UserProfileCard } from './web_components/user_profile_card.js';
-import { User, HistoryObserver, History } from './observer.js';
-export const hist = new History;
+import { User } from './observer.js';
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
 export const user = new User();
-export const historyObserver = new HistoryObserver();
 
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
@@ -90,5 +88,4 @@ $(document).ready(function () {
 	getUserInfo();
 	loadNavbar();
 	history.replaceState('pong', '', 'pong');
-	hist.addObserver(historyObserver);
 });

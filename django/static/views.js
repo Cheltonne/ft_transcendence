@@ -1,12 +1,12 @@
 import { userIsAuthenticated, getCookie, showToast, toggleMenu, handleError } from './utils.js';
-import { getUserInfo, historyObserver, hist } from './scripts.js';
+import { getUserInfo } from './scripts.js';
 import { SigninForm } from './web_components/signin_form.js';
 import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
-const authRequiredViews = ['user-profile'];
+const authRequiredViews = ['user-profile', 'update'];
 const nonAuthViews = ['signin', 'signup'];
 
-async function historyNavigation(viewName, type) {
+async function historyNavigation(viewName, type) {	//handles navigation through browser buttons (back/next)
     const isAuthenticated = await userIsAuthenticated();
 	console.log('History navigation called, isAuth =', isAuthenticated);
 
@@ -19,11 +19,18 @@ async function historyNavigation(viewName, type) {
         return ;
     }
 
-    if (type === 1) {
+    if (type === 1)
         showView(viewName);
-    } else {
+    else
         showForm(viewName);
-    }
+}
+
+export function navigateTo(viewName, type) { // handles regular navigation through clicking on the app elements
+	history.pushState(viewName, '', viewName);
+	if (type === 1)
+		showView(viewName);
+	else
+		showForm(viewName);
 }
 
 export async function handleFormSubmit(formType) {
@@ -63,6 +70,13 @@ export async function handleFormSubmit(formType) {
 						getUserInfo();
 						navigateTo('pong');
 					}
+				}
+				else {
+					if (data.message.includes('request method'))
+						showToast('Please check that all fields are correctly filled.', 'error');
+					else
+						showToast(data.message, 'error');
+					return ;
 				}
 			} catch (error) {
 				console.error(`Error during ${formType} submission:`, error);
@@ -104,14 +118,6 @@ export function showForm(viewName) {
 	const sidebar = document.querySelector('.sidebar');
 	if (sidebar && sidebar.classList.contains('active'))
 		toggleMenu();
-}
-
-export function navigateTo(viewName, type) {
-	history.pushState(viewName, '', viewName);
-	if (type === 1)
-		showView(viewName);
-	else
-	showForm(viewName);
 }
 
 window.addEventListener('popstate', (event) => {
