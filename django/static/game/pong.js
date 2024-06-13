@@ -22,8 +22,8 @@ let lastFrameTime = performance.now();
 ////////////////////////////////////////////////////////
 
 function setCanvasSize() {
-    canvas.width = 960;  // 767 ?
-    canvas.height = 480; 
+    canvas.width = 860;  // 767 ?
+    canvas.height = 430; 
 }
 
 setCanvasSize();
@@ -440,7 +440,8 @@ class AIPlayer {
         constructor(pos) {
             this.pos = pos;
             this.height = 100;
-            this.prediction = null;
+            this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
+            //this.predictionV = { x: 0, y: 0 };
             this.timeSinceLastPrediction = 0;
             this.move = false;
             this.predictionInterval = 1;
@@ -452,16 +453,10 @@ class AIPlayer {
             this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
             this.timeSinceLastPrediction += dt;
 
-            if (((ball.pos.x < Paddle2.pos.x) && (ball.velocity.x < 0)) ||
-                ((ball.pos.x > Paddle2.pos.x + Paddle2.width) && (ball.velocity.x > 0))){
-                this.stopMovingUp();
-                this.stopMovingDown();
-                return;
-            }
-
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
                 this.predict(ball, dt);
                 this.timeSinceLastPrediction = 0;
+                console.log("predicted");
                 //this.move = true;
                 return;
             }
@@ -479,30 +474,36 @@ class AIPlayer {
                 }
                 //this.move = false;
             }
-
-
         }
 
         predict(ball, dt) {
             let predictedPos = { x: ball.pos.x, y: ball.pos.y };
             let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
-        
-            for (let i = 0; i < 100 ; i++) {
+            
+            if (ball.velocity.x < 0) {
+                    this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
+                    //this.predictionV = { x: ball.velocity.x, y: ball.velocity.y };
+                    return;
+            }
+            for (let i = 0; i < 500 ; i++) {
                 predictedPos.x += predictedVelocity.x * dt * 1000;
                 predictedPos.y += predictedVelocity.y * dt * 1000;
         
                 if (predictedPos.y - ball.radius < 0 || predictedPos.y + ball.radius > canvas.height) {
                     predictedVelocity.y *= -1;
                 }
+
+                
         
-                if (predictedPos.x + ball.radius > canvas.width) {
+                if (predictedPos.x + ball.radius > canvas.width　- 50) {
                     console.log(i);
                     break; // Stop the prediction loop if the ball's predicted position exceeds the paddle's position
                 }
             }
-            predictedPos.y += Math.random() + 1 * 25;
+            //predictedPos.y += Math.random() + 1 * 25;
         
             this.prediction = predictedPos;
+            //this.predictionV = predictedVelocity;
         }
           
         stopMovingUp() {
