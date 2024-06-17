@@ -310,17 +310,17 @@ class PongPaddle {
 
 function Players() {
     Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
-    //Paddle1 = new PongPaddle(vec2(canvas.width - 20 - 20, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+    // Paddle1 positioned 20 pixels from the left border
     Paddle1 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
-    if (!AI){
-        Paddle2 = new PongPaddle(vec2(canvas.width - 40, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
-    }
-    else {
-        Paddle2 = new PongPaddle(vec2(canvas.width - 40, (canvas.height - 100) / 2), Bindings('F13', 'F14'));
-        AIplayer = new AIPlayer(vec2(canvas.width - 40, (canvas.height - 100) / 2))
+    
+    if (!AI) {
+        // Paddle2 positioned 20 pixels from the right border, accounting for paddle width
+        Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+    } else {
+        Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('F13', 'F14'));
+        AIplayer = new AIPlayer();
     }
 }
-
 
 
 function drawStaticElements() {
@@ -383,10 +383,10 @@ function GameLoop() {
 
     Ball.update(dt);
     Paddle1.update(dt);
-    Paddle2.update(dt);
     if (AI) {
         AIplayer.update(dt, Ball, Paddle2, Paddle1);
     }
+    Paddle2.update(dt);
     draw();
 
     if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
@@ -439,8 +439,7 @@ function GameEndingScreen() {
 
 
 class AIPlayer {
-        constructor(pos) {
-            this.pos = pos;
+        constructor() {
             this.height = 100;
             this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
             //this.predictionV = { x: 0, y: 0 };
@@ -481,7 +480,7 @@ class AIPlayer {
                     this.moveDown();
                 }
                 console.log("Paddle2 position:", Paddle2.pos.x, Paddle2.pos.y);
-                console.log("AIPlayer position:", AIplayer.pos.x, AIplayer.pos.y);
+                //console.log("AIPlayer position:", AIplayer.pos.x, AIplayer.pos.y);
                 //this.move = false;
             }
         }
