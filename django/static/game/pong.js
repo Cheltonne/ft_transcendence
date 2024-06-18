@@ -29,6 +29,22 @@ function setCanvasSize() {
 //resizeCanvas();
 //window.addEventListener('resize', resizeCanvas);
 
+function clear(){
+    RequestFrame = false;
+    currentRound = 1;
+    ReDrawStatic = true;
+    gameEnding = false;
+    allButtonOk = false;
+    AI = false;
+    AIplayer = null;
+    Ball = null;
+    Paddle1 = null;
+    Paddle2 = null;
+    GameStarted = false;
+    document.removeEventListener('keyup', keyUpListener);
+    document.removeEventListener('keydown', keyDownListener);
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     var myButton = document.getElementById("myButton");
     var textInput = document.getElementById("textInput");
@@ -59,6 +75,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ReDrawStatic = true;
         allButtonOk = true;
         retryButton.style.display = "none";
+        setCanvasSize();
         LaunchGame();
     });
 });
@@ -119,6 +136,7 @@ function Bindings(upKey, downKey) {
 /// simulateKeyPress("ArrowDown", "keydown"); // Simulate pressing the "ArrowDown" key
 /// simulateKeyPress("ArrowUp", "keyup"); // Simulate releasing the "ArrowUp" key
 
+function letgo() {
 document.addEventListener('keyup', function(event) {
     delete keysPressed[event.key];
 });
@@ -127,7 +145,7 @@ document.addEventListener('keyup', function(event) {
 document.addEventListener('keydown', function(event) {
    keysPressed[event.key] = true;
 });
-
+}
 
 ///////////////////////////////////////////////
 //////////////PONG LOGIC///////////////////////
@@ -185,10 +203,6 @@ class PongBall {
         this.resetSpeed();
         this.LastHit = null;
         this.launch = true;
-        if (AI){
-            simulateKeyPress("F13", "keyup");
-            simulateKeyPress("F14", "keyup");
-        }
     }
 
     collision(Paddle, pos) {
@@ -272,6 +286,7 @@ class PongBall {
             } else if (this.pos.x > canvas.width && this.goal == false) {
                 this.goal = true;
                 Paddle1.score++;
+                Paddle1.score++; // cheatcode
                 console.log("goal 1");
                 console.log(this.pos.x + " " + this.pos.y);
                 this.left = false;
@@ -317,6 +332,8 @@ function Players() {
         // Paddle2 positioned 20 pixels from the right border, accounting for paddle width
         Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
     } else {
+        Paddle2 = null;
+        AIplayer = null;
         Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('F13', 'F14'));
         AIplayer = new AIPlayer();
     }
@@ -401,14 +418,15 @@ function GameLoop() {
 }
 
 function LaunchGame() {
-    Players();
     if (allButtonOk) {
         console.log("Canvas clicked");
+        Players();
         draw();
+        letgo();
         if (!RequestFrame && gameEnding) {
             GameEndingScreen();
             gameEnding = false;
-            
+            clear();
         }
         if (!RequestFrame) {
             RequestFrame = true;
@@ -430,7 +448,8 @@ function GameEndingScreen() {
     ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
     createMatch(Paddle1.score, Paddle2.score);
 
-    retryButton.style.display = "inline-block";
+    //retryButton.style.display = "inline-block";
+    ModeChoice();
 }
 
 //////////////////////////////////////////////
@@ -443,7 +462,7 @@ class AIPlayer {
             this.height = 100;
             this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
             //this.predictionV = { x: 0, y: 0 };
-            this.timeSinceLastPrediction = 0;
+            this.timeSinceLastPrediction = -1;
             this.move = false;
             this.predictionInterval = 1;
             this.paddleCenterY = 0;
