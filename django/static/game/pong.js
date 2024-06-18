@@ -15,6 +15,7 @@ let Ball = null;
 let Paddle1 = null;
 let Paddle2 = null;
 let GameStarted = false;
+let keysPressed = {};
 let lastFrameTime = performance.now();
 
 ////////////////////////////////////////////////////////
@@ -41,8 +42,7 @@ function clear(){
     Paddle1 = null;
     Paddle2 = null;
     GameStarted = false;
-    document.removeEventListener('keyup', keyUpListener);
-    document.removeEventListener('keydown', keyDownListener);
+    keysPressed = {};
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", function() {
         allButtonOk = true;
         retryButton.style.display = "none";
         setCanvasSize();
+        clear();
         LaunchGame();
     });
 });
@@ -121,8 +122,6 @@ function ModeChoice(){
 //////////////////BINDINGS/////////////////////
 ///////////////////////////////////////////////
 
-const keysPressed = {};
-
 function simulateKeyPress(key, type) {
     const event = new KeyboardEvent(type, { key });
     document.dispatchEvent(event);
@@ -132,20 +131,14 @@ function Bindings(upKey, downKey) {
     return { up: upKey, down: downKey };
 }
 
-/// simulateKeyPress("ArrowUp", "keydown"); // Simulate pressing the "ArrowUp" key
-/// simulateKeyPress("ArrowDown", "keydown"); // Simulate pressing the "ArrowDown" key
-/// simulateKeyPress("ArrowUp", "keyup"); // Simulate releasing the "ArrowUp" key
-
-function letgo() {
 document.addEventListener('keyup', function(event) {
     delete keysPressed[event.key];
 });
 
-
 document.addEventListener('keydown', function(event) {
    keysPressed[event.key] = true;
 });
-}
+
 
 ///////////////////////////////////////////////
 //////////////PONG LOGIC///////////////////////
@@ -174,7 +167,7 @@ class PongBall {
     }
 
     resetSpeed() {
-        this.speed = 0.5;
+        this.speed = 0.3;
     }
 
     CheckEdge(nextPos) {
@@ -286,7 +279,7 @@ class PongBall {
             } else if (this.pos.x > canvas.width && this.goal == false) {
                 this.goal = true;
                 Paddle1.score++;
-                Paddle1.score++; // cheatcode
+                //Paddle1.score++; // cheatcode
                 console.log("goal 1");
                 console.log(this.pos.x + " " + this.pos.y);
                 this.left = false;
@@ -314,10 +307,20 @@ class PongPaddle {
         if (keysPressed[this.keys.up] && this.pos.y > 0) {
             ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
             this.pos.y -= this.velocity * dt;
+            
+            // Ensure paddle does not go above the top boundary (y = 0)
+            if (this.pos.y < 0) {
+                this.pos.y = 0;
+            }
         }
-        if (keysPressed[this.keys.down] && this.pos.y + this.height < canvas.height) {
+        if (keysPressed[this.keys.down] && this.pos.y + this.height < 430) {
             ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
             this.pos.y += this.velocity * dt;
+            
+            // Ensure paddle does not go below the bottom boundary (y + height = 430)
+            if (this.pos.y + this.height > 430) {
+                this.pos.y = 430 - this.height;
+            }
         }
     }
 }
@@ -325,19 +328,26 @@ class PongPaddle {
 
 function Players() {
     Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
-    // Paddle1 positioned 20 pixels from the left border
-    Paddle1 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
     
     if (!AI) {
-        // Paddle2 positioned 20 pixels from the right border, accounting for paddle width
+        Paddle2 = null;
+        Paddle1 = null;
+        Paddle1 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
         Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
     } else {
         Paddle2 = null;
         AIplayer = null;
+        Paddle1 = null;
         Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('F13', 'F14'));
-        AIplayer = new AIPlayer();
+        AIplayer = new AIPlayer();  
+        Paddle1 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
     }
 }
+
+//////////////////////////////////////////////
+//////////////////DESSIN//////////////////////
+//////////////////////////////////////////////
+
 
 
 function drawStaticElements() {
@@ -393,18 +403,14 @@ function draw() {
     }
 }
 
+//////////////////////////////////////////////////////////
+//////////////////////GESTION TEMPS//////////////////////
+/////////////////////////////////////////////////////////
+
 function GameLoop() {
     const currentTime = performance.now();
     const dt = (currentTime - lastFrameTime) / 1000; // Convert to seconds
     lastFrameTime = currentTime;
-
-    Ball.update(dt);
-    Paddle1.update(dt);
-    if (AI) {
-        AIplayer.update(dt, Ball, Paddle2, Paddle1);
-    }
-    Paddle2.update(dt);
-    draw();
 
     if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
         console.log("Game Ending condition met");
@@ -414,6 +420,14 @@ function GameLoop() {
         return;
     }
 
+    Ball.update(dt);
+    Paddle1.update(dt);
+    if (AI) {
+        AIplayer.update(dt, Ball, Paddle2, Paddle1);
+    }
+    Paddle2.update(dt);
+    draw();
+
     requestAnimationFrame(GameLoop);
 }
 
@@ -422,7 +436,6 @@ function LaunchGame() {
         console.log("Canvas clicked");
         Players();
         draw();
-        letgo();
         if (!RequestFrame && gameEnding) {
             GameEndingScreen();
             gameEnding = false;
@@ -462,43 +475,50 @@ class AIPlayer {
             this.height = 100;
             this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
             //this.predictionV = { x: 0, y: 0 };
-            this.timeSinceLastPrediction = -1;
+            this.timeSinceLastPrediction = 0;
             this.move = false;
             this.predictionInterval = 1;
             this.paddleCenterY = 0;
             this.inRange = 50;
+            this.paddleSeen = {x: canvas.width / 2, y: canvas.height / 2};
+            this.BallSeen = {x: canvas.width / 2, y: canvas.height / 2} ;
+            this.velocitySeen = {x: 0, y: 0};
         }
 
         update(dt, ball, Paddle2, Paddle1) {
-            this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
             this.timeSinceLastPrediction += dt;
 
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
                 this.predict(ball, dt, Paddle1);
                 this.timeSinceLastPrediction = 0;
-                console.log("predicted");
+                //console.log("predicted");
+                this.paddleSeen = Paddle2.pos;
+                this.BallSeen = Ball.pos;
+                this.velocitySeen = Ball.velocity;
+                this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
                 //this.move = true;
                 return;
             }
 
-            if ((this.prediction.y > Paddle2.pos.x + Paddle2.width) && (ball.velocity.x > 0)) {
+            if (((this.BallSeen.x < this.paddleSeen.x) && (this.velocitySeen.x < 0)) ||
+            ((this.BallSeen.x > this.paddleSeen.x + 10) && (this.velocitySeen.x > 0))) {
             this.stopMovingUp();
             this.stopMovingDown();
             return;
         }
 
             if (this.prediction) {
-                if (this.prediction.y >= Paddle2.pos.y + 25 && this.prediction.y <= Paddle2.pos.y + Paddle2.height - 25) {
+                if (this.prediction.y >= this.paddleSeen.y + 25 && this.prediction.y <= this.paddleSeen.y + 100 - 25) {
                     this.stopMovingUp();
                     this.stopMovingDown();
-                } else if (this.prediction.y < this.paddleCenterY  && Paddle2.pos.y > 0) {
+                } else if (this.prediction.y < this.paddleCenterY  && this.paddleSeen.y > 0) {
                     this.stopMovingDown();
                     this.moveUp();
-                } else if (this.prediction.y > this.paddleCenterY && Paddle2.pos.y + 50 < canvas.height) {
+                } else if (this.prediction.y > this.paddleCenterY && this.paddleSeen.y + 50 < canvas.height) {
                     this.stopMovingUp();
                     this.moveDown();
                 }
-                console.log("Paddle2 position:", Paddle2.pos.x, Paddle2.pos.y);
+                //console.log("Paddle2 position:", Paddle2.pos.x, Paddle2.pos.y);
                 //console.log("AIPlayer position:", AIplayer.pos.x, AIplayer.pos.y);
                 //this.move = false;
             }
@@ -544,13 +564,22 @@ class AIPlayer {
         
                 if (predictedPos.x + ball.radius > canvas.width - 50) {
                     console.log(i);
-                    break; 
+                    // Stop predicting if the ball is going off the screen to the right
+                    break;
+                }
+                if (predictedPos.x + ball.radius < 0) {
+                    console.log(i);
+                    // Stop predicting if the ball is going off the screen to the right
+                    break;
                 }
             }
-            if (predictedVelocity.x <= 0)
-                this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
-            else
+        
+            // Set the prediction based on where the prediction stopped
+            if (predictedVelocity.x <= 0) {
+                this.prediction = { x: canvas.width / 2, y: canvas.height / 2 };
+            } else {
                 this.prediction = predictedPos;
+            }
         }
           
         stopMovingUp() {
