@@ -34,6 +34,7 @@ async function fillUserData(data) {
 		user_profile_card.classList.add('profile');
 		userProfileContainer.appendChild(user_profile_card);
 	}
+	console.log(data);
 	user.setUserData(data);
 }
 

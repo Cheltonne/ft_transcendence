@@ -47,8 +47,10 @@ def get_user_info(request):
         user_info = {
                 'username': user.username,
                 'profile_picture': user.profile_picture.url,
-                'user_matches': user_matches
-                }
+                'user_matches': user_matches,
+                'wins': user.wins,
+                'losses': user.losses,
+        }
         return JsonResponse(user_info)
     else:
         return JsonResponse({'error': 'User is not authenticated.'})
@@ -193,7 +195,13 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], url_path='by-username/(?P<username>[^/.]+)')
-    def get_user_by_username(self, request, username=None):
-        user = get_object_or_404(CustomUser, username=username)
-        serializer = self.get_serializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_user_by_username(self, request):
+        try:
+            username = request.POST['username']
+            user = CustomUser.objects.get(username=username)
+        except CustomUser.DoesNotExist:
+            print ('hehe merde')
+        ret = {
+            'id': user.id, 
+        }
+        return JsonResponse(ret)

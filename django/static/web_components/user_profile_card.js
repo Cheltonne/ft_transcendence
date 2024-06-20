@@ -13,11 +13,13 @@ import {
 export class UserProfileCard extends HTMLElement {
     constructor() {
         super();
-        const navbar = document.createElement('template')
-        navbar.innerHTML = `
+        const template = document.createElement('template')
+        template.innerHTML = `
         <div class="user-info-card" id="user-info-card">
             <div class='profile-picture'></div>
-            <div id="user-card-username" class="username"></div>
+            <div class="username"></div>
+            <div class="wins"></div>
+            <div class="losses"></div>
             <div class="match-history-link view-matches-link">
                 <a href='#' id="show-matches">See Match History</a>
             </div>
@@ -29,7 +31,7 @@ export class UserProfileCard extends HTMLElement {
         this.attachShadow({
             mode: 'open'
         });
-        this.shadowRoot.appendChild(navbar.content.cloneNode(true));
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
 
     connectedCallback() {
@@ -43,6 +45,8 @@ export class UserProfileCard extends HTMLElement {
             username: this.shadowRoot.querySelectorAll(".username"),
             profile_picture: this.shadowRoot.querySelectorAll(".profile-picture"),
             match_history_cards: this.shadowRoot.querySelector(".match-history-cards"),
+            wins: this.shadowRoot.querySelectorAll(".wins"),
+            losses: this.shadowRoot.querySelectorAll(".losses"),
         };
         user_observer = new UserObserver(elements);
         user.addObserver(user_observer);

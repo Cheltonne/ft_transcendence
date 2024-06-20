@@ -48,6 +48,25 @@ export class UserObserver extends Observer {
             console.log('Error while updating profile picture: ', error);
         }
         try {
+            if (data.wins)
+                this.elements.wins.forEach(element => {
+                    element.innerHTML = `<p>Wins: ${data.wins}</p>`;
+                })
+                console.log('Updated wins');
+        }
+        catch {
+                console.error('Error while updating number of wins');
+        }
+        try {
+            if (data.losses)
+                this.elements.losses.forEach(element => {
+                    element.innerHTML = `<p>Losses: ${data.losses}</p>`;
+                })
+        }
+        catch {
+                console.error('Error while updating number of losses');
+        }
+        try {
             const userProfileView = document.querySelector('user-profile-view');
             if (userProfileView)
                 userProfileView.renderUserProfile(data);
@@ -61,13 +80,15 @@ export class UserObserver extends Observer {
 export class User extends Subject {
     constructor() {
         super();
-        this.data = { username: '', profile_picture: '', user_matches: '' };
+        this.data = { username: '', profile_picture: '', user_matches: '', wins: 0, losses: 0 };
     }
 
     setUserData(data) {
         this.data.username = data.username;
         this.data.profile_picture = `<img src='${data.profile_picture}' class='profile-picture'></img>`;
         this.data.user_matches = data.user_matches;
+        this.data.wins = data.wins;
+        this.data.losses = data.losses;
         this.notifyObservers(this.data);
     }
 

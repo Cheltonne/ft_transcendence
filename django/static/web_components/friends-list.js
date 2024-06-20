@@ -7,8 +7,8 @@ export class FriendsComponent extends HTMLElement {
     }
 
     connectedCallback() {
-        this.render();
         this.loadFriends();
+        this.render();
     }
 
     async loadFriends() {
@@ -43,6 +43,9 @@ export class FriendsComponent extends HTMLElement {
         if (user) {
             await addFriend(user.id);
             this.loadFriends();
+        }
+        else{
+            console.log('User search failed');
         }
     }
 
