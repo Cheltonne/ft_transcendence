@@ -1,97 +1,91 @@
-var userInfo = {};
-const hamMenu = document.querySelector(".ham-menu");
-const menu = document.querySelector(".off-screen-menu");
+import { toggleMenu, userIsAuthenticated } from './utils.js';
+import { navigateTo, showView } from './views.js';
+import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
+import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
+import { UserProfileCard } from './web_components/user_profile_card.js';
+import { User } from './observer.js';
+export const hamMenu = document.querySelector(".ham-menu");
+export let menu;
+export const user = new User();
 
-function getUserInfo()
-{
-    $.ajax({
-        url: "accounts/get-user-info/",
-        type: 'GET',
-        dataType: 'json',
-        success: function(response)
-        {
-            if ('username' in response)
-            {
-                userInfo.username = response.username;
-                userInfo.profile_picture = response.profile_picture;
-                console.log('User information retrieved:', userInfo);
-                loginButton.innerText = "Logout";
-				loginButton.innerHTML = '<a type="button" id ="loginButton" class="btn btn-outline-dark" style="margin: 5rem;" href="accounts/logout">Logout</a>';
-                loginHeading.innerText = "Welcome, " + userInfo.username;
-				$('#profilePictureContainer').html('<img src="' + userInfo.profile_picture + '" class="profile-picture">');
-            }
-            else
-            {
-                console.error('Error:', response.error);
-                loginButton.innerText = "Login";
-                loginHeading.innerText = "Hey anon!";
-            }
-        },
-        error: function(xhr, status, error)
-        {
-            console.error('Failed to retrieve user information:', error);
-        }
-    });
+const userProfileContainer = document.getElementById('user-profile-content');
+const logo = document.querySelector(".logo");
+
+export function getUserInfo() {
+	return fetch("accounts/get-user-info/")
+		.then(response => response.json())
+		.then(data => {
+			loadNavbar();
+			if ('username' in data)
+				fillUserData(data);
+			return data;
+		})
+		.catch(error => {
+			console.error('Failed to retrieve user information:', error);
+			return false;
+		});
 }
 
-/* document.getElementById("scoreForm").addEventListener("submit", function(event)
-	{
-		event.preventDefault();
-		var scoreInput = document.getElementById("scoreInput").value;
-		if (/^\d+$/.test(scoreInput))
-		{
-			// Send the score to Django via AJAX
-			var xhr = new XMLHttpRequest();
-			xhr.open("POST", "game/save-score/", true);
-			xhr.setRequestHeader("Content-Type", "application/json");
-			xhr.onreadystatechange = function()
-			{
-				if (xhr.readyState === XMLHttpRequest.DONE)
-                {
-					if (xhr.status === 200)
-                    {
-						console.log("Score saved successfully.");
-					}
-                    else
-                    {
-						console.error("Failed to save score:", xhr.status);
-					}
-				}
-			};
-			xhr.send(JSON.stringify({score: parseInt(scoreInput)}));
-		}
-        else
-		{
-			alert("Please enter a valid integer score.");
-		}
-	}); */
-
-	function toggleMenu() {
-		menu.classList.toggle("active");
-		hamMenu.classList.toggle("active");
+async function fillUserData(data) {
+	if (document.querySelector('user-profile-card') === null) {
+		const user_profile_card = document.createElement('user-profile-card');
+		console.log('Created user profile card');
+		user_profile_card.classList.add('profile');
+		userProfileContainer.appendChild(user_profile_card);
 	}
-	
-	document.addEventListener("click", function(event) {
-		if (menu.classList.contains("active") && !event.target.closest(".off-screen-menu")) {
-			toggleMenu();
-		}
-	});
-	
-	hamMenu.addEventListener("click", () =>
-		{
-			toggleMenu();
-			event.stopImmediatePropagation()
-		}
-	);
-	
-	document.addEventListener("keydown", function(event) {
-		if (event.key === "m" || event.code === "KeyM") {
-			hamMenu.classList.toggle("active");
-			menu.classList.toggle("active");
-			console.log("The 'm' key was pressed!");
-		}
-	});
+	user.setUserData(data);
+}
 
-$(document).ready(function() {
-    getUserInfo();
+document.addEventListener("click", (event) => {	//close sidebar if click detected outside of it
+	if (menu.classList.contains("active") && !event.target.closest(".sidebar")) {
+		toggleMenu();
+	}
+});
+
+hamMenu.addEventListener("click", (event) => {	//"hamburger menu" button -> three lines icon to open sidebar
+	toggleMenu();
+	event.stopImmediatePropagation()
+}
+);
+
+document.addEventListener("keydown", function (event) { //open sidebar by pressing M on the keyboard
+	if (event.key === "m" || event.code === "KeyM") {
+		toggleMenu();
+		console.log("The 'm' key was pressed!");
+	}
+});
+
+logo.addEventListener("click", () => { //click logo to go back to pong view
+	navigateTo("pong", 1);
+})
+
+async function loadNavbar() { //always serve correct version of sidebar
+	const navbarContainer = document.getElementById('navbar');
+	const isAuthenticated = await userIsAuthenticated();
+
+	if (isAuthenticated && document.querySelector('logged-in-navbar') || !isAuthenticated && document.querySelector('logged-out-navbar'))
+		return;
+	else if (isAuthenticated && document.querySelector('logged-out-navbar')) {
+		navbarContainer.removeChild(document.querySelector('.sidebar'));
+		const loggedInNavbar = document.createElement('logged-in-navbar');
+		loggedInNavbar.classList.add('sidebar');
+		navbarContainer.appendChild(loggedInNavbar);
+	}
+	else if (!isAuthenticated && document.querySelector('logged-in-navbar')) {
+		navbarContainer.removeChild(document.querySelector('.sidebar'));
+		const loggedOutNavbar = document.createElement('logged-out-navbar');
+		navbarContainer.appendChild(loggedOutNavbar);
+		loggedOutNavbar.classList.add('sidebar');
+	} else {
+		const loggedOutNavbar = document.createElement('logged-out-navbar');
+		navbarContainer.appendChild(loggedOutNavbar);
+		loggedOutNavbar.classList.add('sidebar');
+	}
+	menu = document.querySelector('.sidebar');
+}
+
+$(document).ready(function () {
+	getUserInfo();
+	loadNavbar();
+	history.replaceState('pong', '', 'pong');
 });

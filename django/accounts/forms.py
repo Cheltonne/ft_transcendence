@@ -10,14 +10,14 @@ class CustomUserCreationForm(UserCreationForm):
 		model = CustomUser
 		fields = ['username', 'password1', 'password2', 'profile_picture']
 		help_texts = {
-				'username': _("Taille maximale: 11"),
+				'username': _("Taille maximale: 15"),
 				}
 
 class CustomUserChangeForm(UserChangeForm):
 	class Meta:
 		model = CustomUser
-		fields = ("username", "password")
-
+		fields = ("username", 'profile_picture')
+	profile_picture = forms.ImageField(required=False)
 class CustomAuthenticationForm(AuthenticationForm):
 	class Meta:
 		model = CustomUser

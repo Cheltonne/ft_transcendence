@@ -1,8 +1,8 @@
+export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
-const retryButton = document.getElementById('retryButton');
+const MenuButton = document.getElementById('MenuButton');
 const ctx = canvas.getContext("2d");
 const MAX_ROUNDS = 2;
-var RequestFrame = false;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -14,9 +14,11 @@ var userInfo = {username: 'player1'};
 let Ball = null;
 let Paddle1 = null;
 let Paddle2 = null;
-let GameStarted = false;
 let keysPressed = {};
 let lastFrameTime = performance.now();
+const LocalButton = document.getElementById("LocalButton");
+const AIButton = document.getElementById("AIButton");
+const restartButton = document.getElementById("restartButton")
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -30,25 +32,49 @@ function setCanvasSize() {
 //resizeCanvas();
 //window.addEventListener('resize', resizeCanvas);
 
+LocalButton.addEventListener("click", function() {
+    allButtonOk = true;
+    console.log("local");
+    AI = false;
+    LocalButton.style.display = 'none';
+    AIButton.style.display = 'none';
+    clear();
+    LaunchGame();
+});
+
+AIButton.addEventListener("click", function() {
+    allButtonOk = true;
+    console.log("IA");
+    AI = true;
+    LocalButton.style.display = 'none';
+    AIButton.style.display = 'none';
+    clear();
+    LaunchGame();
+});
+
+restartButton.addEventListener("click", function() {
+    restartButton.style.display = 'none';
+    lastFrameTime = performance.now();
+    requestAnimationFrame(GameLoop);
+});
+
 function clear(){
-    RequestFrame = false;
+    //RequestFrame = false;
     currentRound = 1;
     ReDrawStatic = true;
     gameEnding = false;
-    allButtonOk = false;
-    AI = false;
+    //allButtonOk = false;
+    //AI = false;
     AIplayer = null;
     Ball = null;
     Paddle1 = null;
     Paddle2 = null;
-    GameStarted = false;
     keysPressed = {};
 }
 
 document.addEventListener("DOMContentLoaded", function() {
     var myButton = document.getElementById("myButton");
     var textInput = document.getElementById("textInput");
-    var retryButton = document.getElementById("retryButton");
   
     myButton.addEventListener("click", function() {
         var alias = textInput.value.trim();
@@ -63,49 +89,24 @@ document.addEventListener("DOMContentLoaded", function() {
             alert("Please enter your alias.");
         }
     });
-
-    retryButton.style.display = "none";
-
-    retryButton.addEventListener("click", function() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        Paddle1.score = 0;
-        Paddle2.score = 0;
-        RequestFrame = false;
-        gameEnding = false;
-        ReDrawStatic = true;
-        allButtonOk = true;
-        retryButton.style.display = "none";
-        setCanvasSize();
-        clear();
-        LaunchGame();
-    });
 });
 
 function ModeChoice(){
-    var Local = document.getElementById("LocalButton");
-    var AIPlayer = document.getElementById("AIButton");
-
-    Local.style.display = 'inline-block';
-    AIPlayer.style.display = 'inline-block';
-
-    Local.addEventListener("click", function() {
-        allButtonOk = true;
-        console.log("local");
-        AI = false;
-        Local.style.display = 'none';
-        AIPlayer.style.display = 'none';
-        LaunchGame();
-    });
-    AIPlayer.addEventListener("click", function() {
-        allButtonOk = true;
-        console.log("IA");
-        AI = true;
-        Local.style.display = 'none';
-        AIPlayer.style.display = 'none';
-        LaunchGame();
-    });
+    LocalButton.style.display = 'inline-block';
+    AIButton.style.display = 'inline-block';
+    drawStaticElements();
 }
 
+function MenuChoice(){
+    MenuButton.style.display = 'inline-block';
+}
+
+MenuButton.style.display = "none";
+
+MenuButton.addEventListener("click", function() {
+    MenuButton.style.display = "none";
+    ModeChoice();
+});
 
   $(document).ready(function() {
     $("#myButton").click(function() {
@@ -154,7 +155,7 @@ class PongBall {
         this.prevpos = pos;
         this.velocity = vec2(0, 0);
         this.radius = 5;
-        this.speed = 0.3;
+        this.speed = 0.5;
         this.left = null;
         this.LastHit = null;
         this.trailLength = 10;
@@ -167,7 +168,7 @@ class PongBall {
     }
 
     resetSpeed() {
-        this.speed = 0.3;
+        this.speed = 0.5;
     }
 
     CheckEdge(nextPos) {
@@ -260,7 +261,7 @@ class PongBall {
             //if (Math.abs(collidePoint) > 0.9) {
             //    this.velocity.y = -this.velocity.y;
             //}
-            console.log(this.speed);
+            //console.log(this.speed);
             if (this.speed <= 0.9)
                 this.speed += 0.05;
         } else {
@@ -270,7 +271,7 @@ class PongBall {
             if (this.pos.x <= 0 && this.goal == false) {
                 this.goal = true;
                 Paddle2.score++;
-                console.log("goal 2");
+                //console.log("goal 2");
                 this.left = true;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -280,8 +281,8 @@ class PongBall {
                 this.goal = true;
                 Paddle1.score++;
                 //Paddle1.score++; // cheatcode
-                console.log("goal 1");
-                console.log(this.pos.x + " " + this.pos.y);
+                //console.log("goal 1");
+                //console.log(this.pos.x + " " + this.pos.y);
                 this.left = false;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -353,24 +354,25 @@ function Players() {
 function drawStaticElements() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    ctx.fillStyle = "#a2c11c";
+
+    if (!RequestFrame && currentRound == 1) {
+        ctx.fillRect(20, (canvas.height - 100) / 2, 10, 100);
+        ctx.fillRect(canvas.width - 20 - 10, (canvas.height - 100) / 2, 10, 100);
+        ctx.fillStyle = '#fff';
+        ctx.font = '36px sans-serif';
+        ctx.fillText(0, canvas.width - 130, 50);
+        ctx.fillText(0, 100, 50);
+    }
+    else {
     ctx.fillStyle = '#fff';
     ctx.font = '36px sans-serif';
 
-    if (!RequestFrame && currentRound == 1) {
-        ctx.fillText('click on the canvas to begin',
-            canvas.width / 3.5,
-            canvas.height / 2 + 120
-        );
-
-        ctx.fillText('press 2 to play against AI',
-            canvas.width / 3.5,
-            canvas.height / 2 + 160
-        );
-    }
-
     ctx.fillText(Paddle2.score, canvas.width - 130, 50);
     ctx.fillText(Paddle1.score, 100, 50);
+
     ReDrawStatic == false;
+    }
 }
 
 function draw() {
@@ -407,6 +409,27 @@ function draw() {
 //////////////////////GESTION TEMPS//////////////////////
 /////////////////////////////////////////////////////////
 
+export function onoffGame(Button){
+    if (Button === 'off')
+    {
+        //RequestFrame = false;
+        console.log("pause");
+        clear();
+        cancelAnimationFrame(GameLoop);
+        RequestFrame = false;
+        AI = false;
+    }
+    if (Button === 'on')
+    {
+        //RequestFrame = true;
+        console.log("on continue");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ModeChoice();
+        //restartChoice();
+    }
+
+}
+
 function GameLoop() {
     const currentTime = performance.now();
     const dt = (currentTime - lastFrameTime) / 1000; // Convert to seconds
@@ -433,11 +456,10 @@ function GameLoop() {
 
 function LaunchGame() {
     if (allButtonOk) {
-        console.log("Canvas clicked");
         Players();
         draw();
         if (!RequestFrame && gameEnding) {
-            GameEndingScreen();
+            //GameEndingScreen();
             gameEnding = false;
             clear();
         }
@@ -462,7 +484,8 @@ function GameEndingScreen() {
     createMatch(Paddle1.score, Paddle2.score);
 
     //retryButton.style.display = "inline-block";
-    ModeChoice();
+    MenuChoice();
+    //ModeChoice();
 }
 
 //////////////////////////////////////////////
@@ -559,16 +582,16 @@ class AIPlayer {
                     predictedVelocity.x = direction * ball.speed * Math.cos(angleRad);
                     predictedVelocity.y = ball.speed * Math.sin(angleRad);
         
-                    console.log("changed velocity");
+                    //console.log("changed velocity");
                 }
         
                 if (predictedPos.x + ball.radius > canvas.width - 50) {
-                    console.log(i);
+                    //console.log(i);
                     // Stop predicting if the ball is going off the screen to the right
                     break;
                 }
                 if (predictedPos.x + ball.radius < 0) {
-                    console.log(i);
+                    //console.log(i);
                     // Stop predicting if the ball is going off the screen to the right
                     break;
                 }
