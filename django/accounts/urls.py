@@ -1,7 +1,13 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
+from rest_framework.routers import DefaultRouter
+from .views import CustomUserViewSet
+
+router = DefaultRouter()
+router.register(r'users', CustomUserViewSet)
 
 urlpatterns = [
+        path('', include(router.urls)),
 		path("logout/", views.user_logout, name="logout"),
         path("get-user-info/", views.get_user_info, name='get_user_info'),
         path("render-signin-form/", views.render_signin_form, name='render-signin-form'),

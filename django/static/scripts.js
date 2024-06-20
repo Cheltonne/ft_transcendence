@@ -3,6 +3,7 @@ import { navigateTo, showView } from './views.js';
 import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
 import { UserProfileCard } from './web_components/user_profile_card.js';
+import { FriendsComponent } from './web_components/friends-list.js';
 import { User } from './observer.js';
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;

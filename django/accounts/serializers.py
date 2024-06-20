@@ -26,18 +26,12 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        label=('Username'),
-        required=True,
-        max_length=15,
-        style={
-            "input_type": "text",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True,
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Username is required.",
-        },
-    )
+    friends = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 'friends']
+
+    def get_friends(self, obj):
+        friends = obj.friends.all()
+        return CustomUserSerializer(friends, many=True, context=self.context).data

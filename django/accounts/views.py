@@ -1,23 +1,26 @@
 import json
+from PIL import Image
+from io import BytesIO
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, CustomUserChangeForm
+from .models import CustomUser
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, CustomUserChangeForm
-from PIL import Image
-from .models import CustomUser
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from io import BytesIO
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate
 from django.template.exceptions import TemplateDoesNotExist
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.views import APIView
-from .serializers import UserSerializer
+from rest_framework import viewsets, status
+from .serializers import CustomUserSerializer
 
 def index(request):
     return render(request, 'index.html')
@@ -160,3 +163,37 @@ def render_update_form(request):
             return JsonResponse({'success': False, 'errors': form.errors.as_json()})
     else:
       return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+class CustomUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+
+    @action(detail=True, methods=['post'])
+    def add_friend(self, request, pk=None):
+        user = request.user
+        friend = get_object_or_404(CustomUser, pk=pk)
+        user.friends.add(friend)
+        user.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def remove_friend(self, request, pk=None):
+        user = request.user
+        friend = get_object_or_404(CustomUser, pk=pk)
+        user.friends.remove(friend)
+        user.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'])
+    def my_friends(self, request):
+        user = request.user
+        friends = user.friends.all()
+        serializer = CustomUserSerializer(friends, many=True, context={'request': request})
+        print('This is serializer.data LOOK: ', serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], url_path='by-username/(?P<username>[^/.]+)')
+    def get_user_by_username(self, request, username=None):
+        user = get_object_or_404(CustomUser, username=username)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,8 +1,7 @@
 import { navigateTo } from '../views.js';
-import { handleLogout } from '../utils.js';
+import { handleLogout, showToast } from '../utils.js';
 import { getUserInfo, user } from '../scripts.js';
 import { User, UserObserver } from '../observer.js';
-import { showToast } from '../utils.js';
 
 export class LoggedInNavbar extends HTMLElement {
     constructor() {
@@ -15,6 +14,7 @@ export class LoggedInNavbar extends HTMLElement {
             <li><div id="loginHeading" class="fs-5 fw-semibold username" style="color:white;"></div></li>
             <li><a href="#" class="homeButton">Home</a></li>
             <li class='profile-button-li'><a href="#" class="profileButton">My Profile</a></li>
+            <li><a href="#" class='friendsButton'>Friends</a></li>
             <li><a class="button logoutButton" id="logoutButton" href="#">Logout</a></li>
           </ul>
         </div>
@@ -26,6 +26,7 @@ export class LoggedInNavbar extends HTMLElement {
     connectedCallback() {
         this.home = this.shadowRoot.querySelector('.homeButton');
         this.profile = this.shadowRoot.querySelector('.profileButton');
+        this.friends = this.shadowRoot.querySelector('.friendsButton');
         this.logout = this.shadowRoot.querySelector('.logoutButton');
         let user_observer;
         const styleLink = document.createElement('link');
@@ -41,6 +42,11 @@ export class LoggedInNavbar extends HTMLElement {
         user.addObserver(user_observer);
         this.home.addEventListener("click", () => {
             navigateTo('pong', 1);
+        });
+
+        this.friends.addEventListener("click", () => {
+            if (document.querySelector('.friends-view') === null)
+            navigateTo('friends', 1);
         });
 
         this.profile.addEventListener('click', (event) => {
