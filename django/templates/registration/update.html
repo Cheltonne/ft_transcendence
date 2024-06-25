@@ -1,0 +1,7 @@
+<form method="UPDATE" enctype="multipart/form-data" id="update-form">
+	<h1>Update user information</h1>
+	{% csrf_token %}
+	{{ form.as_p }}
+	<button type="submit">Okay I Update</button></br>
+	<p>😒</p>
+</form>

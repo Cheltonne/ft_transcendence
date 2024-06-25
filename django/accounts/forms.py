@@ -16,8 +16,8 @@ class CustomUserCreationForm(UserCreationForm):
 class CustomUserChangeForm(UserChangeForm):
 	class Meta:
 		model = CustomUser
-		fields = ("username", "password")
-
+		fields = ("username", 'profile_picture')
+	profile_picture = forms.ImageField(required=False)
 class CustomAuthenticationForm(AuthenticationForm):
 	class Meta:
 		model = CustomUser
