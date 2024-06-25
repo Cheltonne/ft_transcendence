@@ -43,6 +43,12 @@ class tagrossemere(AsyncWebsocketConsumer):
             )
 
     async def disconnect(self, close_code):
+        # Remove user from tracker and update status
+        self.user = self.scope['user']
+        await sync_to_async(UserTracker.remove_user)(self.user.username)
+        self.user.is_online = False
+        await sync_to_async(self.user.save)()
+
         # Notify group about user leaving
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -52,13 +58,10 @@ class tagrossemere(AsyncWebsocketConsumer):
                 'is_online': False
             }
         )
-
-        # Remove user from tracker and update status
-        await sync_to_async(UserTracker.remove_user)(self.user.username)
-        self.user.is_online = False
-        await sync_to_async(self.user.save)()
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-
+        await self.channel_layer.group_discard(
+            self.room_group_name, 
+            self.channel_name
+        )
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)

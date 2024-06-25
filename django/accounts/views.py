@@ -21,6 +21,8 @@ from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework import viewsets, status
 from .serializers import CustomUserSerializer
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 def index(request):
     return render(request, 'index.html')

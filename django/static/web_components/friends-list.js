@@ -52,8 +52,10 @@ export class FriendsComponent extends HTMLElement {
                 }
                 this.render();
             };
-            socket.onclose = (e) => {
-                console.log('socket closed.')}
+            socket.onclose = async (e) => {
+                console.log('socket closed.')
+                await this.loadFriends();
+            }
         }
     }
 
@@ -70,7 +72,7 @@ export class FriendsComponent extends HTMLElement {
                         `<li class="friend-card">
                             <img src="${friend.profile_picture.replace('http://localhost/', '')}" alt="Profile Picture"></img>
                             ${friend.username} 
-                            <span class="status ${this.onlineFriends.has(friend.username) ? 'online' : 'offline'}"></span>
+                            <span class="status ${friend.is_online ? 'online' : 'offline'}"></span>
                             <button data-id="${friend.id}" class="remove-friend">Remove</button>
                         </li>`
                     ).join('')}
