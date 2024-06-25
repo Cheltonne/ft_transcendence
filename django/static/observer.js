@@ -21,6 +21,32 @@ class Subject {
     }
 }
 
+export class User extends Subject {
+    constructor() {
+        super();
+        this.data = { username: '', profile_picture: '', user_matches: '', wins: 0, losses: 0 };
+    }
+
+    setUserData(data) {
+        this.data.username = data.username;
+        this.data.profile_picture = `<img src='${data.profile_picture}' class='profile-picture'></img>`;
+        this.data.user_matches = data.user_matches;
+        this.data.wins = data.wins;
+        this.data.losses = data.losses;
+        this.notifyObservers(this.data);
+    }
+
+    clearUserData() {
+        this.data = {};
+        this.notifyObservers(this.data);
+        console.log('Cleared user data');
+    }
+
+    getObservers() {
+        return (this.observers);
+    }
+}
+
 export class UserObserver extends Observer {
     constructor(elements) {
         super();
@@ -55,7 +81,7 @@ export class UserObserver extends Observer {
                 console.log('Updated wins');
         }
         catch {
-                console.error('Error while updating number of wins');
+                //console.error('Error while updating number of wins');
         }
         try {
             if (data.losses)
@@ -64,7 +90,7 @@ export class UserObserver extends Observer {
                 })
         }
         catch {
-                console.error('Error while updating number of losses');
+                //console.error('Error while updating number of losses');
         }
         try {
             const userProfileView = document.querySelector('user-profile-view');
@@ -74,31 +100,5 @@ export class UserObserver extends Observer {
         catch (error) {
             console.log('Error while rendering match history cards: ', error);
         }
-    }
-}
-
-export class User extends Subject {
-    constructor() {
-        super();
-        this.data = { username: '', profile_picture: '', user_matches: '', wins: 0, losses: 0 };
-    }
-
-    setUserData(data) {
-        this.data.username = data.username;
-        this.data.profile_picture = `<img src='${data.profile_picture}' class='profile-picture'></img>`;
-        this.data.user_matches = data.user_matches;
-        this.data.wins = data.wins;
-        this.data.losses = data.losses;
-        this.notifyObservers(this.data);
-    }
-
-    clearUserData() {
-        this.data = {};
-        this.notifyObservers(this.data);
-        console.log('Cleared user data');
-    }
-
-    getObservers() {
-        return (this.observers);
     }
 }

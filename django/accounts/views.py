@@ -176,7 +176,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         friend = get_object_or_404(CustomUser, pk=pk)
         user.friends.add(friend)
         user.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response({'detail': 'Friend added successfully'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
     def remove_friend(self, request, pk=None):
@@ -184,24 +184,20 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         friend = get_object_or_404(CustomUser, pk=pk)
         user.friends.remove(friend)
         user.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response({'detail': 'Friend removed successfully'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def my_friends(self, request):
         user = request.user
         friends = user.friends.all()
         serializer = CustomUserSerializer(friends, many=True, context={'request': request})
-        print('This is serializer.data LOOK: ', serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], url_path='by-username/(?P<username>[^/.]+)')
-    def get_user_by_username(self, request):
+    def get_user_by_username(self, request, username=None):
         try:
-            username = request.POST['username']
             user = CustomUser.objects.get(username=username)
+            ret = {'id': user.id, 'username': user.username}
+            return Response(ret, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
-            print ('hehe merde')
-        ret = {
-            'id': user.id, 
-        }
-        return JsonResponse(ret)
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND) 

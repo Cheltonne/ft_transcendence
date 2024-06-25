@@ -7,5 +7,6 @@ class CustomUser(AbstractUser):
 	wins = models.IntegerField(default=0)
 	losses = models.IntegerField(default=0)
 	friends = models.ManyToManyField('self', blank=True)
+	is_online = models.BooleanField(default=False)
 	def __str__(self):
 		return self.username

@@ -2,6 +2,7 @@ import { navigateTo } from '../views.js';
 import { handleLogout, showToast } from '../utils.js';
 import { getUserInfo, user } from '../scripts.js';
 import { User, UserObserver } from '../observer.js';
+import { socket } from '../utils.js';
 
 export class LoggedInNavbar extends HTMLElement {
     constructor() {

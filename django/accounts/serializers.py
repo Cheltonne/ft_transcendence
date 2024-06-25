@@ -26,12 +26,17 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    friends = serializers.SerializerMethodField()
+    friends = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 'friends']
+        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 'friends', 'is_online']
 
     def get_friends(self, obj):
         friends = obj.friends.all()
         return CustomUserSerializer(friends, many=True, context=self.context).data
+
+    def get_profile_picture(self, obj):
+        if obj.profile_picture:
+            return self.context['request'].build_absolute_uri(obj.profile_picture.url)
+        return None

@@ -28,7 +28,6 @@ export async function getFriends() {
     const response = await fetch(`/accounts/my_friends/`, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
         },
@@ -36,7 +35,6 @@ export async function getFriends() {
     });
  
     if (response.ok) {
-        console.log(response)
         return await response.json();
     }
     else {
@@ -49,7 +47,6 @@ export async function getUserByUsername(username) {
     const response = await fetch(`/accounts/by-username/${username}/`, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Authorization': 'Bearer ' + getCookie('token') // Adjust for your auth method
         }

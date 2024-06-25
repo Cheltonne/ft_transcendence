@@ -1,4 +1,4 @@
-import { toggleMenu, userIsAuthenticated } from './utils.js';
+import { toggleMenu, userIsAuthenticated, initializeWebSocket } from './utils.js';
 import { navigateTo, showView } from './views.js';
 import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
@@ -34,7 +34,6 @@ async function fillUserData(data) {
 		user_profile_card.classList.add('profile');
 		userProfileContainer.appendChild(user_profile_card);
 	}
-	console.log(data);
 	user.setUserData(data);
 }
 
@@ -90,4 +89,5 @@ $(document).ready(function () {
 	getUserInfo();
 	loadNavbar();
 	history.replaceState('pong', '', 'pong');
+	initializeWebSocket();
 });

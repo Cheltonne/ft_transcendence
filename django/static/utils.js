@@ -1,6 +1,6 @@
-import { getUserInfo } from './scripts.js';
-import { menu, hamMenu } from './scripts.js';
+import { getUserInfo, menu, hamMenu } from './scripts.js';
 import { navigateTo } from './views.js';
+export let socket = null;
 
 export function getCookie(cname) { // to get CSRF cookie (necessary for forms)
 	let name = cname + '=';
@@ -69,10 +69,36 @@ export function handleLogout() {
 			}
 		})
 		.catch(error => console.error('Error during logout request:', error));
+		if (socket && socket.readyState === WebSocket.OPEN)
+        	socket.close();
 }
 
 export async function userIsAuthenticated() {
 	const response = await fetch('accounts/check-authenticated/');
 	const data = await response.json();
 	return data.authenticated;
+}
+
+export async function initializeWebSocket() {
+    const authToken = await userIsAuthenticated();
+
+    if (authToken) {
+
+        socket = new WebSocket('wss://' + window.location.host + '/ws/accounts/');
+
+        socket.onopen = function(event) {
+            console.log('WebSocket is open now.');
+        };
+
+        socket.onclose = function(event) {
+            console.log('WebSocket is closed.');
+            socket = null; // Reset socket variable when closed
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket encountered error:', error);
+        };
+    } else {
+        console.log('User is not authenticated.'); // Handle case where authToken is not available
+    }
 }

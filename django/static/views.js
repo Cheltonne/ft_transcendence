@@ -1,9 +1,9 @@
-import { userIsAuthenticated, getCookie, showToast, toggleMenu, handleError } from './utils.js';
+import { userIsAuthenticated, getCookie, showToast, toggleMenu, handleError, initializeWebSocket, socket } from './utils.js';
 import { getUserInfo } from './scripts.js';
 import { SigninForm } from './web_components/signin_form.js';
 import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
-const authRequiredViews = ['user-profile', 'update'];
+const authRequiredViews = ['user-profile', 'update', 'friends-list'];
 const nonAuthViews = ['signin', 'signup'];
 
 async function historyNavigation(viewName, type) {	//handles navigation through browser buttons (back/next)
@@ -65,10 +65,11 @@ export async function handleFormSubmit(formType) {
 								else
 									handleError('You\'re not authenticated anymore!');
 							});
-					} else {
-						showToast(`${formType} succ!`);
+					} else { //after signup or signin do this
+						showToast(`${formType} success!`);
 						getUserInfo();
 						navigateTo('pong');
+						initializeWebSocket();
 					}
 				}
 				else {
