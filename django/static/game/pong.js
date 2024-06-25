@@ -363,6 +363,12 @@ function drawStaticElements() {
         ctx.font = '36px sans-serif';
         ctx.fillText(0, canvas.width - 130, 50);
         ctx.fillText(0, 100, 50);
+        ctx.fillStyle = '#fff';
+        ctx.font = '20px sans-serif';
+        ctx.fillText("'↑': move up", canvas.width - 165, canvas.height - 30);
+        ctx.fillText("'↓': move down", canvas.width - 165, canvas.height - 10);
+        ctx.fillText("'w' : move up", 10, canvas.height - 30);
+        ctx.fillText("'s' : move down", 10, canvas.height - 10);
     }
     else {
     ctx.fillStyle = '#fff';
