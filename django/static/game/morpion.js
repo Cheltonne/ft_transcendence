@@ -56,7 +56,41 @@ newGameWithComputerButton.addEventListener('click', function() {
     startGame();
 });
 
-// fonction pour choisir le type de jeu : soit 5 parties, soit une nouvelle partie
+matchmakingButton.addEventListener('click', async function() {
+    await startMatchmaking();
+});
+
+// Fonction pour démarrer le matchmaking et créer une nouvelle partie
+async function startMatchmaking() {
+    const isAuthenticated = await checkAuthenticated();
+    if (!isAuthenticated) {
+        console.error("User not authenticated. Cannot create match.");
+        alert("You need to be logged in to start a match.");
+        return;
+    }
+    const response = await fetch('create-match/', {
+        method: 'POST',
+    });
+    const data = await response.json();
+    if (data.match_id) {
+        console.log("Match created with ID:", data.match_id);
+        matchId = data.match_id;
+        player1Name = data.player1_name;
+        player2Name = data.player2_name;
+        updatePlayerNames();
+        resetSeries();
+    } else {
+        console.error("Error creating match");
+        alert("Failed to create match. Please try again.");
+    }
+}
+
+function updatePlayerNames() {
+    scorePlayer1.textContent = player1Name + ': ' + scoreX;
+    scorePlayer2.textContent = player2Name + ': ' + scoreO;
+}
+
+// fonction pour choisir le type de jeu : soit 3 parties, soit une nouvelle partie
 function startGame() {
     if (seriesOver) {
         resetSeries();
@@ -127,12 +161,12 @@ function endGame(draw) {
 
 // fonction pour mettre à jour le score
 function updateScore(winner) {
-    if (winner === 'X') {
+    if (winner === player1Name) {
         scoreX++;
-        scorePlayer1.textContent = `Player 1: ${scoreX}`;
-    } else if (winner === 'O') {
+        scorePlayer1.textContent = `${player1Name}: ${scoreX}`;
+    } else if (winner === player2Name) {
         scoreO++;
-        scorePlayer2.textContent = `Player 2: ${scoreO}`;
+        scorePlayer2.textContent = `${player2Name}: ${scoreO}`;
     }
 }
 
@@ -180,6 +214,18 @@ function checkSeriesWinner() {
     if (gamesPlayed >= maxGames) {
         let message;
         if (scoreX > scoreO) {
+            message = `Series Winner: ${player1Name}`;
+        } else if (scoreO > scoreX) {
+            message = `Series Winner: ${player2Name}`;
+        } else {
+            message = "Series ends in a draw.";
+        }
+        console.log(message);
+        createMatch(scoreX, scoreO);
+        //sendScoreToDjango(scoreX, scoreO, matchId);
+    /*if (gamesPlayed >= maxGames) {
+        let message;
+        if (scoreX > scoreO) {
             message = "Series Winner: Player 1";
         } else if (scoreO > scoreX) {
             message = "Series Winner: Player 2";
@@ -188,7 +234,7 @@ function checkSeriesWinner() {
         }
         console.log(message);
         createMatch(scoreX, scoreO);
-        sendScoreToDjango(scoreX, scoreO, "currentMatchId");
+        sendScoreToDjango(scoreX, scoreO, "currentMatchId");*/
         //resetSeries(); // on recommence ici?
     }
 }
@@ -197,25 +243,77 @@ async function createMatch(user_score, alias_score) {
 	const isAuthenticated = await checkAuthenticated();
 	if (!isAuthenticated) {
     console.error("User not authenticated. Cannot create match.");
+    showAlert("danger", "You need to be logged in to create a match.");
     return;
   }
 
-  const response = await fetch('pong/create-match/', {
+  const response = await fetch('create-match/', {
     method: 'POST',
   });
   const data = await response.json();
   if (data.match_id) {
     console.log("Match created with ID:", data.match_id);
+    showAlert("success", "Match created successfully!");
     sendScoreToDjango(user_score, alias_score, data.match_id);
   } else {
     console.error("Error creating match");
+    showAlert("danger", "Failed to create match. Please try again.");
   }
 }
 
+/*async function createMatch(user_score, alias_score) {
+    const isAuthenticated = await checkAuthenticated();
+    if (!isAuthenticated) {
+        console.error("User not authenticated. Cannot create match.");
+        showAlert("danger", "You need to be logged in to create a match.");
+        return;
+    }
+
+    try {
+        const response = await fetch('pong/create-match/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user_score: user_score, alias_score: alias_score })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.match_id) {
+            console.log("Match created with ID:", data.match_id);
+            showAlert("success", "Match created successfully!");
+            sendScoreToDjango(user_score, alias_score, data.match_id);
+        } else {
+            console.error("Error creating match:", data);
+            showAlert("danger", "Failed to create match. Please try again.");
+        }
+    } catch (error) {
+        console.error("Error creating match:", error);
+        showAlert("danger", "Failed to create match. Please check your network connection and try again.");
+    }
+}*/
+
+function showAlert(type, message) {
+    const alertPlaceholder = document.getElementById('alert-placeholder');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.role = 'alert';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    `;
+    alertPlaceholder.appendChild(alert);
+}
 
 function sendScoreToDjango(scoreX, scoreO, match_id) {
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "pong/save-score/", true);
+    xhr.open("POST", "morpion/save-score/", true);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -236,8 +334,10 @@ function resetSeries() {
     gamesPlayed = 0;
     scoreX = 0;
     scoreO = 0;
-    scorePlayer1.textContent = 'Player 1';
-    scorePlayer2.textContent = 'Player 2';
+    scorePlayer1.textContent = `${player1Name}: 0`;
+    scorePlayer2.textContent = `${player2Name}: 0`;
+    /*scorePlayer1.textContent = 'Player 1';
+    scorePlayer2.textContent = 'Player 2';*/
     restartGame();
     seriesOver = false;
     alertShown = false;
