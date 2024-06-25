@@ -18,7 +18,7 @@ let keysPressed = {};
 let lastFrameTime = performance.now();
 const LocalButton = document.getElementById("LocalButton");
 const AIButton = document.getElementById("AIButton");
-const restartButton = document.getElementById("restartButton")
+//const restartButton = document.getElementById("restartButton")
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -52,11 +52,11 @@ AIButton.addEventListener("click", function() {
     LaunchGame();
 });
 
-restartButton.addEventListener("click", function() {
-    restartButton.style.display = 'none';
-    lastFrameTime = performance.now();
-    requestAnimationFrame(GameLoop);
-});
+//restartButton.addEventListener("click", function() {
+///    restartButton.style.display = 'none';
+//    lastFrameTime = performance.now();
+//    requestAnimationFrame(GameLoop);
+//});
 
 function clear(){
     //RequestFrame = false;
@@ -397,12 +397,12 @@ function draw() {
     }
 
     //Draw trails and other dynamic elements
-    for (let i = 0; i < Ball.trailPositions.length; i++) {
-    ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
-    ctx.beginPath();
-    ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
-    ctx.fill();
-    }
+    //for (let i = 0; i < Ball.trailPositions.length; i++) {
+    //ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
+    //ctx.beginPath();
+    //ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
+    //ctx.fill();
+    //}
 }
 
 //////////////////////////////////////////////////////////
@@ -514,21 +514,21 @@ class AIPlayer {
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
                 this.predict(ball, dt, Paddle1);
                 this.timeSinceLastPrediction = 0;
-                //console.log("predicted");
                 this.paddleSeen = Paddle2.pos;
                 this.BallSeen = Ball.pos;
                 this.velocitySeen = Ball.velocity;
                 this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
+                //console.log("predicted");
                 //this.move = true;
                 return;
             }
 
-            if (((this.BallSeen.x < this.paddleSeen.x) && (this.velocitySeen.x < 0)) ||
-            ((this.BallSeen.x > this.paddleSeen.x + 10) && (this.velocitySeen.x > 0))) {
-            this.stopMovingUp();
-            this.stopMovingDown();
-            return;
-        }
+            //if (((this.BallSeen.x < this.paddleSeen.x) && (this.velocitySeen.x < 0)) ||
+            //((this.BallSeen.x > this.paddleSeen.x + 10) && (this.velocitySeen.x > 0))) {
+        //    this.stopMovingUp();
+            //this.stopMovingDown();
+        //    return;
+        //}
 
             if (this.prediction) {
                 if (this.prediction.y >= this.paddleSeen.y + 25 && this.prediction.y <= this.paddleSeen.y + 100 - 25) {
@@ -563,7 +563,7 @@ class AIPlayer {
             let predictedPos = { x: ball.pos.x, y: ball.pos.y };
             let predictedVelocity = { x: ball.velocity.x, y: ball.velocity.y };
         
-            for (let i = 0; i < 500; i++) {
+            while (true) {
                 predictedPos.x += predictedVelocity.x * dt * 1000;
                 predictedPos.y += predictedVelocity.y * dt * 1000;
         
@@ -574,6 +574,7 @@ class AIPlayer {
                 if (this.collision(Paddle1, predictedPos)) {
                     let collidePoint = (predictedPos.y - (Paddle1.pos.y + Paddle1.height / 2));
                     collidePoint = collidePoint / (Paddle1.height / 2);
+                    console.log(collidePoint);
         
                     let angleRad = (Math.PI / 4) * collidePoint;
         
@@ -585,11 +586,12 @@ class AIPlayer {
                     //console.log("changed velocity");
                 }
         
-                if (predictedPos.x + ball.radius > canvas.width - 50) {
+                if (predictedPos.x + ball.radius > canvas.width - 40) {
                     //console.log(i);
                     // Stop predicting if the ball is going off the screen to the right
                     break;
                 }
+
                 if (predictedPos.x + ball.radius < 0) {
                     //console.log(i);
                     // Stop predicting if the ball is going off the screen to the right
