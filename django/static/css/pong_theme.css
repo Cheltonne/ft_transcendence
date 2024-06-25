@@ -246,9 +246,14 @@ form a {
   color: #ffffff;
   background-color: #a2c11c;
   border: none;
+  display:none;
   border-radius: 10px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+}
+
+.text-input {
+  display: none;
 }
 
 .myButton:hover {

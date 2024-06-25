@@ -45,10 +45,10 @@ LocalButton.addEventListener("click", function() {
 AIButton.addEventListener("click", function() {
     allButtonOk = true;
     console.log("IA");
-    AI = true;
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
     clear();
+    AI = true;
     LaunchGame();
 });
 
@@ -83,13 +83,16 @@ document.addEventListener("DOMContentLoaded", function() {
             myButton.style.display = "none";
             textInput.style.display = "none";
             //allButtonOk = true;
-            ModeChoice();
             $("#aliasContainer").text(alias);
         } else {
             alert("Please enter your alias.");
         }
     });
 });
+
+LocalButton.style.display = 'inline-block';
+AIButton.style.display = 'inline-block';
+drawStaticElements();
 
 function ModeChoice(){
     LocalButton.style.display = 'inline-block';
@@ -186,12 +189,12 @@ class PongBall {
         if (this.left)
             {
             this.velocity = vec2(1, 1);
-            this.pos = vec2(150, canvas.height / 2);
+            this.pos = Paddle1.pos;
             }
         else
             {
             this.velocity = vec2(-1, -1);
-            this.pos = vec2(canvas.width - 150, canvas.height / 2);
+            this.pos = Paddle2.pos;
             }
             // je suis deile sa mere je resettais la alle dans la zone de goal
         this.resetSpeed();
@@ -262,7 +265,7 @@ class PongBall {
             //    this.velocity.y = -this.velocity.y;
             //}
             //console.log(this.speed);
-            if (this.speed <= 0.9)
+            if (this.speed <= 0.85)
                 this.speed += 0.05;
         } else {
             this.pos = this.nextPos;
@@ -395,12 +398,12 @@ function draw() {
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
-    if (AIplayer && AIplayer.prediction) {
-    ctx.beginPath();
-    ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = 'red';
-    ctx.fill();
-    }
+    //if (AIplayer && AIplayer.prediction) {
+    //ctx.beginPath();
+    //ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
+    //ctx.fillStyle = 'red';
+    //ctx.fill();
+    //}
 
     //Draw trails and other dynamic elements
     //for (let i = 0; i < Ball.trailPositions.length; i++) {
@@ -572,11 +575,11 @@ class AIPlayer {
             while (true) {
                 predictedPos.x += predictedVelocity.x * dt * 1000;
                 predictedPos.y += predictedVelocity.y * dt * 1000;
-        
+
                 if (predictedPos.y - ball.radius < 0 || predictedPos.y + ball.radius > canvas.height) {
                     predictedVelocity.y *= -1;
                 }
-        
+
                 if (this.collision(Paddle1, predictedPos)) {
                     let collidePoint = (predictedPos.y - (Paddle1.pos.y + Paddle1.height / 2));
                     collidePoint = collidePoint / (Paddle1.height / 2);
