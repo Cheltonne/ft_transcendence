@@ -3,6 +3,8 @@ import { getUserInfo } from './scripts.js';
 import { SigninForm } from './web_components/signin_form.js';
 import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
+import { RequestFrame } from './game/pong.js';
+import { onoffGame } from './game/pong.js';
 const authRequiredViews = ['user-profile', 'update'];
 const nonAuthViews = ['signin', 'signup'];
 
@@ -97,6 +99,11 @@ export function showView(viewName) {
 	for (const view of allViews) {
 		const currentView = view.dataset.view;
 		view.classList.toggle('hidden', currentView !== viewName);
+		if (viewName !== 'pong' && RequestFrame === true) {
+            onoffGame('off');
+        } else if (viewName === 'pong' && RequestFrame === false) {
+            onoffGame('on'); 
+        }
 	}
 	const sidebar = document.querySelector('.sidebar');
 	if (sidebar && sidebar.classList.contains('active'))
