@@ -211,30 +211,55 @@ form a {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-.toast-container {
-  position: fixed;
-  top: 1.5rem;
-  right: 4rem;
-  display: flex;
-  flex-direction: column;
-  z-index: 9999;
+.canvas-container {
+    position: relative;
+    width: 100%; /* Adjust width if necessary */
+    height: 100%; /* Adjust height if necessary */
 }
 
-.toast {
-  background-color: #26532b;
-  color: #c8f1cf;
-  padding: 10px 20px;
-  border-radius: 5px;
-  margin-bottom: 5px;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+.alias-container {
+    position: absolute;
+    top: -50px; /* Adjust to position just above the canvas */
+    left: 50%; /* Adjust horizontal position */
+    transform: translateX(-50%); /* Center horizontally */
+    font-size: 40px; /* Increase font size */
+    color: #ffffff; /* White color */
+    font-weight: bold; /* Bold text */
+    text-transform: uppercase; /* Uppercase text */
 }
 
-.toast.show {
-  opacity: 1;
+#button-container {
+    position: absolute;
+    top: 50%; /* Adjust top position */
+    left: 50%; /* Adjust left position */
+    transform: translate(-50%, -50%); /* Center horizontally and vertically */
+    text-align: center; /* Center button horizontally */
 }
 
-.toast-error {
-  background-color: #6f1a07;
-  color: #ccc;
+.myButton {
+  padding: 12px 25px; /* Adjust padding to increase button size */
+  font-size: 20px; /* Increase font size */
+  color: #ffffff; /* Text color */
+  background-color: #a2c11c; /* Button background color */
+  border: none; /* Remove border */
+  border-radius: 10px; /* Rounded corners */
+  cursor: pointer; /* Cursor style */
+  transition: background-color 0.3s ease; /* Smooth transition */
 }
+
+.myButton:hover {
+  background-color: #a2c11c;
+}
+
+#retryButton {
+  display: none;
+}
+
+#restartButton {
+  display: none;
+}
+
+.Mode {
+  display: none;
+}
+
