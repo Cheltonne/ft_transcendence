@@ -1,4 +1,4 @@
-export class MorpionComponent extends HTMLElement {
+/*export class MorpionComponent extends HTMLElement {
 	constructor() {
 		super();
 		this.attachShadow({ mode: 'open'});
@@ -46,4 +46,4 @@ export class MorpionComponent extends HTMLElement {
 	`;
 	}
 
-}
+}*/

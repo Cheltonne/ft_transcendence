@@ -56,11 +56,11 @@ newGameWithComputerButton.addEventListener('click', function() {
     startGame();
 });
 
-matchmakingButton.addEventListener('click', async function() {
+/*matchmakingButton.addEventListener('click', async function() {
     await startMatchmaking();
-});
+});*/
 
-// Fonction pour démarrer le matchmaking et créer une nouvelle partie
+/*// Fonction pour démarrer le matchmaking et créer une nouvelle partie
 async function startMatchmaking() {
     const isAuthenticated = await checkAuthenticated();
     if (!isAuthenticated) {
@@ -83,12 +83,7 @@ async function startMatchmaking() {
         console.error("Error creating match");
         alert("Failed to create match. Please try again.");
     }
-}
-
-function updatePlayerNames() {
-    scorePlayer1.textContent = player1Name + ': ' + scoreX;
-    scorePlayer2.textContent = player2Name + ': ' + scoreO;
-}
+}*/
 
 // fonction pour choisir le type de jeu : soit 3 parties, soit une nouvelle partie
 function startGame() {
@@ -161,12 +156,12 @@ function endGame(draw) {
 
 // fonction pour mettre à jour le score
 function updateScore(winner) {
-    if (winner === player1Name) {
+    if (winner === 'X') {
         scoreX++;
-        scorePlayer1.textContent = `${player1Name}: ${scoreX}`;
-    } else if (winner === player2Name) {
+        scorePlayer1.textContent = `Player 1: ${scoreX}`;
+    } else if (winner === 'O') {
         scoreO++;
-        scorePlayer2.textContent = `${player2Name}: ${scoreO}`;
+        scorePlayer2.textContent = `Player 2: ${scoreO}`;
     }
 }
 
@@ -214,18 +209,6 @@ function checkSeriesWinner() {
     if (gamesPlayed >= maxGames) {
         let message;
         if (scoreX > scoreO) {
-            message = `Series Winner: ${player1Name}`;
-        } else if (scoreO > scoreX) {
-            message = `Series Winner: ${player2Name}`;
-        } else {
-            message = "Series ends in a draw.";
-        }
-        console.log(message);
-        createMatch(scoreX, scoreO);
-        //sendScoreToDjango(scoreX, scoreO, matchId);
-    /*if (gamesPlayed >= maxGames) {
-        let message;
-        if (scoreX > scoreO) {
             message = "Series Winner: Player 1";
         } else if (scoreO > scoreX) {
             message = "Series Winner: Player 2";
@@ -234,7 +217,7 @@ function checkSeriesWinner() {
         }
         console.log(message);
         createMatch(scoreX, scoreO);
-        sendScoreToDjango(scoreX, scoreO, "currentMatchId");*/
+        sendScoreToDjango(scoreX, scoreO, "currentMatchId");
         //resetSeries(); // on recommence ici?
     }
 }
@@ -260,42 +243,6 @@ async function createMatch(user_score, alias_score) {
     showAlert("danger", "Failed to create match. Please try again.");
   }
 }
-
-/*async function createMatch(user_score, alias_score) {
-    const isAuthenticated = await checkAuthenticated();
-    if (!isAuthenticated) {
-        console.error("User not authenticated. Cannot create match.");
-        showAlert("danger", "You need to be logged in to create a match.");
-        return;
-    }
-
-    try {
-        const response = await fetch('pong/create-match/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ user_score: user_score, alias_score: alias_score })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (data.match_id) {
-            console.log("Match created with ID:", data.match_id);
-            showAlert("success", "Match created successfully!");
-            sendScoreToDjango(user_score, alias_score, data.match_id);
-        } else {
-            console.error("Error creating match:", data);
-            showAlert("danger", "Failed to create match. Please try again.");
-        }
-    } catch (error) {
-        console.error("Error creating match:", error);
-        showAlert("danger", "Failed to create match. Please check your network connection and try again.");
-    }
-}*/
 
 function showAlert(type, message) {
     const alertPlaceholder = document.getElementById('alert-placeholder');
@@ -334,10 +281,8 @@ function resetSeries() {
     gamesPlayed = 0;
     scoreX = 0;
     scoreO = 0;
-    scorePlayer1.textContent = `${player1Name}: 0`;
-    scorePlayer2.textContent = `${player2Name}: 0`;
-    /*scorePlayer1.textContent = 'Player 1';
-    scorePlayer2.textContent = 'Player 2';*/
+    scorePlayer1.textContent = 'Player 1';
+    scorePlayer2.textContent = 'Player 2';
     restartGame();
     seriesOver = false;
     alertShown = false;
