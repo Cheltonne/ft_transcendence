@@ -1,8 +1,7 @@
 import { navigateTo } from '../views.js';
-import { handleLogout, showToast } from '../utils.js';
+import { getUserFromStorage, handleLogout, showToast } from '../utils.js';
 import { getUserInfo, user } from '../scripts.js';
-import { User, UserObserver } from '../observer.js';
-import { socket } from '../utils.js';
+import { UserObserver } from '../observer.js';
 
 export class LoggedInNavbar extends HTMLElement {
     constructor() {
@@ -13,10 +12,10 @@ export class LoggedInNavbar extends HTMLElement {
           <ul class="nav-list">
             <li><div id="profilePictureContainer" class='profile-picture'></div></li>
             <li><div id="loginHeading" class="fs-5 fw-semibold username" style="color:white;"></div></li>
-            <li><a href="#" class="homeButton">Home</a></li>
-            <li class='profile-button-li'><a href="#" class="profileButton">My Profile</a></li>
-            <li><a href="#" class='friendsButton'>Friends</a></li>
-            <li><a class="button logoutButton" id="logoutButton" href="#">Logout</a></li>
+            <li><a class="homeButton">Home</a></li>
+            <li class='profile-button-li'><a class="profileButton">My Profile</a></li>
+            <li><a class='friendsButton'>Friends</a></li>
+            <li><a class="button logoutButton" id="logoutButton">Logout</a></li>
           </ul>
         </div>
         `;
@@ -41,12 +40,12 @@ export class LoggedInNavbar extends HTMLElement {
         };
         user_observer = new UserObserver(elements);
         user.addObserver(user_observer);
+
         this.home.addEventListener("click", () => {
             navigateTo('pong', 1);
         });
 
         this.friends.addEventListener("click", () => {
-            if (document.querySelector('.friends-view') === null)
             navigateTo('friends', 1);
         });
 
@@ -69,6 +68,7 @@ export class LoggedInNavbar extends HTMLElement {
             handleLogout();
             event.stopImmediatePropagation()
         });
+		user.setUserData(getUserFromStorage());
     }
 
     disconnectedCallback() {

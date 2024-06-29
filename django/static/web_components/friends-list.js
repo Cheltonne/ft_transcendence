@@ -5,23 +5,17 @@ export class FriendsComponent extends HTMLElement {
     constructor() {
         super();
         this.friends = [];
-        this.onlineFriends = new Set();
         this.attachShadow({ mode: 'open' });
     }
 
     connectedCallback() {
-        this.render();
         this.loadFriends();
-        this.setupWebSocketListeners(); // New method to set up WebSocket listeners
+        this.setupWebSocketListeners();
     }
 
     async loadFriends() {
         try {
             this.friends = await getFriends();
-            this.friends.forEach(friend => {
-                if (friend.is_online)
-                    this.onlineFriends.add(friend.username);
-            })
             this.render();
         } catch (error) {
             console.error('Error loading friends:', error);
@@ -31,32 +25,25 @@ export class FriendsComponent extends HTMLElement {
     setupWebSocketListeners() {
         if (socket) {
             socket.onmessage = (event) => {
-                console.log('socket opened.');
                 const data = JSON.parse(event.data);
-                console.log(data);
-                if (data.type === 'user_list') {
-                    this.onlineFriends = new Set(data.friends_online);
-                    this.loadFriends();
-                    console.log('New friend online');
-                } else if (data.type === 'user_status_change') {
-                    console.log('status update caught');
-                    const { username, is_online } = data;
-                    this.loadFriends();
-                    if (is_online) {
-                        this.onlineFriends.add(username);
-                    } else {
-                        this.onlineFriends.delete(username);
-                        this.onlineFriends = new Set(data.friends_online);
-                        console.log(data.username + ' is offline.');
-                    }
-                }
-                this.render();
+                this.update_online_status(data);
             };
-            socket.onclose = async (e) => {
-                console.log('socket closed.')
-                await this.loadFriends();
-            }
         }
+    }
+
+    update_online_status(data) {
+        this.friends.forEach(friend => {
+            const statusElement = this.shadowRoot.querySelector(`.status[data-id="${friend.id}"]`);
+            if (statusElement) {
+                if (data.is_online === true && friend.username == data.username) {
+                    statusElement.classList.add('online');
+                    statusElement.classList.remove('offline');
+                } else if (data.is_online === false && friend.username == data.username) {
+                    statusElement.classList.add('offline');
+                    statusElement.classList.remove('online');
+                }
+            }
+        });
     }
 
     render() {
@@ -69,13 +56,13 @@ export class FriendsComponent extends HTMLElement {
                 <h2>Friends</h2>
                 <ul>
                     ${this.friends.map(friend =>
-                        `<li class="friend-card">
+            `<li class="friend-card">
                             <img src="${friend.profile_picture.replace('http://localhost/', '')}" alt="Profile Picture"></img>
                             ${friend.username} 
-                            <span class="status ${friend.is_online ? 'online' : 'offline'}"></span>
+                            <span data-id="${friend.id}" class="status ${friend.is_online ? 'online' : 'offline'}"></span>
                             <button data-id="${friend.id}" class="remove-friend">Remove</button>
                         </li>`
-                    ).join('')}
+        ).join('')}
                 </ul>
                 <input type="text" id="new-friend-username" placeholder="Add a friend by username">
                 <button id="add-friend-button">Add Friend</button>

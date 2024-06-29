@@ -1,6 +1,7 @@
 import { getUserInfo, menu, hamMenu } from './scripts.js';
 import { navigateTo } from './views.js';
 export let socket = null;
+export const USER_STORAGE_KEY = 'user';
 
 export function getCookie(cname) { // to get CSRF cookie (necessary for forms)
 	let name = cname + '=';
@@ -49,8 +50,7 @@ export function toggleMenu() {
 		hamMenu.classList.toggle("active");
 }
 
-export function handleError(message, view='pong')
-{
+export function handleError(message, view = 'pong') {
 	showToast(message, 'error');
 	navigateTo(view, 1);
 }
@@ -64,13 +64,20 @@ export function handleLogout() {
 				navigateTo('pong', 1);
 				getUserInfo();
 				showToast('Successfully logged out!');
+				if (socket && socket.readyState === WebSocket.OPEN) {
+					socket.close();
+					console.log('closed socket after logout.');
+				}
+				removeUserFromStorage();
+				const friendsListElement = document.querySelector('friends-view');
+				if (friendsListElement) {
+					friendsListElement.remove();
+				}
 			} else {
 				showToast('Error during logout:', data.message || 'Unknown error')
 			}
 		})
 		.catch(error => console.error('Error during logout request:', error));
-		if (socket && socket.readyState === WebSocket.OPEN)
-        	socket.close();
 }
 
 export async function userIsAuthenticated() {
@@ -80,25 +87,37 @@ export async function userIsAuthenticated() {
 }
 
 export async function initializeWebSocket() {
-    const authToken = await userIsAuthenticated();
+	const authToken = await userIsAuthenticated();
 
-    if (authToken) {
+	if (authToken && socket === null) {
+		socket = new WebSocket('wss://' + window.location.host + '/ws/accounts/');
 
-        socket = new WebSocket('wss://' + window.location.host + '/ws/accounts/');
+		socket.onopen = function (event) {
+			console.log('WebSocket is open now.');
+		};
 
-        socket.onopen = function(event) {
-            console.log('WebSocket is open now.');
-        };
+		socket.onclose = function (event) {
+			console.log('WebSocket is closed.');
+			socket = null; // Reset socket variable when closed
+		};
 
-        socket.onclose = function(event) {
-            console.log('WebSocket is closed.');
-            socket = null; // Reset socket variable when closed
-        };
+		socket.onerror = function (error) {
+			console.error('WebSocket encountered error:', error);
+		};
+	} else {
+		console.log('User is not authenticated.'); // Handle case where authToken is not available
+	}
+}
 
-        socket.onerror = function(error) {
-            console.error('WebSocket encountered error:', error);
-        };
-    } else {
-        console.log('User is not authenticated.'); // Handle case where authToken is not available
-    }
+export function getUserFromStorage() {
+	const userData = localStorage.getItem(USER_STORAGE_KEY);
+	return userData ? JSON.parse(userData) : null;
+}
+
+export function setUserToStorage(user) {
+	localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+}
+
+export function removeUserFromStorage() {
+	localStorage.removeItem(USER_STORAGE_KEY);
 }

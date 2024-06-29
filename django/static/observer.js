@@ -1,3 +1,5 @@
+import { setUserToStorage } from "./utils.js";
+
 class Observer {
     update(data) {
     }
@@ -21,10 +23,15 @@ class Subject {
     }
 }
 
-export class User extends Subject {
+export class UserObservable extends Subject {
     constructor() {
         super();
         this.data = { username: '', profile_picture: '', user_matches: '', wins: 0, losses: 0 };
+    }
+
+    updateUser(data) {
+        setUserToStorage(data);
+        this.notifyObservers(data);
     }
 
     setUserData(data) {
@@ -54,15 +61,15 @@ export class UserObserver extends Observer {
     }
 
     update(data) {
-        try{
+        try {
             this.elements.username.forEach(element => {
                 element.innerText = `Welcome, ${data.username}!`;
             })
         }
-        catch (error){
+        catch (error) {
             console.log('Error while updating username: ', error);
         }
-        try{
+        try {
             if (data.profile_picture)
                 this.elements.profile_picture.forEach(element => {
                     element.innerHTML = data.profile_picture;
@@ -70,7 +77,7 @@ export class UserObserver extends Observer {
             else
                 this.elements.profile_picture.innerHTML = '';
         }
-        catch (error){
+        catch (error) {
             console.log('Error while updating profile picture: ', error);
         }
         try {
@@ -78,10 +85,9 @@ export class UserObserver extends Observer {
                 this.elements.wins.forEach(element => {
                     element.innerHTML = `<p>Wins: ${data.wins}</p>`;
                 })
-                console.log('Updated wins');
         }
         catch {
-                //console.error('Error while updating number of wins');
+            //console.error('Error while updating number of wins');
         }
         try {
             if (data.losses)
@@ -90,7 +96,7 @@ export class UserObserver extends Observer {
                 })
         }
         catch {
-                //console.error('Error while updating number of losses');
+            //console.error('Error while updating number of losses');
         }
         try {
             const userProfileView = document.querySelector('user-profile-view');

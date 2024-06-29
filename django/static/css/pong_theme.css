@@ -18,6 +18,7 @@ a:visited {
 a:hover {
   color: #6F86FF;
   text-decoration: none;
+  cursor: pointer;
 }
 
 body {

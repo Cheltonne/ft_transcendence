@@ -1,5 +1,5 @@
 import { userIsAuthenticated, getCookie, showToast, toggleMenu, handleError, initializeWebSocket, socket } from './utils.js';
-import { getUserInfo } from './scripts.js';
+import { getUserInfo, user } from './scripts.js';
 import { SigninForm } from './web_components/signin_form.js';
 import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
@@ -60,8 +60,10 @@ export async function handleFormSubmit(formType) {
 						showToast('Update successful!');
 						getUserInfo()
 							.then(data => {
-								if (userIsAuthenticated())
+								if (userIsAuthenticated()) {
+									user.setUserData(data);
 									navigateTo('user-profile',);
+								}
 								else
 									handleError('You\'re not authenticated anymore!');
 							});

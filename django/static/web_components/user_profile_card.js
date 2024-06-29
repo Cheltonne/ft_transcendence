@@ -1,14 +1,7 @@
-import {
-    getUserInfo,
-    user
-} from '../scripts.js'
-import {
-    navigateTo
-} from '../views.js'
-import {
-    User,
-    UserObserver
-} from '../observer.js';
+import { getUserInfo, user } from '../scripts.js'
+import { navigateTo } from '../views.js'
+import { UserObserver } from '../observer.js';
+import { getUserFromStorage } from '../utils.js';
 
 export class UserProfileCard extends HTMLElement {
     constructor() {
@@ -21,7 +14,7 @@ export class UserProfileCard extends HTMLElement {
             <div class="wins"></div>
             <div class="losses"></div>
             <div class="match-history-link view-matches-link">
-                <a href='#' id="show-matches">See Match History</a>
+                See Match History
             </div>
             <a class="button updateButton">Update Profile</a>
         </div>
@@ -58,10 +51,12 @@ export class UserProfileCard extends HTMLElement {
                 this.shadowRoot.querySelector('.match-history-cards').classList.remove('active');
                 this.shadowRoot.querySelector('.match-history-veil').classList.remove('active');
             } else if (event.target.classList.contains('view-matches-link')) {
+		        user.setUserData(getUserFromStorage());
                 this.shadowRoot.querySelector('.match-history-cards').classList.toggle('active');
                 this.shadowRoot.querySelector('.match-history-veil').classList.toggle('active');
             }
         })
+		user.setUserData(getUserFromStorage());
     }
 
     renderUserProfile(userInfo) {
