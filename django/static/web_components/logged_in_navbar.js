@@ -15,6 +15,7 @@ export class LoggedInNavbar extends HTMLElement {
             <li><div id="loginHeading" class="fs-5 fw-semibold username" style="color:white;"></div></li>
             <li><a href="#" class="homeButton">Home</a></li>
             <li class='profile-button-li'><a href="#" class="profileButton">My Profile</a></li>
+            <li><a class="morpionButton">Morpion</a></li>
             <li><a class="button logoutButton" id="logoutButton" href="#">Logout</a></li>
           </ul>
         </div>
@@ -26,7 +27,8 @@ export class LoggedInNavbar extends HTMLElement {
     connectedCallback() {
         this.home = this.shadowRoot.querySelector('.homeButton');
         this.profile = this.shadowRoot.querySelector('.profileButton');
-        this.logout = this.shadowRoot.querySelector('.logoutButton');
+        this.morpion = this.shadowRoot.querySelector('.morpionButton')
+;        this.logout = this.shadowRoot.querySelector('.logoutButton');
         let user_observer;
         const styleLink = document.createElement('link');
 
@@ -57,6 +59,12 @@ export class LoggedInNavbar extends HTMLElement {
                     }
                 })
         })
+
+        this.morpion.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigateTo('morpion', 1);
+            console.log('morpion');
+        });
 
         this.logout.addEventListener('click', (event) => {
             handleLogout();
