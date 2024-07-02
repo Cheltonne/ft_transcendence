@@ -4,7 +4,8 @@ export function socket_logic() {
     );
 
     socket.onopen = function open() {
-        console.log('WebSockets connection created.');
+        sessionStorage.setItem('webSocketOpen', 'true');
+        console.log('WebSocket connection created.');
     };
 
     socket.onmessage = function message(event) {
@@ -27,14 +28,7 @@ export function socket_logic() {
         socket.onopen();
     }
 
-    onlineStatusSocket.onmessage = function (e) {
-        const data = JSON.parse(e.data);
-        const message = data['message'];
-        // Update the online status UI with the received message
-        console.log(message);
-    };
-
-    onlineStatusSocket.onclose = function (e) {
-        console.error('Chat socket closed unexpectedly');
+    socket.onclose = function (e) {
+        sessionStorage.removeItem('webSocketOpen');
     };
 }

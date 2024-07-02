@@ -59,7 +59,7 @@ export class FriendsComponent extends HTMLElement {
             `<li class="friend-card">
                             <img src="${friend.profile_picture.replace('http://localhost/', '')}" alt="Profile Picture"></img>
                             ${friend.username} 
-                            <span data-id="${friend.id}" class="status ${friend.is_online ? 'online' : 'offline'}"></span>
+                            <span data-id="${friend.id}" class="status ${friend.online_devices_count != 0 ? 'online' : 'offline'}"></span>
                             <button data-id="${friend.id}" class="remove-friend">Remove</button>
                         </li>`
         ).join('')}

@@ -94,11 +94,15 @@ export async function initializeWebSocket() {
 
 		socket.onopen = function (event) {
 			console.log('WebSocket is open now.');
+			localStorage.setItem('webSocketOpen', 'true');
+			sessionStorage.setItem('webSocket', socket);
 		};
 
 		socket.onclose = function (event) {
 			console.log('WebSocket is closed.');
 			socket = null; // Reset socket variable when closed
+			localStorage.removeItem('webSocketOpen');
+			sessionStorage.removeItem('webSocket');
 		};
 
 		socket.onerror = function (error) {

@@ -30,7 +30,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 'friends', 'is_online']
+        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 'friends', 'online_devices_count']
 
     def get_friends(self, obj):
         friends = obj.friends.all()

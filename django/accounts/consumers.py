@@ -21,18 +21,22 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
                 self.room_group_name,
                 {
                     'type': 'new_friend_online',
+                    'id': self.user.id,
                     'username': self.user.username,
                     'is_online': True
                 }
             )
 
     async def disconnect(self, close_code):
+        self.room_group_name = 'users_online'
+        self.user = self.scope['user']
         await self.mark_user_offline()
 
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'new_friend_offline',
+                'id': self.user.id,
                 'username': self.user.username,
                 'is_online': False
             }
@@ -43,17 +47,22 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         )
 
     async def new_friend_online(self, event):
+        id = event['id']
+        user = await sync_to_async(User.objects.get)(id=id) 
         username = event['username']
+        is_online = user.online_devices_count != 0
 
         await self.send(text_data=json.dumps({
             'type': 'new_friend_online',
             'username': username,
-            'is_online': True
+            'is_online': is_online
         }))
 
     async def new_friend_offline(self, event):
+        id = event['id']
+        user = await sync_to_async(User.objects.get)(id=id) 
         username = event['username']
-        is_online = event['is_online']
+        is_online = user.online_devices_count != 0
 
         await self.send(text_data=json.dumps({
             'type': 'new_friend_offline',
@@ -65,27 +74,27 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
     def mark_user_online(self):
         # Fetch the latest user instance from the database before updating
         self.user.refresh_from_db()
-        self.user.is_online = True
+        self.user.online_devices_count += 1
         self.user.save()
 
     @sync_to_async
     def mark_user_offline(self):
         # Fetch the latest user instance from the database before updating
         self.user.refresh_from_db()
-        self.user.is_online = False
+        self.user.online_devices_count -= 1
         self.user.save()
 
     @sync_to_async
     def is_user_online(self, username):
         try:
             user = User.objects.get(username=username)
-            return user.is_online
+            return user.online_devices_count != 0
         except User.DoesNotExist:
             return False
 
     @sync_to_async
     def get_online_users(self):
-        return list(User.objects.filter(is_online=True).values_list('username', flat=True))
+        return list(User.objects.filter(online_devices_count!=0).values_list('username', flat=True))
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
