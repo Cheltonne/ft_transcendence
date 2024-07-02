@@ -18,7 +18,15 @@ let keysPressed = {};
 let lastFrameTime = performance.now();
 const LocalButton = document.getElementById("LocalButton");
 const AIButton = document.getElementById("AIButton");
-//const restartButton = document.getElementById("restartButton")
+const TourneyButton = document.getElementById("TourneyButton");
+const title = "versus";
+const nameTourney = document.getElementById("nameTourney");
+const nextButton = document.getElementById("nextButton");
+let participantNames = [];
+const NextMatchButton = document.getElementById("NextMatchButton");
+let matches = [];
+const tournamentTree = document.getElementById('tournamentTree');
+let TourneyMode = false;
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -38,6 +46,9 @@ LocalButton.addEventListener("click", function() {
     AI = false;
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
+    TourneyButton.style.display = 'none';
+    player2Name = 'guest';
+    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
     clear();
     LaunchGame();
 });
@@ -46,10 +57,190 @@ AIButton.addEventListener("click", function() {
     allButtonOk = true;
     console.log("IA");
     AI = true;
+    player2Name = 'AI';
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
+    TourneyButton.style.display = 'none';
+    hideTourneyButtons();
+    $("#aliasContainer").text(userInfo.username + " VS " + " AI");
     clear();
     LaunchGame();
+});
+
+function findMatchWithNullWinner() {
+    for (let i = 0; i < matches.length; i++) {
+        if (matches[i].state === 0 || matches[i].state === undefined) {
+            return matches[i];
+        }
+    }
+    return null; // Return null if no match with null winner is found
+}
+
+NextMatchButton.addEventListener("click", function() {
+    allButtonOk = true;
+    console.log("TourneyMatch");
+    AI = false;
+    LocalButton.style.display = 'none';
+    AIButton.style.display = 'none';
+    TourneyButton.style.display = 'none';
+    //player2Name = 'guest';
+    console.log(matches);
+    let array = findMatchWithNullWinner();
+    $("#aliasContainer").text(array.player1 + " VS " + array.player2);
+    clear();
+    tournamentTree.style.display = 'none';
+    NextMatchButton.style.display = 'none';
+    LaunchGame();
+});
+
+TourneyButton.addEventListener("click", function() {
+    allButtonOk = true;
+    console.log("Tourney");
+    //AI = true;
+    //player2Name = 'AI';
+    LocalButton.style.display = 'none';
+    AIButton.style.display = 'none';
+    hideTourneyButtons();
+    TourneyMode = true;
+    //$("#aliasContainer").text(userInfo.username + " VS " + " AI");
+    clear();
+    TourneyScreen();
+    //LaunchGame();
+    // tt les trucs en vert je les Balance plus loin dans TOURNEY commence jsp
+});
+
+function TourneyScreen() {
+    // Determine text size to clear the correct area
+    ctx.font = '50px sans-serif'; // Set the font
+    ctx.textAlign = 'center'; // Center the text
+    let text = `Player ${participantNames.length + 1} `;
+    let textWidth = ctx.measureText(text).width;
+    let x = canvas.width / 2;
+    let y = canvas.height / 2 - 50;
+
+    // Clear the area around where the text will be drawn
+    ctx.clearRect(x - textWidth / 2 - 10, y - 50, textWidth + 20, 70);
+
+    // Draw the text
+    ctx.fillStyle = '#fff'; // Set the text color
+    ctx.fillText(text, x, y);
+
+    nameTourney.style.display = 'inline-block';
+    nextButton.style.display = 'inline-block';
+}
+
+function hideTourneyButtons() {
+    let text = `Player ${participantNames.length + 1} `;
+    let textWidth = ctx.measureText(text).width;
+    let x = canvas.width / 2;
+    let y = canvas.height / 2 - 50;
+
+    // Clear the area around where the text will be drawn
+    ctx.clearRect(x - textWidth / 2 - 10, y - 50, textWidth + 20, 70);
+
+    TourneyButton.style.display = 'none';
+    nameTourney.style.display = 'none';
+    nextButton.style.display = 'none';
+}
+
+function drawTournamentTree() {
+    hideTourneyButtons();
+    //tournamentTree.style.display = 'inline-block';
+    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+    //drawStaticElements();
+    tournamentTree.innerHTML = '';
+    
+    ctx.save();
+    const round = document.createElement('div');
+    round.className = 'round';
+    let Matchid = 0;
+    // Assuming participantNames is an array of participant names
+    participantNames.forEach((participantName, index) => {
+        if (index % 2 === 0) {
+            const match = document.createElement('div');
+            match.className = 'match';
+            match.innerHTML = 'match ' + ++Matchid;
+            
+            const p1 = document.createElement('div');
+            p1.className = 'participant';
+            p1.textContent = participantName;
+            match.appendChild(p1);
+            
+            const divider = document.createElement('div');
+            divider.className = 'divider';
+            divider.textContent = 'VS';
+            match.appendChild(divider);
+            
+            // Check if there's a next participant to add
+            if (participantNames[index + 1] !== undefined) {
+                const p2 = document.createElement('div');
+                p2.className = 'participant';
+                p2.textContent = participantNames[index + 1];
+                match.appendChild(p2);
+            }
+            matches[Matchid - 1] = { matchId: Matchid, state: 0, player1: participantName, player2: participantNames[index + 1], score: [0, 0], winner: null, final: false};
+            // state 0 pr savoir si le match est jouer ou pas, et winner pour envoyer a la finale qui arranger
+            round.appendChild(match);
+        }
+    });
+    tournamentTree.appendChild(round);
+
+    const match = document.createElement('div');
+    match.className = 'match';
+    match.innerHTML = 'finals';
+    const p1 = document.createElement('div');
+    p1.className = 'participant';
+    p1.textContent = 'winner 1';
+    match.appendChild(p1);
+
+    const divider = document.createElement('div');
+    divider.className = 'divider';
+    divider.textContent = 'VS';
+    match.appendChild(divider);
+
+    const p2 = document.createElement('div');
+    p2.className = 'participant';
+    p2.textContent = 'winner 2';
+    match.appendChild(p2);
+    round.appendChild(match);
+
+    match.classList.add('final-match');
+    matches[2] = { matchId: Matchid + 1, state: 0, player1: null, player2: null, score: [0, 0], winner: null, final: true};
+
+    //let array = findMatchWithNullWinner();
+    //$("#aliasContainer").text(array.player1 + " VS " + array.player2);
+    //NextMatchButton.style.innerHTML = array.player1 + " VS " + array.player2;
+    NextMatchButton.style.display = 'inline-block';
+}
+
+
+nextButton.addEventListener("click", function() {
+    let alias = nameTourney.value.trim(); // Get the value from the input box and trim any whitespace
+
+    if (alias === "") {
+        alert("Please enter your alias."); // Alert if the input box is empty
+    }
+    else if (participantNames.includes(alias)) {
+        alert("This alias is already taken. Please enter a different alias.");
+    }
+    else {
+        // Save the alias (you might want to store it in an array or a variable)
+        let savedName = alias; // This is where you save the name
+        console.log(`Saved name: ${savedName}`); // Optional: log the saved name for debugging
+        participantNames.push(alias);
+
+        // Clear the input box
+        nameTourney.value = "";
+        if (participantNames.length != 4)
+            TourneyScreen();
+        else {
+            drawTournamentTree();
+        }
+
+        //myButton.style.display = "none";
+        // Optionally, proceed with further steps like ModeChoice();
+        // allButtonOk = true;
+    }
 });
 
 //restartButton.addEventListener("click", function() {
@@ -74,17 +265,31 @@ function clear(){
 
 document.addEventListener("DOMContentLoaded", function() {
     var myButton = document.getElementById("myButton");
-    var textInput = document.getElementById("textInput");
-  
+    giveName();
+    //clear();
+    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+    //ctx.fillStyle = '#000'; // Set the background color
+    //ctx.fillRect(0, 0, canvas.width, canvas.height); // Draw the background
+
+    ctx.save();
+
+    ctx.fillStyle = '#fff'; // Set the text color
+    ctx.font = '100px sans-serif'; // Set the font
+    ctx.textAlign = 'center'; // Center the text
+    ctx.fillText('PONG', canvas.width / 2, canvas.height / 2 - 50); // Draw the title
+
+    ctx.restore();
+
+    //var textInput = document.getElementById("textInput");
+    //textInput.style.display = "none";
     myButton.addEventListener("click", function() {
-        var alias = textInput.value.trim();
+        var alias = "VS";
         if (alias != "") {
-            player2Name = alias;
+            //player2Name = alias;
             myButton.style.display = "none";
-            textInput.style.display = "none";
             //allButtonOk = true;
             ModeChoice();
-            $("#aliasContainer").text(alias);
         } else {
             alert("Please enter your alias.");
         }
@@ -94,6 +299,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function ModeChoice(){
     LocalButton.style.display = 'inline-block';
     AIButton.style.display = 'inline-block';
+    TourneyButton.style.display = 'inline-block';
     drawStaticElements();
 }
 
@@ -105,19 +311,20 @@ MenuButton.style.display = "none";
 
 MenuButton.addEventListener("click", function() {
     MenuButton.style.display = "none";
+    $("#aliasContainer").text("");
     ModeChoice();
 });
 
-  $(document).ready(function() {
-    $("#myButton").click(function() {
-        var alias = $("#textInput").val();
-        if(alias.trim() === "") {
-            alert("Please enter your alias.");
-        } else {
-            $("#aliasContainer").text(alias);
-        }
-    });
-});
+//  $(document).ready(function() {
+//    $("#myButton").click(function() {
+//        var alias = $("#textInput").val();
+//        if(alias.trim() === "") {
+//            alert("Please enter your alias.");
+//        } else {
+//            $("#aliasContainer").text(alias);
+//        }
+//    });
+//});
 
 ///////////////////////////////////////////////
 //////////////////BINDINGS/////////////////////
@@ -154,7 +361,7 @@ class PongBall {
         this.pos = pos;
         this.prevpos = pos;
         this.velocity = vec2(0, 0);
-        this.radius = 5;
+        this.radius = 8;
         this.speed = 0.5;
         this.left = null;
         this.LastHit = null;
@@ -186,12 +393,12 @@ class PongBall {
         if (this.left)
             {
             this.velocity = vec2(1, 1);
-            this.pos = vec2(150, canvas.height / 2);
+            this.pos = vec2(Paddle1.pos.x, Paddle1.pos.y + 50);
             }
         else
             {
             this.velocity = vec2(-1, -1);
-            this.pos = vec2(canvas.width - 150, canvas.height / 2);
+            this.pos = vec2(Paddle2.pos.x, Paddle2.pos.y + 50);
             }
             // je suis deile sa mere je resettais la alle dans la zone de goal
         this.resetSpeed();
@@ -262,7 +469,7 @@ class PongBall {
             //    this.velocity.y = -this.velocity.y;
             //}
             //console.log(this.speed);
-            if (this.speed <= 0.9)
+            if (this.speed <= 0.85)
                 this.speed += 0.05;
         } else {
             this.pos = this.nextPos;
@@ -351,9 +558,9 @@ function Players() {
 
 
 
+
 function drawStaticElements() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.fillStyle = "#a2c11c";
 
     if (!RequestFrame && currentRound == 1) {
@@ -363,16 +570,20 @@ function drawStaticElements() {
         ctx.font = '36px sans-serif';
         ctx.fillText(0, canvas.width - 130, 50);
         ctx.fillText(0, 100, 50);
+        ctx.fillStyle = '#fff';
+        ctx.font = '20px sans-serif';
+        ctx.fillText("'↑': move up", canvas.width - 165, canvas.height - 30);
+        ctx.fillText("'↓': move down", canvas.width - 165, canvas.height - 10);
+        ctx.fillText("'w' : move up", 10, canvas.height - 30);
+        ctx.fillText("'s' : move down", 10, canvas.height - 10);
     }
     else {
-    ctx.fillStyle = '#fff';
-    ctx.font = '36px sans-serif';
-
-    ctx.fillText(Paddle2.score, canvas.width - 130, 50);
-    ctx.fillText(Paddle1.score, 100, 50);
-
-    ReDrawStatic == false;
-    }
+        ctx.fillStyle = '#fff';
+        ctx.font = '36px sans-serif';
+        ctx.fillText(Paddle2.score, canvas.width - 130, 50);
+        ctx.fillText(Paddle1.score, 100, 50);
+        ReDrawStatic == false;
+        }
 }
 
 function draw() {
@@ -423,12 +634,13 @@ export function onoffGame(Button){
     {
         //RequestFrame = true;
         console.log("on continue");
+        hideTourneyButtons();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ModeChoice();
         //restartChoice();
     }
-
 }
+
 
 function GameLoop() {
     const currentTime = performance.now();
@@ -472,20 +684,51 @@ function LaunchGame() {
 }
 
 function GameEndingScreen() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (TourneyMode) {
+        for (let i = 0; i < matches.length; i++) {
+            if (matches[i].winner === null || matches[i].winner === undefined) {
+                matches[i].winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                matches[i].state = 1; // Update state to indicate match is completed
 
-    ctx.fillStyle = '#fff';
-    ctx.font = '36px sans-serif';
-    giveName();
+                if (i == 0) {
+                    matches[2].player1 = matches[0].winner;
+                    NextMatchButton.style.display = 'inline-block';
+                } else if (i == 1) {
+                    matches[2].player2 = matches[1].winner;
+                    NextMatchButton.style.display = 'inline-block';
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
-    ctx.fillText(`${winner} wins!`, canvas.width / 5, canvas.height / 6 + 130);
-    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
-    createMatch(Paddle1.score, Paddle2.score);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '36px sans-serif';
 
-    //retryButton.style.display = "inline-block";
-    MenuChoice();
-    //ModeChoice();
+                    let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 + 130);
+                    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2);
+                    // createMatch(Paddle1.score, Paddle2.score);
+
+                    // retryButton.style.display = "inline-block";
+                    MenuChoice();
+                }
+                break;
+            }
+        }
+        // drawTournamentTree();
+    } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '36px sans-serif';
+        giveName();
+
+        let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
+        ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 + 130);
+        ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2);
+        createMatch(Paddle1.score, Paddle2.score);
+
+        // retryButton.style.display = "inline-block";
+        MenuChoice();
+    }
 }
 
 //////////////////////////////////////////////
@@ -512,12 +755,12 @@ class AIPlayer {
             this.timeSinceLastPrediction += dt;
 
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
-                this.predict(ball, dt, Paddle1);
                 this.timeSinceLastPrediction = 0;
                 this.paddleSeen = Paddle2.pos;
                 this.BallSeen = Ball.pos;
                 this.velocitySeen = Ball.velocity;
                 this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
+                this.predict(ball, dt, Paddle1);
                 //console.log("predicted");
                 //this.move = true;
                 return;
