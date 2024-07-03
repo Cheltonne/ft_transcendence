@@ -3,7 +3,7 @@ import { getUserInfo, user } from './scripts.js';
 import { SigninForm } from './web_components/signin_form.js';
 import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
-const authRequiredViews = ['user-profile', 'update', 'friends-list'];
+const authRequiredViews = ['user-profile', 'update', 'friends'];
 const nonAuthViews = ['signin', 'signup'];
 
 async function historyNavigation(viewName, type) {	//handles navigation through browser buttons (back/next)
@@ -25,8 +25,18 @@ async function historyNavigation(viewName, type) {	//handles navigation through 
         showForm(viewName);
 }
 
-export function navigateTo(viewName, type) { // handles regular navigation through clicking on the app elements
+export async function navigateTo(viewName, type) { // handles regular navigation through clicking on the app elements
+    const isAuthenticated = await userIsAuthenticated();
 	history.pushState(viewName, '', viewName);
+
+    if (authRequiredViews.includes(viewName) && !isAuthenticated) {
+        handleError('You need to be logged in to access this view.');
+        return ;
+    }
+    if (nonAuthViews.includes(viewName) && isAuthenticated) {
+        handleError('You are already logged in.');
+        return ;
+    }
 	if (type === 1)
 		showView(viewName);
 	else

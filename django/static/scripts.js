@@ -10,7 +10,7 @@ export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
 export const user = new UserObservable();
 export const userObserver = new UserObserver();
-
+export const bbc = new BroadcastChannel('bbc');
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
 

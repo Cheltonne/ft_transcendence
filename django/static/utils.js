@@ -1,4 +1,4 @@
-import { getUserInfo, menu, hamMenu } from './scripts.js';
+import { getUserInfo, menu, hamMenu, bbc } from './scripts.js';
 import { navigateTo } from './views.js';
 export let socket = null;
 export const USER_STORAGE_KEY = 'user';
@@ -73,6 +73,7 @@ export function handleLogout() {
 				if (friendsListElement) {
 					friendsListElement.remove();
 				}
+				bbc.postMessage('loggedOut');
 			} else {
 				showToast('Error during logout:', data.message || 'Unknown error')
 			}
@@ -94,16 +95,16 @@ export async function initializeWebSocket() {
 
 		socket.onopen = function (event) {
 			console.log('WebSocket is open now.');
-			localStorage.setItem('webSocketOpen', 'true');
-			sessionStorage.setItem('webSocket', socket);
 		};
 
 		socket.onclose = function (event) {
 			console.log('WebSocket is closed.');
 			socket = null; // Reset socket variable when closed
-			localStorage.removeItem('webSocketOpen');
-			sessionStorage.removeItem('webSocket');
 		};
+
+		bbc.addEventListener('message', (e) => {
+			socket.close();
+		})
 
 		socket.onerror = function (error) {
 			console.error('WebSocket encountered error:', error);
