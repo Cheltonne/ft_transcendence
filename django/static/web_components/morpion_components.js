@@ -6,12 +6,6 @@ export class MorpionComponent extends HTMLElement {
 		const navbar = document.createElement('template')
         navbar.innerHTML = `
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
-			<!--<link rel="stylesheet" href="./static/css/morpion.css">
-            <style>
-                @import url('${this.getAttribute('css-url')}'); 
-			<style>	
-				@import url('static/css/morpion.css');
-            </style> -->
             <div class="container">
                 <div id="alert-placeholder"></div>
                 <h1 class="text-center pt-5">Morpion des familles</h1>
@@ -52,9 +46,14 @@ export class MorpionComponent extends HTMLElement {
 
 		this.attachShadow({ mode: 'open' });
 		this.shadowRoot.appendChild(navbar.content.cloneNode(true));
+        const scriptBootstrap = document.createElement('script');
+        scriptBootstrap.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js';
+        scriptBootstrap.onload = () => {
+            // Bootstrap's JavaScript is now loaded and can be used
+        };
+        document.head.appendChild(scriptBootstrap);
 	}
 
-	
 
     connectedCallback() {
 		const styleLink = document.createElement('link');
@@ -64,7 +63,7 @@ export class MorpionComponent extends HTMLElement {
 
         //this.render();
 
-
+        // initialisation des variables
         this.X_CLASS = 'x';
         this.CIRCLE_CLASS = 'circle';
         this.WINNING_COMBINATIONS = [
@@ -101,6 +100,7 @@ export class MorpionComponent extends HTMLElement {
 
         this.startGame();
 
+        // comportement des boutons new game, AI game et restart 
         this.restartButton.addEventListener('click', () => {
             if (!this.seriesOver) {
                 this.restartGame();
@@ -114,11 +114,13 @@ export class MorpionComponent extends HTMLElement {
         this.newGameButton.addEventListener('click', () => {
             this.isAI = false;
             this.startGame();
+            this.showAlert('success', 'Starting new game');
         });
 
         this.newGameWithComputerButton.addEventListener('click', () => {
             this.isAI = true;
             this.startGame();
+            this.showAlert('success', 'Starting new game with computer');
         });
 
         /*this.matchmakingButton.addEventListener('click', async () => {
@@ -127,9 +129,9 @@ export class MorpionComponent extends HTMLElement {
     }
 
 
-    render() {
+    /*render() {
         this.startGame();
-    }
+    }*/
 
     async checkAuthenticated() {
         const response = await fetch('/accounts/check-authenticated/');
@@ -168,6 +170,7 @@ export class MorpionComponent extends HTMLElement {
         this.scorePlayer2.textContent = this.player2Name + ': ' + this.scoreO;
     }
 
+    // fonction pour commencer une partie et verifier si la serie est terminée
     startGame() {
         if (this.seriesOver) {
             this.resetSeries();
@@ -188,24 +191,29 @@ export class MorpionComponent extends HTMLElement {
         this.seriesOver = false;
     }
 
+    // fonction pour gérer le clic sur une case
     handleClick(e) {
         if (this.seriesOver) return;
         const cell = e.target;
-        let currentClass = this.circleTurn ? this.CIRCLE_CLASS : this.X_CLASS;
-        this.placeMark(cell, currentClass);
-        if (this.checkWin(currentClass)) {
-            this.endGame(false);
-        } else if (this.isDraw()) {
-            this.endGame(true);
-        } else {
-            this.swapTurns();
-            this.setBoardHoverClass();
-            if (this.isAI && this.circleTurn) {
-                setTimeout(() => this.makeAIMove(), 300);
+        const currentClass = this.circleTurn ? this.CIRCLE_CLASS : this.X_CLASS;
+        if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
+            this.placeMark(cell, currentClass);
+            if (this.checkWin(currentClass)) {
+                this.endGame(false);
+            } else if (this.isDraw()) {
+                this.endGame(true);
+            } else {
+                this.swapTurns();
+                this.setBoardHoverClass();
+                if (this.isAI && this.circleTurn) {
+                    setTimeout(() => this.makeAIMove(), 300);
+                }
             }
         }
     }
-
+    
+    // fonction pour gérer la fin de la partie: soit un gagnant, soit un match nul ensuite 
+    // on met à jour le score et on vérifie si la série est terminée
     endGame(draw) {
         if (draw) {
             this.winningMessageTextElement.innerText = 'Draw!';
@@ -221,7 +229,8 @@ export class MorpionComponent extends HTMLElement {
             this.seriesOver = true;
         }
     }
-
+    
+    // fonction pour mettre à jour le score
     updateScore(winner) {
         if (winner === "X") {
             this.scoreX++;
@@ -232,20 +241,26 @@ export class MorpionComponent extends HTMLElement {
         }
     }
 
+    // fonction pour vérifier si le match est nul
     isDraw() {
         return [...this.cellElements].every(cell => {
             return cell.classList.contains(this.X_CLASS) || cell.classList.contains(this.CIRCLE_CLASS);
         });
     }
 
+    // fonction pour placer le symbole dans la case
     placeMark(cell, currentClass) {
-        cell.classList.add(currentClass);
+         if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
+            cell.classList.add(currentClass);
+         }
     }
 
+    // fonction pour changer de joueur
     swapTurns() {
         this.circleTurn = !this.circleTurn;
     }
 
+    // fonction pour changer la classe de la case en fonction du joueur
     setBoardHoverClass() {
         this.board.classList.remove(this.X_CLASS);
         this.board.classList.remove(this.CIRCLE_CLASS);
@@ -256,6 +271,7 @@ export class MorpionComponent extends HTMLElement {
         }
     }
 
+    // fonction pour vérifier si un joueur a gagné
     checkWin(currentClass) {
         return this.WINNING_COMBINATIONS.some(combination => {
             return combination.every(index => {
@@ -280,11 +296,12 @@ export class MorpionComponent extends HTMLElement {
         }
     }
 
+    // fonction pour créer un match
     async createMatch(user_score, alias_score) {
         const isAuthenticated = await this.checkAuthenticated();
         if (!isAuthenticated) {
             console.error("User not authenticated. Cannot create match.");
-            this.showAlert("danger", "You need to be logged in to create a match.");
+            //this.showAlert("danger", "You need to be logged in to create a match.");
             return;
         }
 		const csrftoken = getCookie('csrftoken');
@@ -294,28 +311,35 @@ export class MorpionComponent extends HTMLElement {
         const data = await response.json();
         if (data.match_id) {
             console.log("Match created with ID:", data.match_id);
-            this.showAlert("success", "Match created successfully!");
+            //this.showAlert("success", "Match created successfully!");
             this.sendScoreToDjango(user_score, alias_score, data.match_id);
         } else {
             console.error("Error creating match");
-            this.showAlert("danger", "Failed to create match. Please try again.");
+            //this.showAlert("danger", "Failed to create match. Please try again.");
         }
     }
 
-    showAlert(type, message) {
+    showAlert(type, message, duration = 2000) {
         const alertPlaceholder = this.shadowRoot.getElementById('alert-placeholder');
         const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.className = `alert alert-secondary alert-dismissible fade show`;
         alert.role = 'alert';
         alert.innerHTML = `
             ${message}
-            <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
         alertPlaceholder.appendChild(alert);
+        setTimeout(() => {
+            if (alert) {
+                alert.classList.remove('show');
+                alert.addEventListener('transitionend', () => {
+                    alert.remove();
+                });
+            }
+        }, duration);
     }
 
+    // fonction pour envoyer le score au serveur Django
     sendScoreToDjango(scoreX, scoreO, match_id) {
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "morpion/save-score/", true);
@@ -333,6 +357,7 @@ export class MorpionComponent extends HTMLElement {
         xhr.send(JSON.stringify({ user_score: scoreX, alias_score: scoreO, match_id: match_id }));
     }
 
+    // fonction pour réinitialiser la série
     resetSeries() {
         this.gamesPlayed = 0;
         this.scoreX = 0;
@@ -344,7 +369,9 @@ export class MorpionComponent extends HTMLElement {
         this.alertShown = false;
     }
 
+    // fonction pour faire jouer l'ordinateur
     makeAIMove() {
+        // verifie si l'IA peut gagner au prochain tour et gagne
         for (let combination of this.WINNING_COMBINATIONS) {
             const [a, b, c] = combination;
             if (this.cellElements[a].classList.contains(this.CIRCLE_CLASS) &&
@@ -354,8 +381,8 @@ export class MorpionComponent extends HTMLElement {
                 this.placeMark(this.cellElements[c], this.CIRCLE_CLASS);
                 if (this.checkWin(this.CIRCLE_CLASS)) {
                     this.endGame(false);
-                    return;
                 }
+                return;
             }
             if (this.cellElements[a].classList.contains(this.CIRCLE_CLASS) &&
                 this.cellElements[c].classList.contains(this.CIRCLE_CLASS) &&
@@ -364,8 +391,8 @@ export class MorpionComponent extends HTMLElement {
                 this.placeMark(this.cellElements[b], this.CIRCLE_CLASS);
                 if (this.checkWin(this.CIRCLE_CLASS)) {
                     this.endGame(false);
-                    return;
                 }
+                return;
             }
             if (this.cellElements[b].classList.contains(this.CIRCLE_CLASS) &&
                 this.cellElements[c].classList.contains(this.CIRCLE_CLASS) &&
@@ -374,11 +401,12 @@ export class MorpionComponent extends HTMLElement {
                 this.placeMark(this.cellElements[a], this.CIRCLE_CLASS);
                 if (this.checkWin(this.CIRCLE_CLASS)) {
                     this.endGame(false);
-                    return;
                 }
+                return;
             }
         }
-
+    
+        // verifie si l'IA peut perdre au prochain tour et le bloque
         for (let combination of this.WINNING_COMBINATIONS) {
             const [a, b, c] = combination;
             if (this.cellElements[a].classList.contains(this.X_CLASS) &&
@@ -409,7 +437,8 @@ export class MorpionComponent extends HTMLElement {
                 return;
             }
         }
-
+    
+        // prend le centre si disponible
         const centerCell = this.cellElements[4];
         if (!centerCell.classList.contains(this.X_CLASS) && !centerCell.classList.contains(this.CIRCLE_CLASS)) {
             this.placeMark(centerCell, this.CIRCLE_CLASS);
@@ -417,7 +446,8 @@ export class MorpionComponent extends HTMLElement {
             this.setBoardHoverClass();
             return;
         }
-
+    
+        /*// prend un coin si possible (rend l'IA plus difficile à battre)
         const corners = [this.cellElements[0], this.cellElements[2], this.cellElements[6], this.cellElements[8]];
         for (let corner of corners) {
             if (!corner.classList.contains(this.X_CLASS) && !corner.classList.contains(this.CIRCLE_CLASS)) {
@@ -426,12 +456,13 @@ export class MorpionComponent extends HTMLElement {
                 this.setBoardHoverClass();
                 return;
             }
-        }
-
+        }*/
+    
+        // prend une case aléatoire
         const emptyCells = [...this.cellElements].filter(cell => {
             return !cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS);
         });
-
+    
         if (emptyCells.length > 0) {
             const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
             this.placeMark(randomCell, this.CIRCLE_CLASS);
