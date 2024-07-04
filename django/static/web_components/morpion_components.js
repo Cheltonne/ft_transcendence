@@ -2,10 +2,6 @@ import {
     getUserInfo,
     user
 } from '../scripts.js'
-import {
-    User,
-    UserObserver
-} from '../observer.js';
 
 import { getCookie } from "../utils.js";
 
