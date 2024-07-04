@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
 	"accounts",
 	"game",
+	"morpion",
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',

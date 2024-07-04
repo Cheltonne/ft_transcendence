@@ -237,7 +237,7 @@ async function createMatch(user_score, alias_score) {
   if (data.match_id) {
     console.log("Match created with ID:", data.match_id);
     showAlert("success", "Match created successfully!");
-    sendScoreToDjango(user_score, alias_score, data.match_id);
+    sendScoreToDjango(player1_score, player2_score, data.match_id);
   } else {
     console.error("Error creating match");
     showAlert("danger", "Failed to create match. Please try again.");
@@ -272,7 +272,7 @@ function sendScoreToDjango(scoreX, scoreO, match_id) {
             }
         }
     };
-    xhr.send(JSON.stringify({ user_score: scoreX, alias_score: scoreO, match_id: match_id }));
+    xhr.send(JSON.stringify({ player1_score: scoreX, player2_score: scoreO, match_id: match_id }));
 }
 
 
