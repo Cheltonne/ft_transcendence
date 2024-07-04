@@ -1,3 +1,12 @@
+import {
+    getUserInfo,
+    user
+} from '../scripts.js'
+import {
+    User,
+    UserObserver
+} from '../observer.js';
+
 import { getCookie } from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
@@ -49,7 +58,7 @@ export class MorpionComponent extends HTMLElement {
         const scriptBootstrap = document.createElement('script');
         scriptBootstrap.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js';
         scriptBootstrap.onload = () => {
-            // Bootstrap's JavaScript is now loaded and can be used
+            console.log('Bootstrap loaded');
         };
         document.head.appendChild(scriptBootstrap);
 	}
@@ -60,8 +69,6 @@ export class MorpionComponent extends HTMLElement {
         styleLink.rel = 'stylesheet';
         styleLink.href = 'static/css/morpion.css';
         this.shadowRoot.appendChild(styleLink);
-
-        //this.render();
 
         // initialisation des variables
         this.X_CLASS = 'x';
@@ -106,7 +113,7 @@ export class MorpionComponent extends HTMLElement {
                 this.restartGame();
             } else {
                 this.winningMessageElement.classList.remove('show');
-                alert("Series has ended. Press 'Start New Game' to start a new series.");
+                this.showAlert('info', 'Series has ended. Press Start New Game to start a new series.');
                 this.alertShown = true;
             }
         });
@@ -114,24 +121,19 @@ export class MorpionComponent extends HTMLElement {
         this.newGameButton.addEventListener('click', () => {
             this.isAI = false;
             this.startGame();
-            this.showAlert('success', 'Starting new game');
+            this.showAlert('success', 'Starting new series of 3 games');
         });
 
         this.newGameWithComputerButton.addEventListener('click', () => {
             this.isAI = true;
             this.startGame();
-            this.showAlert('success', 'Starting new game with computer');
+            this.showAlert('success', 'Starting new series of 3 games with computer');
         });
 
         /*this.matchmakingButton.addEventListener('click', async () => {
             await this.startMatchmaking();
         });*/
     }
-
-
-    /*render() {
-        this.startGame();
-    }*/
 
     async checkAuthenticated() {
         const response = await fetch('/accounts/check-authenticated/');
@@ -164,7 +166,7 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "Failed to create match. Please try again.");
         }
     }*/
-
+    
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
         this.scorePlayer2.textContent = this.player2Name + ': ' + this.scoreO;
@@ -311,15 +313,15 @@ export class MorpionComponent extends HTMLElement {
         const data = await response.json();
         if (data.match_id) {
             console.log("Match created with ID:", data.match_id);
-            //this.showAlert("success", "Match created successfully!");
+            this.showAlert("success", "Match created successfully!");
             this.sendScoreToDjango(user_score, alias_score, data.match_id);
         } else {
             console.error("Error creating match");
-            //this.showAlert("danger", "Failed to create match. Please try again.");
+            this.showAlert("danger", "Failed to create match. Please try again.");
         }
     }
 
-    showAlert(type, message, duration = 2000) {
+    showAlert(type, message, duration = 3000) {
         const alertPlaceholder = this.shadowRoot.getElementById('alert-placeholder');
         const alert = document.createElement('div');
         alert.className = `alert alert-secondary alert-dismissible fade show`;
