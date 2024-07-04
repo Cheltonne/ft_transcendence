@@ -3,6 +3,7 @@ import { getUserInfo } from './scripts.js';
 import { SigninForm } from './web_components/signin_form.js';
 import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
+import { MorpionComponent } from './web_components/morpion_components.js';
 import { RequestFrame } from './game/pong.js';
 import { onoffGame } from './game/pong.js';
 const authRequiredViews = ['user-profile', 'update'];
