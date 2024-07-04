@@ -201,12 +201,12 @@ export class MorpionComponent extends HTMLElement {
         if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
             this.placeMark(cell, currentClass);
             if (this.checkWin(currentClass)) {
-                this.endGame(false);set_winne
+                this.endGame(false);
             } else if (this.isDraw()) {
                 this.endGame(true);
             } else {
                 this.swapTurns();
-                this.setBoardHoverClass();
+                this.setBoardHoverClass();  
                 if (this.isAI && this.circleTurn) {
                     setTimeout(() => this.makeAIMove(), 300);
                 }
@@ -214,7 +214,7 @@ export class MorpionComponent extends HTMLElement {
         }
     }
     
-    // fonction pour gérer la fin de la partie: soit un gagnant, soit un matset_winnech nul ensuite 
+    // fonction pour gérer la fin de la partie: soit un gagnant, soit un match nul ensuite 
     // on met à jour le score et on vérifie si la série est terminée
     endGame(draw) {
         if (draw) {
