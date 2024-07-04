@@ -73,7 +73,7 @@ export class FriendsComponent extends HTMLElement {
     }
 
     addEventListeners() {
-        this.shadowRoot.querySelector('#add-friend-button').addEventListener('click', () => this.addFriend());
+        this.shadowRoot.querySelector('#add-friend-button').addEventListener('click', (data) => this.addFriend());
         this.shadowRoot.querySelectorAll('.remove-friend').forEach(button => {
             button.addEventListener('click', event => this.removeFriend(event.target.dataset.id));
         });

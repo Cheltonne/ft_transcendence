@@ -15,9 +15,6 @@ const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
 
 export async function getUserInfo() {
-	if (localStorage.getItem('webSocketOpen') === null && sessionStorage.getItem('webSocket')){
-		sessionStorage.getItem('webSocket').close();
-	}
 	return fetch("accounts/get-user-info/")
 		.then(response => response.json())
 		.then(data => {

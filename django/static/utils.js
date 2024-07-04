@@ -115,14 +115,14 @@ export async function initializeWebSocket() {
 }
 
 export function getUserFromStorage() {
-	const userData = localStorage.getItem(USER_STORAGE_KEY);
+	const userData = sessionStorage.getItem(USER_STORAGE_KEY);
 	return userData ? JSON.parse(userData) : null;
 }
 
 export function setUserToStorage(user) {
-	localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+	sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 }
 
 export function removeUserFromStorage() {
-	localStorage.removeItem(USER_STORAGE_KEY);
+	sessionStorage.removeItem(USER_STORAGE_KEY);
 }

@@ -1,4 +1,4 @@
-import { getCookie } from "./utils.js";
+import { getCookie, getUserFromStorage, showToast } from "./utils.js";
 
 export async function addFriend(userId) {
     const response = await fetch(`/accounts/${userId}/add_friend/`, {
@@ -9,7 +9,7 @@ export async function addFriend(userId) {
         },
         credentials: 'include'
     });
-    return response.ok;
+    return response.json();
 }
 
 export async function removeFriend(userId) {
@@ -55,9 +55,14 @@ export async function getUserByUsername(username) {
     if (response.ok) {
         const user = await response.json();
         console.log(user);
+        if (username === getUserFromStorage().username){
+            showToast('Cant\'t add yourself as friend!', 'error');
+            return null;
+        }
         return user;
     } else {
         console.error('Failed to fetch user by username:', response.statusText);
+        showToast('Couldn\'t find user \"' + username + '\", please verify the username.', 'error');
         return null;
     }
 }
