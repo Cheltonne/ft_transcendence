@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'daphne',
 	"accounts",
 	"game",
+	"morpion",
     'rest_framework',
     'channels',
     'django.contrib.admin',
