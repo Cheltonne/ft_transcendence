@@ -2,3 +2,4 @@
 .env
 .swp
 django/media/profile_pictures
+__pycache__
