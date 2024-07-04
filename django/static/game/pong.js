@@ -110,9 +110,9 @@ TourneyButton.addEventListener("click", function() {
 });
 
 function TourneyScreen() {
-    // Determine text size to clear the correct area
-    ctx.font = '50px sans-serif'; // Set the font
-    ctx.textAlign = 'center'; // Center the text
+    ctx.save();
+    ctx.font = '50px sans-serif';
+    ctx.textAlign = 'center';
     let text = `Player ${participantNames.length + 1} `;
     let textWidth = ctx.measureText(text).width;
     let x = canvas.width / 2;
@@ -124,6 +124,7 @@ function TourneyScreen() {
     // Draw the text
     ctx.fillStyle = '#fff'; // Set the text color
     ctx.fillText(text, x, y);
+    ctx.restore();
 
     nameTourney.style.display = 'inline-block';
     nextButton.style.display = 'inline-block';
@@ -135,7 +136,6 @@ function hideTourneyButtons() {
     let x = canvas.width / 2;
     let y = canvas.height / 2 - 50;
 
-    // Clear the area around where the text will be drawn
     ctx.clearRect(x - textWidth / 2 - 10, y - 50, textWidth + 20, 70);
 
     TourneyButton.style.display = 'none';
@@ -234,6 +234,7 @@ nextButton.addEventListener("click", function() {
         if (participantNames.length != 4)
             TourneyScreen();
         else {
+            drawStaticElements();
             drawTournamentTree();
         }
 
@@ -699,14 +700,17 @@ function GameEndingScreen() {
                 } else {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+                    ctx.save();
                     ctx.fillStyle = '#fff';
                     ctx.font = '36px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle'; 
 
                     let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
-                    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 + 130);
-                    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2);
+                    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
+                    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
                     // createMatch(Paddle1.score, Paddle2.score);
-
+                    ctx.restore();
                     // retryButton.style.display = "inline-block";
                     MenuChoice();
                 }
@@ -716,17 +720,20 @@ function GameEndingScreen() {
         // drawTournamentTree();
     } else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+        ctx.save();
         ctx.fillStyle = '#fff';
         ctx.font = '36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle'; 
         giveName();
 
         let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
-        ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 + 130);
-        ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2);
+        ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
+        ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
         createMatch(Paddle1.score, Paddle2.score);
 
         // retryButton.style.display = "inline-block";
+        ctx.restore();
         MenuChoice();
     }
 }
