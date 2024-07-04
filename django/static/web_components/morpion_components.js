@@ -206,7 +206,7 @@ export class MorpionComponent extends HTMLElement {
                 this.endGame(true);
             } else {
                 this.swapTurns();
-                this.setBoardHoverClass();
+                this.setBoardHoverClass();  
                 if (this.isAI && this.circleTurn) {
                     setTimeout(() => this.makeAIMove(), 300);
                 }
@@ -293,32 +293,93 @@ export class MorpionComponent extends HTMLElement {
                 message = "Series ends in a draw.";
             }
             console.log(message);
-            this.createMatch(this.scoreX, this.scoreO);
-    
+            if (this.isAI) {
+                this.createMatch_ai(this.scoreX, this.scoreO);
+            }else{
+                this.createMatch(this.scoreX, this.scoreO);
+            }
         }
     }
 
-    // fonction pour créer un match
+    // fonctions pour créer un match normal ou AI
     async createMatch(user_score, alias_score) {
         const isAuthenticated = await this.checkAuthenticated();
         if (!isAuthenticated) {
             console.error("User not authenticated. Cannot create match.");
-            //this.showAlert("danger", "You need to be logged in to create a match.");
+            this.showAlert("danger", "You need to be logged in to create a match.");
             return;
         }
 		const csrftoken = getCookie('csrftoken');
         const response = await fetch('morpion/create-match/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+        });
+        const data = await response.json();
+        if (data.match_id) {
+            console.log("Match created with ID:", data.match_id);
+            this.showAlert("success", "Match created successfully!");
+            this.sendScoreToDjango(user_score, alias_score, data.match_id, false);
+        } else {
+            console.error("Error creating match");
+            this.showAlert("danger", "Failed to create match. Please try again.");
+        }
+    }
+
+    async createMatch_ai(user_score, ia_score) {
+        const isAuthenticated = await this.checkAuthenticated();
+        if (!isAuthenticated) {
+            console.error("User not authenticated. Cannot create match.");
+            this.showAlert("danger", "You need to be logged in to create a match.");
+            return;
+        }
+		const csrftoken = getCookie('csrftoken');
+        const response = await fetch('morpion/create-match-ai/', {
             method: 'POST',
         });
         const data = await response.json();
         if (data.match_id) {
             console.log("Match created with ID:", data.match_id);
             this.showAlert("success", "Match created successfully!");
-            this.sendScoreToDjango(user_score, alias_score, data.match_id);
+            this.sendScoreToDjango(user_score, ia_score, data.match_id, true);
         } else {
             console.error("Error creating match");
             this.showAlert("danger", "Failed to create match. Please try again.");
         }
+    }
+
+    // fonctions pour envoyer le score au serveur Django
+    sendScoreToDjango(scoreX, scoreO, match_id, isAI) {
+        var xhr = new XMLHttpRequest();
+        const endpoint = isAI ? "morpion/save-score-ai/" : "morpion/save-score/";
+        xhr.open("POST", endpoint, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                var status = xhr.status;
+                if (status === 200) {
+                    console.log("Score saved successfully.");
+                } else {
+                    console.error("Failed to save score:", status, xhr.statusText);
+                }   
+            }
+        };
+        if (endpoint === "morpion/save-score/") {
+            xhr.send(JSON.stringify({ player1_score: scoreX, player2_score: scoreO, match_id: match_id }));
+        } else {
+            xhr.send(JSON.stringify({ player1_score: scoreX, ai_score: scoreO, match_id: match_id }));
+        }
+    }
+
+    // fonction pour réinitialiser la série
+    resetSeries() {
+        this.gamesPlayed = 0;
+        this.scoreX = 0;
+        this.scoreO = 0;
+        this.scorePlayer1.textContent = `${this.player1Name}: 0`;
+        this.scorePlayer2.textContent = `${this.player2Name}: 0`;
+        this.restartGame();
+        this.seriesOver = false;
+        this.alertShown = false;
     }
 
     showAlert(type, message, duration = 3000) {
@@ -339,36 +400,6 @@ export class MorpionComponent extends HTMLElement {
                 });
             }
         }, duration);
-    }
-
-    // fonction pour envoyer le score au serveur Django
-    sendScoreToDjango(scoreX, scoreO, match_id) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "morpion/save-score/", true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                var status = xhr.status;
-                if (status === 200) {
-                    console.log("Score saved successfully.");
-                } else {
-                    console.error("Failed to save score:", status, xhr.statusText);
-                }
-            }
-        };
-        xhr.send(JSON.stringify({ user_score: scoreX, alias_score: scoreO, match_id: match_id }));
-    }
-
-    // fonction pour réinitialiser la série
-    resetSeries() {
-        this.gamesPlayed = 0;
-        this.scoreX = 0;
-        this.scoreO = 0;
-        this.scorePlayer1.textContent = `${this.player1Name}: 0`;
-        this.scorePlayer2.textContent = `${this.player2Name}: 0`;
-        this.restartGame();
-        this.seriesOver = false;
-        this.alertShown = false;
     }
 
     // fonction pour faire jouer l'ordinateur
