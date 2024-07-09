@@ -1,6 +1,7 @@
 import { getUserInfo, menu, hamMenu, bbc } from './scripts.js';
 import { navigateTo } from './views.js';
 export let socket = null;
+export let notificationSocket = null;
 export const USER_STORAGE_KEY = 'user';
 
 export function getCookie(cname) { // to get CSRF cookie (necessary for forms)
@@ -92,6 +93,7 @@ export async function initializeWebSocket() {
 
 	if (authToken && socket === null) {
 		socket = new WebSocket('wss://' + window.location.host + '/ws/accounts/');
+		notificationSocket = new WebSocket('wss://' + window.location.host + '/ws/notifications/');
 
 		socket.onopen = function (event) {
 			console.log('WebSocket is open now.');
@@ -108,6 +110,19 @@ export async function initializeWebSocket() {
 
 		socket.onerror = function (error) {
 			console.error('WebSocket encountered error:', error);
+		};
+
+		notificationSocket.onmessage = function (e) {
+			const data = JSON.parse(e.data);
+			console.log('Notification:', data);
+			// Display notification to the user
+			if (data.sender) {
+				alert(`${data.sender} wants to add you as a friend.`);
+			}
+		};
+
+		notificationSocket.onclose = function (e) {
+			console.log('Notification socket closed.');
 		};
 	} else {
 		console.log('User is not authenticated.'); // Handle case where authToken is not available

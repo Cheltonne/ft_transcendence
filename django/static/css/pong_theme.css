@@ -51,6 +51,16 @@ canvas {
   min-width: 30px;
 }
 
+#notificationDropdown {
+  position: relative;
+  margin-left: auto;
+}
+
+#dropdownMenuButton .active{
+  position: absolute;
+  z-index: -1;
+}
+
 nav {
   padding: 1rem;
   display: flex;

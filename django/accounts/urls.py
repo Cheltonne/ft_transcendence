@@ -13,5 +13,7 @@ urlpatterns = [
         path("render-signup-form/", views.render_signup_form, name='render-signup-form'),
         path("render-update-form/", views.render_update_form, name='render-update-form'),
         path("check-authenticated/", views.check_authenticated, name='check-authenticated'),
+        path('send-friend-request/', views.FriendRequestView.as_view(), name='send_friend_request'),
+         path('notifications/', views.NotificationListView.as_view(), name='notification_list_view'),
         path('', include(router.urls)),
 ]

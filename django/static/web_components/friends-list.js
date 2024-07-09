@@ -1,5 +1,5 @@
-import { getFriends, addFriend, removeFriend, getUserByUsername } from "../user_utils.js";
-import { socket } from "../utils.js";
+import { getFriends, addFriend, removeFriend, getUserByUsername} from "../user_utils.js";
+import { socket, getCookie } from "../utils.js";
 
 export class FriendsComponent extends HTMLElement {
     constructor() {
@@ -83,7 +83,8 @@ export class FriendsComponent extends HTMLElement {
         const username = this.shadowRoot.querySelector('#new-friend-username').value;
         const user = await getUserByUsername(username);
         if (user) {
-            await addFriend(user.id);
+            await this.sendFriendRequest(username);
+            //await addFriend(user.id);
             await this.loadFriends(); // Reload friends list after adding friend
         } else {
             console.log('User search failed');
@@ -94,6 +95,30 @@ export class FriendsComponent extends HTMLElement {
         await removeFriend(userId);
         await this.loadFriends(); // Reload friends list after removing friend
     }
+
+    async sendFriendRequest(recipientUsername) {
+    fetch('accounts/send-friend-request/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+            //'Authorization': 'Bearer ' + token,  // Ensure the user is authenticated
+        },
+        body: JSON.stringify({
+            username: recipientUsername,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.detail === 'Friend request sent successfully.') {
+            console.log('Notification sent');
+        } else {
+            console.error(data.detail);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
 }
 
 customElements.define('friends-view', FriendsComponent);

@@ -2,27 +2,26 @@ import json
 from PIL import Image
 from io import BytesIO
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, CustomUserChangeForm
-from .models import CustomUser
+from .models import CustomUser, Notification
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate
-from django.template.exceptions import TemplateDoesNotExist
 from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+from rest_framework.response import Response 
 from rest_framework.decorators import action
 from rest_framework.views import APIView
-from rest_framework import viewsets, status
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, NotificationSerializer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from .utils import send_friend_request_notification
 
 def index(request):
     return render(request, 'index.html')
@@ -203,3 +202,23 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return Response(ret, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
             return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND) 
+
+class FriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        recipient_username = request.data.get('username')
+        try:
+            recipient = CustomUser.objects.get(username=recipient_username)
+            send_friend_request_notification(request.user, recipient)
+            return Response({'detail': 'Friend request sent successfully.'}, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({'detail': 'Recipient not found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+class NotificationListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Notification.objects.filter(recipient=user).order_by('-created_at')

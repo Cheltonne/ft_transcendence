@@ -37,10 +37,12 @@ nav {
 }
 
 .profile-picture {
-    vertical-align: middle;
-    height: 12rem;
+    align-self: center;
+    height: 13rem;
+    width: 13rem;
     border-radius: 50%;
     object-fit: cover;
+    margin: auto;
 }
 
 .toast-container {

@@ -32,3 +32,5 @@ export function socket_logic() {
         sessionStorage.removeItem('webSocketOpen');
     };
 }
+
+
