@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response 
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 from .serializers import CustomUserSerializer, NotificationSerializer
 from channels.layers import get_channel_layer
@@ -222,3 +222,18 @@ class NotificationListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return Notification.objects.filter(recipient=user).order_by('-created_at')
+
+@api_view(['PUT'])
+def mark_as_read(request, id):
+    serializer_class = NotificationSerializer
+    if request.method != 'PUT':
+        return Response({'Error': 'Only PUT requests allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    try:
+        notification = Notification.objects.get(id=id)
+        notification.is_read = True
+        notification.save()
+        return Response(NotificationSerializer(notification).data)
+    except Notification.DoesNotExist:
+        return Response ({'Error': 'Error fetching notification. + ratio'})
+    

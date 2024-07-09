@@ -1,71 +1,47 @@
 import { getCookie } from "./utils.js";
 import { dropdownMenu } from "./scripts.js";
 import { addFriend } from "./user_utils.js";
+import { NotificationItem } from "./web_components/notification_item.js";
 let notificationContent = null;
 
 export function displayNotifications(notifications) {
-    dropdownMenu.innerHTML = '';  // Clear existing notifications
+    dropdownMenu.innerHTML = '';
 
     notifications.forEach(function (notification) {
-        var notificationItem = document.createElement('a');
-        notificationItem.classList.add('dropdown-item');
-
-        notificationContent = `
-                <div>
-                    <strong>${notification.sender}</strong> sent you a friend request.<br>
-                    ${notification.message}
-                </div>
-                <div>
-                    <button class="btn btn-success" z-index="2">Accept</button>
-                    <button class="btn btn-danger">Reject</button>
-                </div>
-                <script>
-                const acceptButton = notificationItem.querySelector('.btn-success');
-                const rejectButton = notificationItem.querySelector('.btn-danger');
-
-                acceptButton.addEventListener('click', (event) => {
-                    acceptFriendRequest(notification.id, notification.sender_id);
-                });
-
-                rejectButton.addEventListener('click', () => {
-                    rejectFriendRequest(notification.id);
-                });
-                </script>
-            `;
-        notificationItem.innerHTML = notificationContent;
+        const notificationItem = document.createElement('notification-item');
+        notificationItem.data = notification;
         dropdownMenu.appendChild(notificationItem);
+        console.log(notification);
     });
 }
 
 export function acceptFriendRequest(notificationId, senderId){
     toggleNotificationRead(notificationId);
     addFriend(senderId);
-    notificationContent.innerHTML = '';
 }
 
 export function rejectFriendRequest(notificationId) {
-    // Implement logic to handle rejecting friend request
     toggleNotificationRead(notificationId);
-    // Other relevant actions
+    notificationContent.innerHTML = '';
 }
 
 export function toggleNotificationRead(notificationId) {
-    // Send API request to mark notification as read
-    fetch(`/api/notifications/${notificationId}/mark_as_read/`, {
+    fetch(`accounts/notifications/${notificationId}/mark_as_read/`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token,  // Ensure the user is authenticated
+            'X-CSRFToken': getCookie('csrftoken'),
         },
         body: JSON.stringify({
             is_read: true
         }),
     })
+    /*
         .then(response => response.json())
         .then(data => {
-            // Handle success or error response
         })
         .catch(error => console.error('Error:', error));
+        */
 }
 
 export function fetchNotifications() {
@@ -78,7 +54,7 @@ export function fetchNotifications() {
     })
     .then(response => response.json())
     .then(data => {
-        displayNotifications(data);  // Call function to display notifications
+        displayNotifications(data);
     })
     .catch(error => console.error('Error:', error));
 }

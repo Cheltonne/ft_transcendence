@@ -123,6 +123,7 @@ export async function initializeWebSocket() {
 
 		notificationSocket.onclose = function (e) {
 			console.log('Notification socket closed.');
+			notificationSocket = null;
 		};
 	} else {
 		console.log('User is not authenticated.'); // Handle case where authToken is not available

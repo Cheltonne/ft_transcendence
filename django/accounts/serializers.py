@@ -42,9 +42,17 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return None
 
 class NotificationSerializer(serializers.ModelSerializer):
-    sender = serializers.StringRelatedField()
-    recipient = serializers.StringRelatedField()
+    sender_id = serializers.PrimaryKeyRelatedField(source='sender', read_only=True)
+    recipient_id = serializers.PrimaryKeyRelatedField(source='recipient', read_only=True)
+    sender_username = serializers.SerializerMethodField()
+    recipient_username = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
         fields = '__all__'
+
+    def get_sender_username(self, obj):
+        return obj.sender.username
+
+    def get_recipient_username(self, obj):
+        return obj.recipient.username

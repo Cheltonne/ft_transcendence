@@ -128,7 +128,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         await self.send(text_data=json.dumps({
-            'message': 'Notifications are received server side, not client side'
+            'message': 'Notification'
         }))
 
     async def send_notification(self, event):

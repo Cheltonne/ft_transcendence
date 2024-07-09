@@ -1,5 +1,4 @@
 {% load static %}
-<script type="module" src="../web_components/notification_dropdown.js"></script>
 <nav>
 	<div class="logo-container">
 		<a><img class="logo" src="{% static 'images/logo.png' %}"></a>
@@ -8,10 +7,9 @@
 		<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 			Notifications
 		</button>
-		<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+		<div class="dropdown-menu-items">
 		</div>
 	</div>
-	<notification-dropdown-element></notification-dropdown-element>
 	<div class="ham-menu">
 		<span></span>
 		<span></span>

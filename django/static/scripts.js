@@ -7,13 +7,13 @@ import { FriendsComponent } from './web_components/friends-list.js';
 import { UserObservable, UserObserver} from './observer.js';
 import { getUserFromStorage, setUserToStorage, removeUserFromStorage } from './utils.js';
 import { fetchNotifications } from './notification_utils.js';
-import { NotificationDropdown } from "./web_components/notification_dropdown.js";
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
 export const user = new UserObservable();
 export const userObserver = new UserObserver();
 export const bbc = new BroadcastChannel('bbc');
-export const dropdownMenu = document.querySelector('.dropdown-toggle');
+export const dropDownButton = document.querySelector('.dropdown-toggle');
+export const dropdownMenu = document.querySelector('.dropdown-menu-items');
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
 
@@ -64,8 +64,7 @@ logo.addEventListener("click", () => { //click logo to go back to pong view
 	navigateTo("pong", 1);
 })
 
-dropdownMenu.addEventListener('click', (event) => {
-	dropdownMenu.classList.toggle("active");
+dropDownButton.addEventListener('click', (event) => {
 	fetchNotifications();
 	console.log('clicked');
 })
@@ -100,6 +99,4 @@ $(document).ready(function () {
 	loadNavbar();
 	history.replaceState('pong', '', 'pong');
 	initializeWebSocket();
-	const notificationDropdown = document.createElement("notification-dropdown-element");
-	document.body.appendChild(notificationDropdown); // Or any other parent element
 });
