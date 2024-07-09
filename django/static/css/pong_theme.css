@@ -301,10 +301,10 @@ form a {
 }
 
 .participant {
+  background-color: #a2c11c; /* Button background color */
   padding: 12px 25px; /* Adjust padding to increase button size */
   font-size: 20px; /* Increase font size */
   color: #ffffff; /* Text color */
-  background-color: #a2c11c; /* Button background color */
   border: none; /* Remove border */
   border-radius: 10px; /* Rounded corners */
   margin: 5px;
@@ -313,17 +313,19 @@ form a {
 
 .divider {
     font-size: 16px;
-    color: #000000;
+    color: #ffffffd6;
     margin: 0 10px;
 }
 
 .final-match {
-  background-color: #000000f4; /* Example background color for final match */
-  padding: 15px; /* Example padding for final match */
-  margin-top: 20px; /* Example margin top for final match */
-  margin-left: 30px;
-  border-radius: 5px; /* Example border radius for final match */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Example box shadow for final match */
+  background-color: #22393D;
+  padding: 12px 25px; /* Adjust padding to increase button size */
+  font-size: 20px; /* Increase font size */
+  color: #ffffff; /* Text color */
+  border: none; /* Remove border */
+  border-radius: 10px; /* Rounded corners */
+  margin: 5px;
+  transition: background-color 0.3s ease; /* Smooth transition */
 }
 
 #NextMatchButton {
