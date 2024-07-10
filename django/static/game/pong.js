@@ -26,6 +26,7 @@ let participantNames = [];
 const NextMatchButton = document.getElementById("NextMatchButton");
 let matches = [];
 const tournamentTree = document.getElementById('tournamentTree');
+const EndTourneyButton = document.getElementById("EndTourneyButton");
 let TourneyMode = false;
 
 ////////////////////////////////////////////////////////
@@ -47,7 +48,7 @@ LocalButton.addEventListener("click", function() {
     TourneyButton.style.display = 'none';
     player2Name = 'guest';
     $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
-    clear();
+    clear();TourneyScreen
     LaunchGame();
 });
 
@@ -64,6 +65,12 @@ AIButton.addEventListener("click", function() {
     clear();
     LaunchGame();
 });
+
+EndTourneyButton.addEventListener("click", function() {
+        clearTourney();
+        ModeChoice();
+        EndTourneyButton.style.display = 'none';
+})
 
 function findMatchWithNullWinner() {
     for (let i = 0; i < matches.length; i++) {
@@ -146,11 +153,11 @@ let array = findMatchWithNullWinner(matches);
 
     if (array !== null) {
         document.getElementById("aliasContainer").textContent = `${array.player1} VS ${array.player2}`;
-        NextMatchButton.innerHTML = `${array.player1} VS ${array.player2}`;
+        NextMatchButton.innerHTML = `${array.player1} VS ${array.player2} ->`;
+        NextMatchButton.style.display = 'inline-block';
     }   else {
-        NextMatchButton.innerHTML = 'Next match';
+        NextMatchButton.innerHTML = 'Next Match';
     }
-    NextMatchButton.style.display = 'inline-block';
 }
 
 function drawTournamentTree() {
@@ -201,6 +208,7 @@ function drawTournamentTree() {
     const p1 = document.createElement('div');
     p1.className = 'participant';
     p1.textContent = 'winner 1';
+    p1.id = 'winner1';
     match.appendChild(p1);
 
     const divider = document.createElement('div');
@@ -211,6 +219,7 @@ function drawTournamentTree() {
     const p2 = document.createElement('div');
     p2.className = 'participant';
     p2.textContent = 'winner 2';
+    p2.id = 'winner2';
     match.appendChild(p2);
     round.appendChild(match);
 
@@ -270,6 +279,7 @@ function clear(){
     Ball = null;
     Paddle1 = null;
     Paddle2 = null;
+    EndTourneyButton.style.display = 'none';
     NextMatchButton.style.display = 'none';
     keysPressed = {};
 }
@@ -279,6 +289,7 @@ function clearTourney() {
     participantNames = [];
     TourneyMode = false;
     tournamentTree.style.display = 'none';
+    $("#aliasContainer").text('');
     //NextMatchButton.style.display = 'none';
     //tournamentTree.display.html = '';
 
@@ -333,6 +344,7 @@ MenuButton.style.display = "none";
 MenuButton.addEventListener("click", function() {
     MenuButton.style.display = "none";
     $("#aliasContainer").text("");
+    TourneyClear();
     ModeChoice();
 });
 
@@ -708,12 +720,16 @@ function LaunchGame() {
 }
 
 function UpdateTourney() {
+    $("#aliasContainer").text('');
+    drawStaticElements();
+
     matches.forEach(match => {
-        if (match.winner !== null) {
+        if (match.winner !== null && !match.final) {
             const matchElements = document.getElementsByClassName('match');
             Array.from(matchElements).forEach(matchElement => {
                 const participants = matchElement.getElementsByClassName('participant');
-                if (participants[0].textContent === match.player1 || participants[1].textContent === match.player2) {
+                if ((participants[0].textContent === match.player1 || participants[1].textContent === match.player2) && 
+                    !matchElement.classList.contains('final-match')) { // Ensure it's not the final match
                     if (match.winner !== match.player1 && match.player1 !== null) {
                         participants[0].style.backgroundColor = '#6d071a';
                     }
@@ -724,19 +740,30 @@ function UpdateTourney() {
             });
         }
     });
+
     const semiFinalMatch1 = matches[0];
     const semiFinalMatch2 = matches[1];
 
     if (semiFinalMatch1 && semiFinalMatch2) {
         if (semiFinalMatch1.winner) {
             matches[matches.length - 1].player1 = semiFinalMatch1.winner;
+            document.getElementById('winner1').innerHTML = semiFinalMatch1.winner;
         }
         if (semiFinalMatch2.winner) {
             matches[matches.length - 1].player2 = semiFinalMatch2.winner;
+            document.getElementById('winner2').innerHTML = semiFinalMatch2.winner;
         }
     }
 
-    NextMatchButton.style.display = 'inline-block';
+    if (matches[2].state == 1) {
+        if (matches[2].winner == matches[2].player1)
+            document.getElementById('winner2').style.backgroundColor = '#6d071a';
+        else
+            document.getElementById('winner1').style.backgroundColor = '#6d071a';
+    }
+
+    updateNextMatchButton();
+    //NextMatchButton.style.display = 'inline-block';
     tournamentTree.style.display = 'inline-block';
 }
 
@@ -749,12 +776,7 @@ function GameEndingScreen() {
 
                 if (i == 0) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                    ctx.save();
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '36px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle'; 
+                    //matches[2].player1 = matches[0].winner;
                     UpdateTourney();
 
                     // mettre une function qui va display tournament tree, mettre a jour le next match,
@@ -766,42 +788,52 @@ function GameEndingScreen() {
                     //ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 124);
                     //ctx.fillText(`next : `, canvas.width / 2, canvas.height / 2 - 36);
                     //ctx.fillText(`${matches[1].player1} versus ${matches[1].player2}`, canvas.width / 2, canvas.height / 2 - 8);
-
-                    ctx.restore();
                 } else if (i == 1) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    matches[2].player2 = matches[1].winner;
-                    NextMatchButton.style.display = 'inline-block';
+                    //matches[2].player2 = matches[1].winner;
+                    //NextMatchButton.style.display = 'inline-block';
+                    UpdateTourney();
 
                     ctx.save();
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '36px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle'; 
+                    //ctx.fillStyle = '#fff';
+                    //ctx.font = '36px sans-serif';
+                    //ctx.textAlign = 'center';
+                    //ctx.textBaseline = 'middle'; 
 
 
-                    let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
-                    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 180);
+                    //let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                    //ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 180);
                     //ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 124);
-                    ctx.fillText(`next : `, canvas.width / 2, canvas.height / 2 - 36);
-                    ctx.fillText(`${matches[2].player1} versus ${matches[2].player2}`, canvas.width / 2, canvas.height / 2 - 8);
+                    //ctx.fillText(`next : `, canvas.width / 2, canvas.height / 2 - 36);
+                    //ctx.fillText(`${matches[2].player1} versus ${matches[2].player2}`, canvas.width / 2, canvas.height / 2 - 8);
 
                     ctx.restore();
                 } else {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    //NextMatchButton.style.display = 'inline-block';
+                    UpdateTourney();
+                    console.log(matches);
+                    if (matches[i].winner)
+                    {
+                        console.log("nouveau truc");
+                        EndTourneyButton.style.display = 'inline-block';
+                        //clearTourney();
+                        //MenuChoice();
+                        // a mettre dans ce nouveau Bouton
+                    }
 
-                    ctx.save();
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '36px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle'; 
+                    //ctx.save();
+                    //ctx.fillStyle = '#fff';
+                    //ctx.font = '36px sans-serif';
+                //    ctx.textAlign = 'center';
+                    //ctx.textBaseline = 'middle'; 
 
-                    let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
-                    ctx.fillText(`${winner} wins the tournament`, canvas.width / 2, canvas.height / 2 - 75);
+                    //let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                    //ctx.fillText(`${winner} wins the tournament`, canvas.width / 2, canvas.height / 2 - 75);
                     //ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
-                    ctx.restore();
-                    clearTourney();
-                    MenuChoice();
+                    //ctx.restore();
+                    //clearTourney();
+                    //MenuChoice();
                 }
                 break;
             }

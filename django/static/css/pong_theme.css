@@ -331,3 +331,7 @@ form a {
 #NextMatchButton {
   display: none;
 }
+
+#EndTourneyButton {
+  display: none;
+}
