@@ -103,7 +103,7 @@ export class UserProfileCard extends HTMLElement {
         super();
         const template = document.createElement('template')
         template.innerHTML = `
-        <div class="user-info-card" id="user-info-card">
+        <!-- <div class="user-info-card" id="user-info-card">
             <div class='profile-picture'></div>
             <div class="username"></div>
             <div class="wins"></div>
@@ -115,6 +115,22 @@ export class UserProfileCard extends HTMLElement {
                 See Morpion Match History
             </div>
             <a class="button updateButton">Update Profile</a>
+        </div>
+        <div class="match-history-cards"></div>
+        <div class="match-history-veil"></div>-->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <div class="user-info-card" id="user-info-card">
+            <div class='profile-picture'></div>
+            <div class="username"></div>
+            <div class="wins"></div>
+            <div class="losses"></div>
+            <button class="btn btn-light view-matches-link" id="view-pong-matches">
+                See Pong Match History
+            </button>
+            <button class="btn btn-light view-matches-link" id="view-morpion-matches">
+                See Morpion Match History
+            </button>
+            <a class="btn btn-secondary updateButton">Update Profile</a>
         </div>
         <div class="match-history-cards"></div>
         <div class="match-history-veil"></div>
