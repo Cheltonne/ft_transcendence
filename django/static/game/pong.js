@@ -48,7 +48,7 @@ LocalButton.addEventListener("click", function() {
     TourneyButton.style.display = 'none';
     player2Name = 'guest';
     $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
-    clear();TourneyScreen
+    clear();
     LaunchGame();
 });
 
@@ -153,7 +153,7 @@ let array = findMatchWithNullWinner(matches);
 
     if (array !== null) {
         document.getElementById("aliasContainer").textContent = `${array.player1} VS ${array.player2}`;
-        NextMatchButton.innerHTML = `${array.player1} VS ${array.player2} ->`;
+        NextMatchButton.innerHTML = `${array.player1} VS ${array.player2}`;
         NextMatchButton.style.display = 'inline-block';
     }   else {
         NextMatchButton.innerHTML = 'Next Match';
@@ -279,6 +279,7 @@ function clear(){
     Ball = null;
     Paddle1 = null;
     Paddle2 = null;
+    nameTourney.value = "";
     EndTourneyButton.style.display = 'none';
     NextMatchButton.style.display = 'none';
     keysPressed = {};
@@ -344,7 +345,7 @@ MenuButton.style.display = "none";
 MenuButton.addEventListener("click", function() {
     MenuButton.style.display = "none";
     $("#aliasContainer").text("");
-    TourneyClear();
+    clearTourney();
     ModeChoice();
 });
 
@@ -362,6 +363,11 @@ MenuButton.addEventListener("click", function() {
 ///////////////////////////////////////////////
 //////////////////BINDINGS/////////////////////
 ///////////////////////////////////////////////
+
+function dispatchDOMContentLoaded() {
+    const event = new Event('DOMContentLoaded');
+    document.dispatchEvent(event);
+}
 
 function simulateKeyPress(key, type) {
     const event = new KeyboardEvent(type, { key });
@@ -673,6 +679,8 @@ export function onoffGame(Button){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         $("#aliasContainer").text('');
         ModeChoice();
+        //dispatchDOMContentLoaded();
+        // je devrais faire en sorte que ce soit DOMLOADED CONTENT SIMULER
         //restartChoice();
     }
 }
@@ -788,13 +796,23 @@ function GameEndingScreen() {
                     //ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 124);
                     //ctx.fillText(`next : `, canvas.width / 2, canvas.height / 2 - 36);
                     //ctx.fillText(`${matches[1].player1} versus ${matches[1].player2}`, canvas.width / 2, canvas.height / 2 - 8);
+                    ctx.save();
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '36px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle'; 
+
+                    let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 145);
+                    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 105);
+
+                    ctx.restore();
                 } else if (i == 1) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     //matches[2].player2 = matches[1].winner;
                     //NextMatchButton.style.display = 'inline-block';
                     UpdateTourney();
 
-                    ctx.save();
                     //ctx.fillStyle = '#fff';
                     //ctx.font = '36px sans-serif';
                     //ctx.textAlign = 'center';
@@ -806,8 +824,17 @@ function GameEndingScreen() {
                     //ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 124);
                     //ctx.fillText(`next : `, canvas.width / 2, canvas.height / 2 - 36);
                     //ctx.fillText(`${matches[2].player1} versus ${matches[2].player2}`, canvas.width / 2, canvas.height / 2 - 8);
+                    ctx.save();
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '36px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle'; 
 
-                    ctx.restore();
+                    let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 145);
+                    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 105);
+
+                    ctx.restore();  
                 } else {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     //NextMatchButton.style.display = 'inline-block';
@@ -817,6 +844,17 @@ function GameEndingScreen() {
                     {
                         console.log("nouveau truc");
                         EndTourneyButton.style.display = 'inline-block';
+                        ctx.save();
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '36px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle'; 
+    
+                        let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                        ctx.fillText(`${winner} wins the tourney!`, canvas.width / 2, canvas.height / 2 - 145);
+                        ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 105);
+    
+                        ctx.restore();  
                         //clearTourney();
                         //MenuChoice();
                         // a mettre dans ce nouveau Bouton
