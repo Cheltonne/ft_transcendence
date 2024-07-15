@@ -332,6 +332,10 @@ form a {
   display: none;
 }
 
+#MyButton {
+  display: none;
+}
+
 #EndTourneyButton {
   display: none;
 }

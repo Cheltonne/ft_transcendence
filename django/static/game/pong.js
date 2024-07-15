@@ -2,7 +2,7 @@ export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
 const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 2;
+const MAX_ROUNDS = 5;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -19,7 +19,7 @@ let lastFrameTime = performance.now();
 const LocalButton = document.getElementById("LocalButton");
 const AIButton = document.getElementById("AIButton");
 const TourneyButton = document.getElementById("TourneyButton");
-const title = "versus";
+var title = true;
 const nameTourney = document.getElementById("nameTourney");
 const nextButton = document.getElementById("nextButton");
 let participantNames = [];
@@ -27,6 +27,7 @@ const NextMatchButton = document.getElementById("NextMatchButton");
 let matches = [];
 const tournamentTree = document.getElementById('tournamentTree');
 const EndTourneyButton = document.getElementById("EndTourneyButton");
+const myButton = document.getElementById("myButton");
 let TourneyMode = false;
 
 ////////////////////////////////////////////////////////
@@ -296,8 +297,25 @@ function clearTourney() {
 
 }
 
+EnterScreen();
+
+function EnterScreen(){
+    title = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    LocalButton.style.display = 'none';
+    AIButton.style.display = 'none';
+    TourneyButton.style.display = 'none';
+    ctx.save();
+    myButton.style.display = "inline-block";
+    ctx.fillStyle = '#fff'; // Set the text color
+    ctx.font = '100px sans-serif'; // Set the font
+    ctx.textAlign = 'center'; // Center the text
+    ctx.fillText('PONG', canvas.width / 2, canvas.height / 2 - 50); // Draw the title
+
+    ctx.restore();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
-    var myButton = document.getElementById("myButton");
     giveName();
     //clear();
     //ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
@@ -305,29 +323,18 @@ document.addEventListener("DOMContentLoaded", function() {
     //ctx.fillStyle = '#000'; // Set the background color
     //ctx.fillRect(0, 0, canvas.width, canvas.height); // Draw the background
 
-    ctx.save();
-
-    ctx.fillStyle = '#fff'; // Set the text color
-    ctx.font = '100px sans-serif'; // Set the font
-    ctx.textAlign = 'center'; // Center the text
-    ctx.fillText('PONG', canvas.width / 2, canvas.height / 2 - 50); // Draw the title
-
-    ctx.restore();
-
+    EnterScreen();
     //var textInput = document.getElementById("textInput");
     //textInput.style.display = "none";
     myButton.addEventListener("click", function() {
-        var alias = "VS";
-        if (alias != "") {
             //player2Name = alias;
-            myButton.style.display = "none";
+        myButton.style.display = "none";
             //allButtonOk = true;
-            ModeChoice();
-        } else {
-            alert("Please enter your alias.");
-        }
+        ModeChoice();
+            //alert("Please enter your alias.");
     });
 });
+
 
 function ModeChoice(){
     LocalButton.style.display = 'inline-block';
@@ -363,11 +370,6 @@ MenuButton.addEventListener("click", function() {
 ///////////////////////////////////////////////
 //////////////////BINDINGS/////////////////////
 ///////////////////////////////////////////////
-
-function dispatchDOMContentLoaded() {
-    const event = new Event('DOMContentLoaded');
-    document.dispatchEvent(event);
-}
 
 function simulateKeyPress(key, type) {
     const event = new KeyboardEvent(type, { key });
@@ -637,12 +639,13 @@ function draw() {
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
-    if (AIplayer && AIplayer.prediction) {
-    ctx.beginPath();
-    ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = 'red';
-    ctx.fill();
-    }
+    // AI DRAW RED BALL
+    //if (AIplayer && AIplayer.prediction) {
+    //ctx.beginPath();
+    //ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
+    //ctx.fillStyle = 'red';
+    //ctx.fill();
+    //}
 
     //Draw trails and other dynamic elements
     //for (let i = 0; i < Ball.trailPositions.length; i++) {
@@ -660,42 +663,51 @@ function draw() {
 export function onoffGame(Button){
     if (Button === 'off')
     {
-        //RequestFrame = false;
-        console.log("pause");
+        RequestFrame = false;
         clear();
         clearTourney();
-        cancelAnimationFrame(GameLoop);
         $("#aliasContainer").text('');
         RequestFrame = false;
         AI = false;
+        title = true;
+        EnterScreen();
     }
     if (Button === 'on')
     {
         //RequestFrame = true;
-        console.log("on continue");
         clearTourney();
         clear();
         hideTourneyButtons();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         $("#aliasContainer").text('');
-        ModeChoice();
+        RequestFrame = false;
+        AI = false;
+        title = true;
+        drawStaticElements();
+        MenuButton.style.display = "none";
+        EnterScreen();
+        //ModeChoice();
         //dispatchDOMContentLoaded();
         // je devrais faire en sorte que ce soit DOMLOADED CONTENT SIMULER
         //restartChoice();
     }
 }
-
-
+    
 function GameLoop() {
     const currentTime = performance.now();
     const dt = (currentTime - lastFrameTime) / 1000;
     lastFrameTime = currentTime;
 
+    if (!RequestFrame)
+        return;
+
     if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
         console.log("Game Ending condition met");
         gameEnding = true;
         RequestFrame = false;
-        GameEndingScreen();
+        if (!title)
+            GameEndingScreen();
+        title = false;
         return;
     }
 
