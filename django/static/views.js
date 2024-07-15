@@ -113,9 +113,9 @@ export function showView(viewName) {
 	for (const view of allViews) {
 		const currentView = view.dataset.view;
 		view.classList.toggle('hidden', currentView !== viewName);
-		if (viewName !== 'pong') {
+		if (viewName !== 'pong' && RequestFrame === true) {
             onoffGame('off');
-        } else if (viewName === 'pong') {
+        } else if (viewName === 'pong' && RequestFrame === false) {
             onoffGame('on'); 
         }
 	}
