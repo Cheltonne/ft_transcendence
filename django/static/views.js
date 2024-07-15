@@ -1,11 +1,12 @@
-import { userIsAuthenticated, getCookie, showToast, toggleMenu, handleError } from './utils.js';
-import { getUserInfo } from './scripts.js';
+import { userIsAuthenticated, getCookie, showToast, toggleMenu, handleError, initializeWebSocket, socket } from './utils.js';
+import { getUserInfo, user } from './scripts.js';
 import { SigninForm } from './web_components/signin_form.js';
 import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
+import { MorpionComponent } from './web_components/morpion_components.js';
 import { RequestFrame } from './game/pong.js';
 import { onoffGame } from './game/pong.js';
-const authRequiredViews = ['user-profile', 'update'];
+const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion'];
 const nonAuthViews = ['signin', 'signup'];
 
 async function historyNavigation(viewName, type) {	//handles navigation through browser buttons (back/next)
@@ -27,8 +28,18 @@ async function historyNavigation(viewName, type) {	//handles navigation through 
         showForm(viewName);
 }
 
-export function navigateTo(viewName, type) { // handles regular navigation through clicking on the app elements
+export async function navigateTo(viewName, type) { // handles regular navigation through clicking on the app elements
+    const isAuthenticated = await userIsAuthenticated();
 	history.pushState(viewName, '', viewName);
+
+    if (authRequiredViews.includes(viewName) && !isAuthenticated) {
+        handleError('You need to be logged in to access this view.');
+        return ;
+    }
+    if (nonAuthViews.includes(viewName) && isAuthenticated) {
+        handleError('You are already logged in.');
+        return ;
+    }
 	if (type === 1)
 		showView(viewName);
 	else
@@ -62,15 +73,18 @@ export async function handleFormSubmit(formType) {
 						showToast('Update successful!');
 						getUserInfo()
 							.then(data => {
-								if (userIsAuthenticated())
+								if (userIsAuthenticated()) {
+									user.setUserData(data);
 									navigateTo('user-profile',);
+								}
 								else
 									handleError('You\'re not authenticated anymore!');
 							});
-					} else {
-						showToast(`${formType} succ!`);
+					} else { //after signup or signin do this
+						showToast(`${formType} success!`);
 						getUserInfo();
 						navigateTo('pong');
+						initializeWebSocket();
 					}
 				}
 				else {

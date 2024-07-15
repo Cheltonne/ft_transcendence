@@ -27,6 +27,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("game/", include("game.urls")),
     path("accounts/", include("accounts.urls")),
+    path("morpion/", include("morpion.urls")),
 	path("accounts/", include("django.contrib.auth.urls")),
     path("render-template/<str:folder>/<str:template_name>/", views.render_template, name='render-template'),
     re_path(r'^(?!api/)(?!admin/)(?!static/)(?!.*\.(jpg|jpeg|png|gif|svg)$).*$', TemplateView.as_view(template_name='index.html'))

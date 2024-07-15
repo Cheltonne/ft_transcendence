@@ -1,0 +1,106 @@
+.friends-container {
+    font-family: monospace;
+    color: brown;
+    display: flex;
+    flex-direction: column;
+}
+
+.friends-container a {
+    color: brown;
+    text-decoration: none;
+}
+
+.friends-container a:visited {
+    color: brown;
+}
+
+.friends-container a:hover {
+    color: #6F86FF;
+    text-decoration: none;
+}
+
+.friends-container .button {
+    background-color: #dddace;
+    color: brown;
+    padding: 5px 10px 1px 1px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.friends-container .button:hover {
+    background-color: #2980b9;
+}
+
+.friends-container h2 {
+    margin: auto;
+}
+
+.friends-container ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.friends-container li {
+    margin-bottom: 10px;
+}
+
+.friends-container input[type="text"], .friends-container button {
+    margin: auto;
+}
+
+.friend-card {
+    display: flex;
+    align-items: center;
+    width: 75%;
+    margin: 10px auto;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.friend-card img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Ensures the image is round */
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.friend-card .username {
+    flex: 1; /* Takes up remaining space */
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.friend-card .remove-friend {
+    background-color: #dddace;
+    color: brown;
+    padding: 5px 10px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.friend-card .remove-friend:hover {
+    background-color: #2980b9;
+}
+
+.friend-card .status {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 10px;
+}
+
+.friend-card .status.online {
+    background-color: green;
+}
+
+.friend-card .status.offline {
+    background-color: red;
+}

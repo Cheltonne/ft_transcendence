@@ -11,13 +11,15 @@
     </head>
     <body>
         {% include 'navbar.html' %}
-        <div id='navbar'></div>
-    
-        <div data-view="signin" id="signin-content" class="hidden"></div>
-        <div data-view="signup" id="signup-content" class="hidden"></div>
-        <div data-view="update" id="update-content" class="hidden"></div>
-        <div data-view="user-profile" id="user-profile-content" class="hidden"></div>
-        <div class="toast-container"></div>
+		<div id='navbar'></div>
+	
+		<div data-view="signin" id="signin-content" class="hidden"></div>
+		<div data-view="signup" id="signup-content" class="hidden"></div>
+		<div data-view="update" id="update-content" class="hidden"></div>
+		<div data-view="user-profile" id="user-profile-content" class="hidden"></div>
+		<div data-view="friends" id="friends-content" class="hidden"></div>
+        <div data-view="morpion" id="morpion-content" class="hidden"></div>
+		<div class="toast-container"></div>
         <div data-view="pong" id="pong-content">
             <div id="canvasContainer" class="canvas-container">
                 <canvas id="myCanvas"></canvas>
@@ -44,9 +46,9 @@
     <script src="{% static 'game/pong.js'  %}"></script>
 </html>
 <!-- <div class="form-container" style="padding: 5rem;">
-    <h2>Score input tester</h2>
-    <form id="scoreForm">
-    <input type="text" id="scoreInput" placeholder="Enter your score (integer)">
-    <input type="submit" value="Submit">
-    </form>
-    </div> --!>
+	<h2>Score input tester</h2>
+	<form id="scoreForm">
+	<input type="text" id="scoreInput" placeholder="Enter your score (integer)">
+	<input type="submit" value="Submit">
+	</form>
+	</div> --!>

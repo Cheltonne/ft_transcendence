@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F
 from accounts.models import CustomUser
 
 class Match(models.Model):
@@ -11,7 +12,11 @@ class Match(models.Model):
 	def set_winner(self):
 		if self.user_score > self.alias_score:
 			self.winner = self.player
+			self.player.wins = F('wins') + 1 
 			print(self.winner)
+			self.player.save()
 		else:
 			print('No winner!')
 			self.winner = None
+			self.player.losses = F('losses') + 1 
+			self.player.save()

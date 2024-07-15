@@ -1,17 +1,20 @@
-import { toggleMenu, userIsAuthenticated } from './utils.js';
+import { toggleMenu, userIsAuthenticated, initializeWebSocket } from './utils.js';
 import { navigateTo, showView } from './views.js';
 import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
 import { UserProfileCard } from './web_components/user_profile_card.js';
-import { User } from './observer.js';
+import { FriendsComponent } from './web_components/friends-list.js';
+import { UserObservable, UserObserver} from './observer.js';
+import { getUserFromStorage, setUserToStorage, removeUserFromStorage } from './utils.js';
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
-export const user = new User();
-
+export const user = new UserObservable();
+export const userObserver = new UserObserver();
+export const bbc = new BroadcastChannel('bbc');
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
 
-export function getUserInfo() {
+export async function getUserInfo() {
 	return fetch("accounts/get-user-info/")
 		.then(response => response.json())
 		.then(data => {
@@ -33,7 +36,7 @@ async function fillUserData(data) {
 		user_profile_card.classList.add('profile');
 		userProfileContainer.appendChild(user_profile_card);
 	}
-	user.setUserData(data);
+	setUserToStorage(data);
 }
 
 document.addEventListener("click", (event) => {	//close sidebar if click detected outside of it
@@ -51,7 +54,6 @@ hamMenu.addEventListener("click", (event) => {	//"hamburger menu" button -> thre
 document.addEventListener("keydown", function (event) { //open sidebar by pressing M on the keyboard
 	if (event.key === "m" || event.code === "KeyM") {
 		toggleMenu();
-		console.log("The 'm' key was pressed!");
 	}
 });
 
@@ -88,4 +90,5 @@ $(document).ready(function () {
 	getUserInfo();
 	loadNavbar();
 	history.replaceState('pong', '', 'pong');
+	initializeWebSocket();
 });
