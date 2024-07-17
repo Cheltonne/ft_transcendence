@@ -2,7 +2,7 @@ export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
 const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 5;
+const MAX_ROUNDS = 3;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -29,6 +29,7 @@ const tournamentTree = document.getElementById('tournamentTree');
 const EndTourneyButton = document.getElementById("EndTourneyButton");
 const myButton = document.getElementById("myButton");
 let TourneyMode = false;
+const message = document.getElementById("message");
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -89,8 +90,6 @@ NextMatchButton.addEventListener("click", function() {
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
-    //player2Name = 'guest';
-    console.log(matches);
     let array = findMatchWithNullWinner();
     $("#aliasContainer").text(array.player1 + " VS " + array.player2);
     clear();
@@ -102,17 +101,12 @@ NextMatchButton.addEventListener("click", function() {
 TourneyButton.addEventListener("click", function() {
     allButtonOk = true;
     console.log("Tourney");
-    //AI = true;
-    //player2Name = 'AI';
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
     hideTourneyButtons();
     TourneyMode = true;
-    //$("#aliasContainer").text(userInfo.username + " VS " + " AI");
     clear();
     TourneyScreen();
-    //LaunchGame();
-    // tt les trucs en vert je les Balance plus loin dans TOURNEY commence jsp
 });
 
 function TourneyScreen() {
@@ -123,12 +117,8 @@ function TourneyScreen() {
     let textWidth = ctx.measureText(text).width;
     let x = canvas.width / 2;
     let y = canvas.height / 2 - 50;
-
-    // Clear the area around where the text will be drawn
     ctx.clearRect(x - textWidth / 2 - 10, y - 50, textWidth + 20, 70);
-
-    // Draw the text
-    ctx.fillStyle = '#fff'; // Set the text color
+    ctx.fillStyle = '#fff';
     ctx.fillText(text, x, y);
     ctx.restore();
 
@@ -164,15 +154,12 @@ let array = findMatchWithNullWinner(matches);
 function drawTournamentTree() {
     hideTourneyButtons();
     tournamentTree.style.display = 'inline-block';
-    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-    //drawStaticElements();
     tournamentTree.innerHTML = '';
     
     ctx.save();
     const round = document.createElement('div');
     round.className = 'round';
     let Matchid = 0;
-    // Assuming participantNames is an array of participant names
     participantNames.forEach((participantName, index) => {
         if (index % 2 === 0) {
             const match = document.createElement('div');
@@ -189,7 +176,6 @@ function drawTournamentTree() {
             divider.textContent = 'VS';
             match.appendChild(divider);
             
-            // Check if there's a next participant to add
             if (participantNames[index + 1] !== undefined) {
                 const p2 = document.createElement('div');
                 p2.className = 'participant';
@@ -197,7 +183,6 @@ function drawTournamentTree() {
                 match.appendChild(p2);
             }
             matches[Matchid - 1] = { matchId: Matchid, state: 0, player1: participantName, player2: participantNames[index + 1], score: [0, 0], winner: null, final: false};
-            // state 0 pr savoir si le match est jouer ou pas, et winner pour envoyer a la finale qui arranger
             round.appendChild(match);
         }
     });
@@ -227,55 +212,48 @@ function drawTournamentTree() {
     match.classList.add('final-match');
     matches[2] = { matchId: Matchid + 1, state: 0, player1: null, player2: null, score: [0, 0], winner: null, final: true};
 
-    //let array = findMatchWithNullWinner();
-    //$("#aliasContainer").text(array.player1 + " VS " + array.player2);
-    //NextMatchButton.style.innerHTML = array.player1 + " VS " + array.player2;'
     updateNextMatchButton();
 }
 
+function displayMessage(msg) {
+    if (msg === "") {
+        message.style.visibility = "hidden";
+    } else {
+        message.textContent = msg;
+        message.style.visibility = "visible";
+    }
+}
+
 nextButton.addEventListener("click", function() {
-    let alias = nameTourney.value.trim(); // Get the value from the input box and trim any whitespace
+    let alias = nameTourney.value.trim();
 
     if (alias === "") {
-        alert("Please enter your alias."); // Alert if the input box is empty
+        displayMessage("please enter an alias.");
     }
     else if (participantNames.includes(alias)) {
-        alert("This alias is already taken. Please enter a different alias.");
+        displayMessage("this alias is already taken.");
     }
     else {
-        // Save the alias (you might want to store it in an array or a variable)
-        let savedName = alias; // This is where you save the name
-        console.log(`Saved name: ${savedName}`); // Optional: log the saved name for debugging
+        let savedName = alias;
+        console.log(`Saved name: ${savedName}`);
         participantNames.push(alias);
 
-        // Clear the input box
         nameTourney.value = "";
+        displayMessage("");  // Clear any previous messages
+
         if (participantNames.length != 4)
             TourneyScreen();
         else {
             drawStaticElements();
             drawTournamentTree();
         }
-
-        //myButton.style.display = "none";
-        // Optionally, proceed with further steps like ModeChoice();
-        // allButtonOk = true;
     }
 });
 
-//restartButton.addEventListener("click", function() {
-///    restartButton.style.display = 'none';
-//    lastFrameTime = performance.now();
-//    requestAnimationFrame(GameLoop);
-//});
-
 function clear(){
-    //RequestFrame = false;
     currentRound = 1;
     ReDrawStatic = true;
     gameEnding = false;
-    //allButtonOk = false;
-    //AI = false;
     AIplayer = null;
     Ball = null;
     Paddle1 = null;
@@ -292,9 +270,6 @@ function clearTourney() {
     TourneyMode = false;
     tournamentTree.style.display = 'none';
     $("#aliasContainer").text('');
-    //NextMatchButton.style.display = 'none';
-    //tournamentTree.display.html = '';
-
 }
 
 EnterScreen();
@@ -307,31 +282,20 @@ function EnterScreen(){
     TourneyButton.style.display = 'none';
     ctx.save();
     myButton.style.display = "inline-block";
-    ctx.fillStyle = '#fff'; // Set the text color
-    ctx.font = '100px sans-serif'; // Set the font
-    ctx.textAlign = 'center'; // Center the text
-    ctx.fillText('PONG', canvas.width / 2, canvas.height / 2 - 50); // Draw the title
+    ctx.fillStyle = '#fff';
+    ctx.font = '100px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PONG', canvas.width / 2, canvas.height / 2 - 50);
 
     ctx.restore();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
     giveName();
-    //clear();
-    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-
-    //ctx.fillStyle = '#000'; // Set the background color
-    //ctx.fillRect(0, 0, canvas.width, canvas.height); // Draw the background
-
     EnterScreen();
-    //var textInput = document.getElementById("textInput");
-    //textInput.style.display = "none";
     myButton.addEventListener("click", function() {
-            //player2Name = alias;
         myButton.style.display = "none";
-            //allButtonOk = true;
         ModeChoice();
-            //alert("Please enter your alias.");
     });
 });
 
@@ -356,16 +320,6 @@ MenuButton.addEventListener("click", function() {
     ModeChoice();
 });
 
-//  $(document).ready(function() {
-//    $("#myButton").click(function() {
-//        var alias = $("#textInput").val();
-//        if(alias.trim() === "") {
-//            alert("Please enter your alias.");
-//        } else {
-//            $("#aliasContainer").text(alias);
-//        }
-//    });
-//});
 
 ///////////////////////////////////////////////
 //////////////////BINDINGS/////////////////////
@@ -441,7 +395,6 @@ class PongBall {
             this.velocity = vec2(-1, -1);
             this.pos = vec2(Paddle2.pos.x, Paddle2.pos.y + 50);
             }
-            // je suis deile sa mere je resettais la alle dans la zone de goal
         this.resetSpeed();
         this.LastHit = null;
         this.launch = true;
@@ -470,7 +423,6 @@ class PongBall {
     }
 
     launchBall() {
-            //this.goal = false;
             this.resetSpeed();
             let direction = this.left ? 1 : -1;
             const randomNumber = Math.random() * Math.PI / 4;
@@ -496,22 +448,14 @@ class PongBall {
         
             let collidePoint = (this.nextPos.y - (player.pos.y + player.height / 2));
             collidePoint = collidePoint / (player.height / 2);
-        
-            // Calculate the angle in radians
+
             let angleRad = (Math.PI / 4) * collidePoint;
-        
-            // Ensure the ball bounces correctly on top/bottom edges
             let direction = (this.nextPos.x < canvas.width / 2) ? 1 : -1;
-        
             this.velocity.x = direction * this.speed * Math.cos(angleRad);
             this.velocity.y = this.speed * Math.sin(angleRad);
         
-            //if (Math.abs(collidePoint) > 0.9) {
-            //    this.velocity.y = -this.velocity.y;
-            //}
-            //console.log(this.speed);
             if (this.speed <= 0.95)
-                this.speed += 0.03;
+                this.speed += 0.04;
         } else {
             this.pos = this.nextPos;
         }
@@ -519,7 +463,6 @@ class PongBall {
             if (this.pos.x <= 0 && this.goal == false) {
                 this.goal = true;
                 Paddle2.score++;
-                //console.log("goal 2");
                 this.left = true;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -528,9 +471,6 @@ class PongBall {
             } else if (this.pos.x > canvas.width && this.goal == false) {
                 this.goal = true;
                 Paddle1.score++;
-                //Paddle1.score++; // cheatcode
-                //console.log("goal 1");
-                //console.log(this.pos.x + " " + this.pos.y);
                 this.left = false;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -674,7 +614,6 @@ export function onoffGame(Button){
     }
     if (Button === 'on')
     {
-        //RequestFrame = true;
         clearTourney();
         clear();
         hideTourneyButtons();
@@ -686,10 +625,6 @@ export function onoffGame(Button){
         drawStaticElements();
         MenuButton.style.display = "none";
         EnterScreen();
-        //ModeChoice();
-        //dispatchDOMContentLoaded();
-        // je devrais faire en sorte que ce soit DOMLOADED CONTENT SIMULER
-        //restartChoice();
     }
 }
     
@@ -727,7 +662,6 @@ function LaunchGame() {
         Players();
         draw();
         if (!RequestFrame && gameEnding) {
-            //GameEndingScreen();
             gameEnding = false;
             clear();
         }
@@ -783,7 +717,6 @@ function UpdateTourney() {
     }
 
     updateNextMatchButton();
-    //NextMatchButton.style.display = 'inline-block';
     tournamentTree.style.display = 'inline-block';
 }
 
@@ -796,18 +729,8 @@ function GameEndingScreen() {
 
                 if (i == 0) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    //matches[2].player1 = matches[0].winner;
                     UpdateTourney();
 
-                    // mettre une function qui va display tournament tree, mettre a jour le next match,
-                    // je dois mettre en rouge le perdant, et mettre le gagnant du match 1 dans l'emplacement 1
-                    // mettre a jour le alias container des le que le tournoi continue
-                    //let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
-                    //Tor
-                    //ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 180);
-                    //ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 124);
-                    //ctx.fillText(`next : `, canvas.width / 2, canvas.height / 2 - 36);
-                    //ctx.fillText(`${matches[1].player1} versus ${matches[1].player2}`, canvas.width / 2, canvas.height / 2 - 8);
                     ctx.save();
                     ctx.fillStyle = '#fff';
                     ctx.font = '36px sans-serif';
@@ -821,21 +744,8 @@ function GameEndingScreen() {
                     ctx.restore();
                 } else if (i == 1) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    //matches[2].player2 = matches[1].winner;
-                    //NextMatchButton.style.display = 'inline-block';
                     UpdateTourney();
 
-                    //ctx.fillStyle = '#fff';
-                    //ctx.font = '36px sans-serif';
-                    //ctx.textAlign = 'center';
-                    //ctx.textBaseline = 'middle'; 
-
-
-                    //let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
-                    //ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 180);
-                    //ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 124);
-                    //ctx.fillText(`next : `, canvas.width / 2, canvas.height / 2 - 36);
-                    //ctx.fillText(`${matches[2].player1} versus ${matches[2].player2}`, canvas.width / 2, canvas.height / 2 - 8);
                     ctx.save();
                     ctx.fillStyle = '#fff';
                     ctx.font = '36px sans-serif';
@@ -849,9 +759,7 @@ function GameEndingScreen() {
                     ctx.restore();  
                 } else {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    //NextMatchButton.style.display = 'inline-block';
                     UpdateTourney();
-                    console.log(matches);
                     if (matches[i].winner)
                     {
                         console.log("nouveau truc");
@@ -867,28 +775,11 @@ function GameEndingScreen() {
                         ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 105);
     
                         ctx.restore();  
-                        //clearTourney();
-                        //MenuChoice();
-                        // a mettre dans ce nouveau Bouton
                     }
-
-                    //ctx.save();
-                    //ctx.fillStyle = '#fff';
-                    //ctx.font = '36px sans-serif';
-                //    ctx.textAlign = 'center';
-                    //ctx.textBaseline = 'middle'; 
-
-                    //let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
-                    //ctx.fillText(`${winner} wins the tournament`, canvas.width / 2, canvas.height / 2 - 75);
-                    //ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
-                    //ctx.restore();
-                    //clearTourney();
-                    //MenuChoice();
                 }
                 break;
             }
         }
-        // drawTournamentTree();
     } else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
@@ -903,7 +794,6 @@ function GameEndingScreen() {
         ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
         createMatch(Paddle1.score, Paddle2.score);
 
-        // retryButton.style.display = "inline-block";
         ctx.restore();
         MenuChoice();
     }
@@ -918,7 +808,6 @@ class AIPlayer {
         constructor() {
             this.height = 100;
             this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
-            //this.predictionV = { x: 0, y: 0 };
             this.timeSinceLastPrediction = 0;
             this.move = false;
             this.predictionInterval = 1;
@@ -939,17 +828,9 @@ class AIPlayer {
                 this.velocitySeen = Ball.velocity;
                 this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
                 this.predict(ball, dt, Paddle1);
-                //console.log("predicted");
-                //this.move = true;
                 return;
             }
 
-            //if (((this.BallSeen.x < this.paddleSeen.x) && (this.velocitySeen.x < 0)) ||
-            //((this.BallSeen.x > this.paddleSeen.x + 10) && (this.velocitySeen.x > 0))) {
-        //    this.stopMovingUp();
-            //this.stopMovingDown();
-        //    return;
-        //}
 
             if (this.prediction) {
                 if (this.prediction.y >= this.paddleSeen.y + 25 && this.prediction.y <= this.paddleSeen.y + 100 - 25) {
@@ -962,9 +843,6 @@ class AIPlayer {
                     this.stopMovingUp();
                     this.moveDown();
                 }
-                //console.log("Paddle2 position:", Paddle2.pos.x, Paddle2.pos.y);
-                //console.log("AIPlayer position:", AIplayer.pos.x, AIplayer.pos.y);
-                //this.move = false;
             }
         }
 
@@ -995,7 +873,6 @@ class AIPlayer {
                 if (this.collision(Paddle1, predictedPos)) {
                     let collidePoint = (predictedPos.y - (Paddle1.pos.y + Paddle1.height / 2));
                     collidePoint = collidePoint / (Paddle1.height / 2);
-                    console.log(collidePoint);
         
                     let angleRad = (Math.PI / 4) * collidePoint;
         
@@ -1003,24 +880,17 @@ class AIPlayer {
         
                     predictedVelocity.x = direction * ball.speed * Math.cos(angleRad);
                     predictedVelocity.y = ball.speed * Math.sin(angleRad);
-        
-                    //console.log("changed velocity");
                 }
         
                 if (predictedPos.x + ball.radius > canvas.width - 40) {
-                    //console.log(i);
-                    // Stop predicting if the ball is going off the screen to the right
                     break;
                 }
 
                 if (predictedPos.x + ball.radius < 0) {
-                    //console.log(i);
-                    // Stop predicting if the ball is going off the screen to the right
                     break;
                 }
             }
         
-            // Set the prediction based on where the prediction stopped
             if (predictedVelocity.x <= 0) {
                 this.prediction = { x: canvas.width / 2, y: canvas.height / 2 };
             } else {
@@ -1051,8 +921,6 @@ class AIPlayer {
 const giveName = async () => {
     const response = await fetch('accounts/get-user-info/');
     const data = await response.json();
-    // je recup pas le pseudo du mec ici
-    //player1name =  data.user_info('username');
     if (data.username) {
         userInfo.username = data.username;
       } else {
@@ -1064,8 +932,6 @@ const checkAuthenticated = async () => {
     const response = await fetch('/accounts/check-authenticated/');
     const data = await response.json();
     console.log(data);
-    // je recup pas le pseudo du mec ici
-    //player1name =  data.user_info('username');
     return data.authenticated;
 };
 
