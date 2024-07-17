@@ -19,12 +19,13 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django_asgi_app = get_asgi_application()
 
 import accounts.routing
+import morpion.routing
 
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
         "websocket":  AllowedHostsOriginValidator(
-            AuthMiddlewareStack(URLRouter(accounts.routing.websocket_urlpatterns))
+            AuthMiddlewareStack(URLRouter(accounts.routing.websocket_urlpatterns + morpion.routing.websocket_urlpatterns))
         ),
     }
 )

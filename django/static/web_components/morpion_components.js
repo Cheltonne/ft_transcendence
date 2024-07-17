@@ -128,6 +128,7 @@ export class MorpionComponent extends HTMLElement {
 
         /*this.matchmakingButton.addEventListener('click', async () => {
             await this.startMatchmaking();
+            this.showAlert('info', 'Looking for a match...');
         });*/
     }
 
@@ -136,33 +137,28 @@ export class MorpionComponent extends HTMLElement {
         const data = await response.json();
         return data.authenticated;
     }
-
-   /* async startMatchmaking() {
-        const isAuthenticated = await this.checkAuthenticated();
-        if (!isAuthenticated) {
-            console.error("User not authenticated. Cannot create match.");
-            this.showAlert("danger", "You need to be logged in to start a match.");
-            return;
-        }
-
-        const response = await fetch('create-match/', {
-            method: 'POST',
-        });
-        const data = await response.json();
-        if (data.match_id) {
-            console.log("Match created with ID:", data.match_id);
-            this.matchId = data.match_id;
-            this.player1Name = data.player1_name;
-            this.player2Name = data.player2_name;
-            this.updatePlayerNames();
-            this.resetSeries();
-            this.showAlert("success", "Match created successfully!");
-        } else {
-            console.error("Error creating match");
-            this.showAlert("danger", "Failed to create match. Please try again.");
-        }
-    }*/
     
+    startMatchmaking() {
+        const socket = new WebSocket('ws://localhost:8000/ws/morpion/');
+        socket.onopen = () => {
+            console.log('WebSocket connection established');
+            socket.send(JSON.stringify({ type: 'matchmaking' }));
+        };
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('Received message:', data);
+            if (data.type === 'match_found') {
+                console.log('Match found!');
+                this.showAlert('success', 'Match found! Starting game...');
+                this.isAI = false;
+                this.startGame();
+            }
+        };
+        socket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+    }
+
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
         this.scorePlayer2.textContent = this.player2Name + ': ' + this.scoreO;
