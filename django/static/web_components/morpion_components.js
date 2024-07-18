@@ -139,7 +139,7 @@ export class MorpionComponent extends HTMLElement {
     }
     
     startMatchmaking() {
-        const socket = new WebSocket('ws://localhost:8000/ws/morpion/');
+        const socket = new WebSocket('ws://localhost:4343/ws/morpion/');
         socket.onopen = () => {
             console.log('WebSocket connection established');
             socket.send(JSON.stringify({ type: 'matchmaking' }));
@@ -152,7 +152,16 @@ export class MorpionComponent extends HTMLElement {
                 this.showAlert('success', 'Match found! Starting game...');
                 this.isAI = false;
                 this.startGame();
+            } else if (data.type === 'no_match_found') {
+                console.log('No match found. Starting game with AI.');
+                this.showAlert('info', 'No match found. Starting game with AI.');
+                this.isAI = true;
+                this.startGame();
             }
+        };
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.showAlert('danger', 'WebSocket error occurred. Please try again later.');
         };
         socket.onclose = () => {
             console.log('WebSocket connection closed');
