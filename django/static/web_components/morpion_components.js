@@ -126,10 +126,10 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert('success', 'Starting new series of 3 games with computer');
         });
 
-        /*this.matchmakingButton.addEventListener('click', async () => {
+        this.matchmakingButton.addEventListener('click', async () => {
             await this.startMatchmaking();
             this.showAlert('info', 'Looking for a match...');
-        });*/
+        });
     }
 
     async checkAuthenticated() {
