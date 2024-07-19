@@ -40,6 +40,8 @@ export async function navigateTo(viewName, type) { // handles regular navigation
         handleError('You are already logged in.');
         return ;
     }
+	const event = new CustomEvent(`reload-${viewName + '-view'}`);
+    window.dispatchEvent(event);
 	if (type === 1)
 		showView(viewName);
 	else

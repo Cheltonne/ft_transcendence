@@ -11,6 +11,10 @@ export class FriendsComponent extends HTMLElement {
     connectedCallback() {
         this.loadFriends();
         this.setupWebSocketListeners();
+        console.log(`reload-${this.tagName.toLowerCase()}`);
+        window.addEventListener(`reload-${this.tagName.toLowerCase()}`, () => {
+            this.loadFriends();
+        });
     }
 
     async loadFriends() {

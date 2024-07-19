@@ -6,13 +6,13 @@ import { UserProfileCard } from './web_components/user_profile_card.js';
 import { FriendsComponent } from './web_components/friends-list.js';
 import { UserObservable, UserObserver} from './observer.js';
 import { getUserFromStorage, setUserToStorage, removeUserFromStorage } from './utils.js';
-import { fetchNotifications } from './notification_utils.js';
+import { NotificationList } from './web_components/notifications/notification_list.js';
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
 export const user = new UserObservable();
 export const userObserver = new UserObserver();
 export const bbc = new BroadcastChannel('bbc');
-export const dropDownButton = document.querySelector('.dropdown-toggle');
+export const dropDownButton = document.querySelector('.notification-btn');
 export const dropdownMenu = document.querySelector('.dropdown-menu-items');
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
@@ -46,6 +46,10 @@ document.addEventListener("click", (event) => {	//close sidebar if click detecte
 	if (menu.classList.contains("active") && !event.target.closest(".sidebar")) {
 		toggleMenu();
 	}
+	if (dropDownButton.classList.contains('active') && !event.target.closest("notification-list")){
+		document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
+		dropDownButton.classList.toggle('active');
+	}
 });
 
 hamMenu.addEventListener("click", (event) => {	//"hamburger menu" button -> three lines icon to open sidebar
@@ -65,8 +69,17 @@ logo.addEventListener("click", () => { //click logo to go back to pong view
 })
 
 dropDownButton.addEventListener('click', (event) => {
-	fetchNotifications();
-	console.log('clicked');
+	if (document.querySelector('notification-list') === null) {
+		event.stopImmediatePropagation();
+		const list = document.createElement('notification-list');
+		document.getElementById("notificationDropdown").appendChild(list);
+		console.log('clicked');
+		dropDownButton.classList.toggle('active');
+	}
+	else {
+		document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
+		dropDownButton.classList.toggle('active');
+	}
 })
 
 async function loadNavbar() { //always serve correct version of sidebar

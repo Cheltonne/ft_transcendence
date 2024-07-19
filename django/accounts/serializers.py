@@ -45,6 +45,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     sender_id = serializers.PrimaryKeyRelatedField(source='sender', read_only=True)
     recipient_id = serializers.PrimaryKeyRelatedField(source='recipient', read_only=True)
     sender_username = serializers.SerializerMethodField()
+    sender_pfp = serializers.SerializerMethodField()
     recipient_username = serializers.SerializerMethodField()
 
     class Meta:
@@ -56,3 +57,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     def get_recipient_username(self, obj):
         return obj.recipient.username
+
+    def get_sender_pfp(self, obj):
+        if obj.sender.profile_picture:
+            return self.context['request'].build_absolute_uri(obj.sender.profile_picture.url)
