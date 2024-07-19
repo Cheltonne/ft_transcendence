@@ -2,7 +2,7 @@ export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
 const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 2;
+const MAX_ROUNDS = 3;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -18,19 +18,28 @@ let keysPressed = {};
 let lastFrameTime = performance.now();
 const LocalButton = document.getElementById("LocalButton");
 const AIButton = document.getElementById("AIButton");
-//const restartButton = document.getElementById("restartButton")
+const TourneyButton = document.getElementById("TourneyButton");
+var title = true;
+const nameTourney = document.getElementById("nameTourney");
+const nextButton = document.getElementById("nextButton");
+let participantNames = [];
+const NextMatchButton = document.getElementById("NextMatchButton");
+let matches = [];
+const tournamentTree = document.getElementById('tournamentTree');
+const EndTourneyButton = document.getElementById("EndTourneyButton");
+const myButton = document.getElementById("myButton");
+let TourneyMode = false;
+const message = document.getElementById("message");
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
 ////////////////////////////////////////////////////////
+
 setCanvasSize();
 function setCanvasSize() {
-    canvas.width = 860;  // 767 ?
+    canvas.width = 860;
     canvas.height = 430; 
 }
-
-//resizeCanvas();
-//window.addEventListener('resize', resizeCanvas);
 
 LocalButton.addEventListener("click", function() {
     allButtonOk = true;
@@ -38,6 +47,9 @@ LocalButton.addEventListener("click", function() {
     AI = false;
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
+    TourneyButton.style.display = 'none';
+    player2Name = 'guest';
+    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
     clear();
     LaunchGame();
 });
@@ -46,54 +58,252 @@ AIButton.addEventListener("click", function() {
     allButtonOk = true;
     console.log("IA");
     AI = true;
+    player2Name = 'AI';
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
+    TourneyButton.style.display = 'none';
+    hideTourneyButtons();
+    $("#aliasContainer").text(userInfo.username + " VS " + " AI");
     clear();
     LaunchGame();
 });
 
-//restartButton.addEventListener("click", function() {
-///    restartButton.style.display = 'none';
-//    lastFrameTime = performance.now();
-//    requestAnimationFrame(GameLoop);
-//});
+EndTourneyButton.addEventListener("click", function() {
+        clearTourney();
+        ModeChoice();
+        EndTourneyButton.style.display = 'none';
+})
+
+function findMatchWithNullWinner() {
+    for (let i = 0; i < matches.length; i++) {
+        if (matches[i].state === 0 || matches[i].state === undefined) {
+            return matches[i];
+        }
+    }
+    return null;
+}
+
+NextMatchButton.addEventListener("click", function() {
+    allButtonOk = true;
+    console.log("TourneyMatch");
+    AI = false;
+    LocalButton.style.display = 'none';
+    AIButton.style.display = 'none';
+    TourneyButton.style.display = 'none';
+    let array = findMatchWithNullWinner();
+    $("#aliasContainer").text(array.player1 + " VS " + array.player2);
+    clear();
+    tournamentTree.style.display = 'none';
+    NextMatchButton.style.display = 'none';
+    LaunchGame();
+});
+
+TourneyButton.addEventListener("click", function() {
+    allButtonOk = true;
+    console.log("Tourney");
+    LocalButton.style.display = 'none';
+    AIButton.style.display = 'none';
+    hideTourneyButtons();
+    TourneyMode = true;
+    clear();
+    TourneyScreen();
+});
+
+function TourneyScreen() {
+    ctx.save();
+    ctx.font = '50px sans-serif';
+    ctx.textAlign = 'center';
+    let text = `Player ${participantNames.length + 1} `;
+    let textWidth = ctx.measureText(text).width;
+    let x = canvas.width / 2;
+    let y = canvas.height / 2 - 50;
+    ctx.clearRect(x - textWidth / 2 - 10, y - 50, textWidth + 20, 70);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+
+    nameTourney.style.display = 'inline-block';
+    nextButton.style.display = 'inline-block';
+}
+
+function hideTourneyButtons() {
+    let text = `Player ${participantNames.length + 1} `;
+    let textWidth = ctx.measureText(text).width;
+    let x = canvas.width / 2;
+    let y = canvas.height / 2 - 50;
+
+    ctx.clearRect(x - textWidth / 2 - 10, y - 50, textWidth + 20, 70);
+
+    TourneyButton.style.display = 'none';
+    nameTourney.style.display = 'none';
+    nextButton.style.display = 'none';
+}
+
+function updateNextMatchButton() {
+let array = findMatchWithNullWinner(matches);
+
+    if (array !== null) {
+        document.getElementById("aliasContainer").textContent = `${array.player1} VS ${array.player2}`;
+        NextMatchButton.innerHTML = `${array.player1} VS ${array.player2}`;
+        NextMatchButton.style.display = 'inline-block';
+    }   else {
+        NextMatchButton.innerHTML = 'Next Match';
+    }
+}
+
+function drawTournamentTree() {
+    hideTourneyButtons();
+    tournamentTree.style.display = 'inline-block';
+    tournamentTree.innerHTML = '';
+    
+    ctx.save();
+    const round = document.createElement('div');
+    round.className = 'round';
+    let Matchid = 0;
+    participantNames.forEach((participantName, index) => {
+        if (index % 2 === 0) {
+            const match = document.createElement('div');
+            match.className = 'match';
+            match.innerHTML = 'match ' + ++Matchid;
+            
+            const p1 = document.createElement('div');
+            p1.className = 'participant';
+            p1.textContent = participantName;
+            match.appendChild(p1);
+            
+            const divider = document.createElement('div');
+            divider.className = 'divider';
+            divider.textContent = 'VS';
+            match.appendChild(divider);
+            
+            if (participantNames[index + 1] !== undefined) {
+                const p2 = document.createElement('div');
+                p2.className = 'participant';
+                p2.textContent = participantNames[index + 1];
+                match.appendChild(p2);
+            }
+            matches[Matchid - 1] = { matchId: Matchid, state: 0, player1: participantName, player2: participantNames[index + 1], score: [0, 0], winner: null, final: false};
+            round.appendChild(match);
+        }
+    });
+    tournamentTree.appendChild(round);
+
+    const match = document.createElement('div');
+    match.className = 'match';
+    match.innerHTML = 'finals';
+    const p1 = document.createElement('div');
+    p1.className = 'participant';
+    p1.textContent = 'winner 1';
+    p1.id = 'winner1';
+    match.appendChild(p1);
+
+    const divider = document.createElement('div');
+    divider.className = 'divider';
+    divider.textContent = 'VS';
+    match.appendChild(divider);
+
+    const p2 = document.createElement('div');
+    p2.className = 'participant';
+    p2.textContent = 'winner 2';
+    p2.id = 'winner2';
+    match.appendChild(p2);
+    round.appendChild(match);
+
+    match.classList.add('final-match');
+    matches[2] = { matchId: Matchid + 1, state: 0, player1: null, player2: null, score: [0, 0], winner: null, final: true};
+
+    updateNextMatchButton();
+}
+
+function displayMessage(msg) {
+    if (msg === "") {
+        message.style.visibility = "hidden";
+    } else {
+        message.textContent = msg;
+        message.style.visibility = "visible";
+    }
+}
+
+nextButton.addEventListener("click", function() {
+    let alias = nameTourney.value.trim();
+
+    if (alias === "") {
+        displayMessage("please enter an alias.");
+    }
+    else if (participantNames.includes(alias)) {
+        displayMessage("this alias is already taken.");
+    }
+    else {
+        let savedName = alias;
+        console.log(`Saved name: ${savedName}`);
+        participantNames.push(alias);
+
+        nameTourney.value = "";
+        displayMessage("");  // Clear any previous messages
+
+        if (participantNames.length != 4)
+            TourneyScreen();
+        else {
+            drawStaticElements();
+            drawTournamentTree();
+        }
+    }
+});
 
 function clear(){
-    //RequestFrame = false;
     currentRound = 1;
     ReDrawStatic = true;
     gameEnding = false;
-    //allButtonOk = false;
-    //AI = false;
     AIplayer = null;
     Ball = null;
     Paddle1 = null;
     Paddle2 = null;
+    nameTourney.value = "";
+    EndTourneyButton.style.display = 'none';
+    NextMatchButton.style.display = 'none';
     keysPressed = {};
 }
 
+function clearTourney() {
+    matches = [];
+    participantNames = [];
+    TourneyMode = false;
+    tournamentTree.style.display = 'none';
+    $("#aliasContainer").text('');
+}
+
+EnterScreen();
+
+function EnterScreen(){
+    title = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    LocalButton.style.display = 'none';
+    AIButton.style.display = 'none';
+    TourneyButton.style.display = 'none';
+    ctx.save();
+    myButton.style.display = "inline-block";
+    ctx.fillStyle = '#fff';
+    ctx.font = '100px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PONG', canvas.width / 2, canvas.height / 2 - 50);
+
+    ctx.restore();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
-    var myButton = document.getElementById("myButton");
-    var textInput = document.getElementById("textInput");
-  
+    giveName();
+    EnterScreen();
     myButton.addEventListener("click", function() {
-        var alias = textInput.value.trim();
-        if (alias != "") {
-            player2Name = alias;
-            myButton.style.display = "none";
-            textInput.style.display = "none";
-            //allButtonOk = true;
-            ModeChoice();
-            $("#aliasContainer").text(alias);
-        } else {
-            alert("Please enter your alias.");
-        }
+        myButton.style.display = "none";
+        ModeChoice();
     });
 });
+
 
 function ModeChoice(){
     LocalButton.style.display = 'inline-block';
     AIButton.style.display = 'inline-block';
+    TourneyButton.style.display = 'inline-block';
     drawStaticElements();
 }
 
@@ -105,19 +315,11 @@ MenuButton.style.display = "none";
 
 MenuButton.addEventListener("click", function() {
     MenuButton.style.display = "none";
+    $("#aliasContainer").text("");
+    clearTourney();
     ModeChoice();
 });
 
-  $(document).ready(function() {
-    $("#myButton").click(function() {
-        var alias = $("#textInput").val();
-        if(alias.trim() === "") {
-            alert("Please enter your alias.");
-        } else {
-            $("#aliasContainer").text(alias);
-        }
-    });
-});
 
 ///////////////////////////////////////////////
 //////////////////BINDINGS/////////////////////
@@ -154,7 +356,7 @@ class PongBall {
         this.pos = pos;
         this.prevpos = pos;
         this.velocity = vec2(0, 0);
-        this.radius = 5;
+        this.radius = 8;
         this.speed = 0.5;
         this.left = null;
         this.LastHit = null;
@@ -186,14 +388,13 @@ class PongBall {
         if (this.left)
             {
             this.velocity = vec2(1, 1);
-            this.pos = vec2(150, canvas.height / 2);
+            this.pos = vec2(Paddle1.pos.x, Paddle1.pos.y + 50);
             }
         else
             {
             this.velocity = vec2(-1, -1);
-            this.pos = vec2(canvas.width - 150, canvas.height / 2);
+            this.pos = vec2(Paddle2.pos.x, Paddle2.pos.y + 50);
             }
-            // je suis deile sa mere je resettais la alle dans la zone de goal
         this.resetSpeed();
         this.LastHit = null;
         this.launch = true;
@@ -222,7 +423,6 @@ class PongBall {
     }
 
     launchBall() {
-            //this.goal = false;
             this.resetSpeed();
             let direction = this.left ? 1 : -1;
             const randomNumber = Math.random() * Math.PI / 4;
@@ -248,22 +448,14 @@ class PongBall {
         
             let collidePoint = (this.nextPos.y - (player.pos.y + player.height / 2));
             collidePoint = collidePoint / (player.height / 2);
-        
-            // Calculate the angle in radians
+
             let angleRad = (Math.PI / 4) * collidePoint;
-        
-            // Ensure the ball bounces correctly on top/bottom edges
             let direction = (this.nextPos.x < canvas.width / 2) ? 1 : -1;
-        
             this.velocity.x = direction * this.speed * Math.cos(angleRad);
             this.velocity.y = this.speed * Math.sin(angleRad);
         
-            //if (Math.abs(collidePoint) > 0.9) {
-            //    this.velocity.y = -this.velocity.y;
-            //}
-            //console.log(this.speed);
-            if (this.speed <= 0.9)
-                this.speed += 0.05;
+            if (this.speed <= 0.95)
+                this.speed += 0.04;
         } else {
             this.pos = this.nextPos;
         }
@@ -271,7 +463,6 @@ class PongBall {
             if (this.pos.x <= 0 && this.goal == false) {
                 this.goal = true;
                 Paddle2.score++;
-                //console.log("goal 2");
                 this.left = true;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -280,9 +471,6 @@ class PongBall {
             } else if (this.pos.x > canvas.width && this.goal == false) {
                 this.goal = true;
                 Paddle1.score++;
-                //Paddle1.score++; // cheatcode
-                //console.log("goal 1");
-                //console.log(this.pos.x + " " + this.pos.y);
                 this.left = false;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -309,7 +497,6 @@ class PongPaddle {
             ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
             this.pos.y -= this.velocity * dt;
             
-            // Ensure paddle does not go above the top boundary (y = 0)
             if (this.pos.y < 0) {
                 this.pos.y = 0;
             }
@@ -318,7 +505,6 @@ class PongPaddle {
             ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
             this.pos.y += this.velocity * dt;
             
-            // Ensure paddle does not go below the bottom boundary (y + height = 430)
             if (this.pos.y + this.height > 430) {
                 this.pos.y = 430 - this.height;
             }
@@ -351,9 +537,9 @@ function Players() {
 
 
 
+
 function drawStaticElements() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.fillStyle = "#a2c11c";
 
     if (!RequestFrame && currentRound == 1) {
@@ -363,16 +549,20 @@ function drawStaticElements() {
         ctx.font = '36px sans-serif';
         ctx.fillText(0, canvas.width - 130, 50);
         ctx.fillText(0, 100, 50);
+        ctx.fillStyle = '#fff';
+        ctx.font = '20px sans-serif';
+        ctx.fillText("'↑': move up", canvas.width - 165, canvas.height - 30);
+        ctx.fillText("'↓': move down", canvas.width - 165, canvas.height - 10);
+        ctx.fillText("'w' : move up", 10, canvas.height - 30);
+        ctx.fillText("'s' : move down", 10, canvas.height - 10);
     }
     else {
-    ctx.fillStyle = '#fff';
-    ctx.font = '36px sans-serif';
-
-    ctx.fillText(Paddle2.score, canvas.width - 130, 50);
-    ctx.fillText(Paddle1.score, 100, 50);
-
-    ReDrawStatic == false;
-    }
+        ctx.fillStyle = '#fff';
+        ctx.font = '36px sans-serif';
+        ctx.fillText(Paddle2.score, canvas.width - 130, 50);
+        ctx.fillText(Paddle1.score, 100, 50);
+        ReDrawStatic == false;
+        }
 }
 
 function draw() {
@@ -389,12 +579,13 @@ function draw() {
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
-    if (AIplayer && AIplayer.prediction) {
-    ctx.beginPath();
-    ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = 'red';
-    ctx.fill();
-    }
+    // AI DRAW RED BALL
+    //if (AIplayer && AIplayer.prediction) {
+    //ctx.beginPath();
+    //ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
+    //ctx.fillStyle = 'red';
+    //ctx.fill();
+    //}
 
     //Draw trails and other dynamic elements
     //for (let i = 0; i < Ball.trailPositions.length; i++) {
@@ -412,34 +603,46 @@ function draw() {
 export function onoffGame(Button){
     if (Button === 'off')
     {
-        //RequestFrame = false;
-        console.log("pause");
+        RequestFrame = false;
         clear();
-        cancelAnimationFrame(GameLoop);
+        clearTourney();
+        $("#aliasContainer").text('');
         RequestFrame = false;
         AI = false;
+        title = true;
+        EnterScreen();
     }
     if (Button === 'on')
     {
-        //RequestFrame = true;
-        console.log("on continue");
+        clearTourney();
+        clear();
+        hideTourneyButtons();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ModeChoice();
-        //restartChoice();
+        $("#aliasContainer").text('');
+        RequestFrame = false;
+        AI = false;
+        title = true;
+        drawStaticElements();
+        MenuButton.style.display = "none";
+        EnterScreen();
     }
-
 }
-
+    
 function GameLoop() {
     const currentTime = performance.now();
-    const dt = (currentTime - lastFrameTime) / 1000; // Convert to seconds
+    const dt = (currentTime - lastFrameTime) / 1000;
     lastFrameTime = currentTime;
+
+    if (!RequestFrame)
+        return;
 
     if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
         console.log("Game Ending condition met");
         gameEnding = true;
         RequestFrame = false;
-        GameEndingScreen();
+        if (!title)
+            GameEndingScreen();
+        title = false;
         return;
     }
 
@@ -459,7 +662,6 @@ function LaunchGame() {
         Players();
         draw();
         if (!RequestFrame && gameEnding) {
-            //GameEndingScreen();
             gameEnding = false;
             clear();
         }
@@ -471,21 +673,130 @@ function LaunchGame() {
     }
 }
 
+function UpdateTourney() {
+    $("#aliasContainer").text('');
+    drawStaticElements();
+
+    matches.forEach(match => {
+        if (match.winner !== null && !match.final) {
+            const matchElements = document.getElementsByClassName('match');
+            Array.from(matchElements).forEach(matchElement => {
+                const participants = matchElement.getElementsByClassName('participant');
+                if ((participants[0].textContent === match.player1 || participants[1].textContent === match.player2) && 
+                    !matchElement.classList.contains('final-match')) { // Ensure it's not the final match
+                    if (match.winner !== match.player1 && match.player1 !== null) {
+                        participants[0].style.backgroundColor = '#6d071a';
+                    }
+                    if (match.winner !== match.player2 && match.player2 !== null) {
+                        participants[1].style.backgroundColor = '#6d071a';
+                    }
+                }
+            });
+        }
+    });
+
+    const semiFinalMatch1 = matches[0];
+    const semiFinalMatch2 = matches[1];
+
+    if (semiFinalMatch1 && semiFinalMatch2) {
+        if (semiFinalMatch1.winner) {
+            matches[matches.length - 1].player1 = semiFinalMatch1.winner;
+            document.getElementById('winner1').innerHTML = semiFinalMatch1.winner;
+        }
+        if (semiFinalMatch2.winner) {
+            matches[matches.length - 1].player2 = semiFinalMatch2.winner;
+            document.getElementById('winner2').innerHTML = semiFinalMatch2.winner;
+        }
+    }
+
+    if (matches[2].state == 1) {
+        if (matches[2].winner == matches[2].player1)
+            document.getElementById('winner2').style.backgroundColor = '#6d071a';
+        else
+            document.getElementById('winner1').style.backgroundColor = '#6d071a';
+    }
+
+    updateNextMatchButton();
+    tournamentTree.style.display = 'inline-block';
+}
+
 function GameEndingScreen() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (TourneyMode) {
+        for (let i = 0; i < matches.length; i++) {
+            if (matches[i].winner === null || matches[i].winner === undefined) {
+                matches[i].winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                matches[i].state = 1;
 
-    ctx.fillStyle = '#fff';
-    ctx.font = '36px sans-serif';
-    giveName();
+                if (i == 0) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    UpdateTourney();
 
-    let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
-    ctx.fillText(`${winner} wins!`, canvas.width / 5, canvas.height / 6 + 130);
-    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 5, canvas.height / 4 + 130);
-    createMatch(Paddle1.score, Paddle2.score);
+                    ctx.save();
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '36px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle'; 
 
-    //retryButton.style.display = "inline-block";
-    MenuChoice();
-    //ModeChoice();
+                    let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 145);
+                    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 105);
+
+                    ctx.restore();
+                } else if (i == 1) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    UpdateTourney();
+
+                    ctx.save();
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '36px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle'; 
+
+                    let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 145);
+                    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 105);
+
+                    ctx.restore();  
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    UpdateTourney();
+                    if (matches[i].winner)
+                    {
+                        console.log("nouveau truc");
+                        EndTourneyButton.style.display = 'inline-block';
+                        ctx.save();
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '36px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle'; 
+    
+                        let winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
+                        ctx.fillText(`${winner} wins the tourney!`, canvas.width / 2, canvas.height / 2 - 145);
+                        ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 105);
+    
+                        ctx.restore();  
+                    }
+                }
+                break;
+            }
+        }
+    } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.fillStyle = '#fff';
+        ctx.font = '36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle'; 
+        giveName();
+
+        let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
+        ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
+        ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
+        createMatch(Paddle1.score, Paddle2.score);
+
+        ctx.restore();
+        MenuChoice();
+    }
 }
 
 //////////////////////////////////////////////
@@ -497,7 +808,6 @@ class AIPlayer {
         constructor() {
             this.height = 100;
             this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
-            //this.predictionV = { x: 0, y: 0 };
             this.timeSinceLastPrediction = 0;
             this.move = false;
             this.predictionInterval = 1;
@@ -512,23 +822,15 @@ class AIPlayer {
             this.timeSinceLastPrediction += dt;
 
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
-                this.predict(ball, dt, Paddle1);
                 this.timeSinceLastPrediction = 0;
                 this.paddleSeen = Paddle2.pos;
                 this.BallSeen = Ball.pos;
                 this.velocitySeen = Ball.velocity;
                 this.paddleCenterY = Paddle2.pos.y + Paddle2.height / 2;
-                //console.log("predicted");
-                //this.move = true;
+                this.predict(ball, dt, Paddle1);
                 return;
             }
 
-            //if (((this.BallSeen.x < this.paddleSeen.x) && (this.velocitySeen.x < 0)) ||
-            //((this.BallSeen.x > this.paddleSeen.x + 10) && (this.velocitySeen.x > 0))) {
-        //    this.stopMovingUp();
-            //this.stopMovingDown();
-        //    return;
-        //}
 
             if (this.prediction) {
                 if (this.prediction.y >= this.paddleSeen.y + 25 && this.prediction.y <= this.paddleSeen.y + 100 - 25) {
@@ -541,9 +843,6 @@ class AIPlayer {
                     this.stopMovingUp();
                     this.moveDown();
                 }
-                //console.log("Paddle2 position:", Paddle2.pos.x, Paddle2.pos.y);
-                //console.log("AIPlayer position:", AIplayer.pos.x, AIplayer.pos.y);
-                //this.move = false;
             }
         }
 
@@ -574,7 +873,6 @@ class AIPlayer {
                 if (this.collision(Paddle1, predictedPos)) {
                     let collidePoint = (predictedPos.y - (Paddle1.pos.y + Paddle1.height / 2));
                     collidePoint = collidePoint / (Paddle1.height / 2);
-                    console.log(collidePoint);
         
                     let angleRad = (Math.PI / 4) * collidePoint;
         
@@ -582,24 +880,17 @@ class AIPlayer {
         
                     predictedVelocity.x = direction * ball.speed * Math.cos(angleRad);
                     predictedVelocity.y = ball.speed * Math.sin(angleRad);
-        
-                    //console.log("changed velocity");
                 }
         
                 if (predictedPos.x + ball.radius > canvas.width - 40) {
-                    //console.log(i);
-                    // Stop predicting if the ball is going off the screen to the right
                     break;
                 }
 
                 if (predictedPos.x + ball.radius < 0) {
-                    //console.log(i);
-                    // Stop predicting if the ball is going off the screen to the right
                     break;
                 }
             }
         
-            // Set the prediction based on where the prediction stopped
             if (predictedVelocity.x <= 0) {
                 this.prediction = { x: canvas.width / 2, y: canvas.height / 2 };
             } else {
@@ -630,8 +921,6 @@ class AIPlayer {
 const giveName = async () => {
     const response = await fetch('accounts/get-user-info/');
     const data = await response.json();
-    // je recup pas le pseudo du mec ici
-    //player1name =  data.user_info('username');
     if (data.username) {
         userInfo.username = data.username;
       } else {
@@ -643,8 +932,6 @@ const checkAuthenticated = async () => {
     const response = await fetch('/accounts/check-authenticated/');
     const data = await response.json();
     console.log(data);
-    // je recup pas le pseudo du mec ici
-    //player1name =  data.user_info('username');
     return data.authenticated;
 };
 
