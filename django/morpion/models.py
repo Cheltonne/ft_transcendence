@@ -26,3 +26,6 @@ class MatchAI(models.Model):
 		if self.player1_score > self.ai_score:
 			self.winner = self.player1
 			print(self.winner)
+		else:
+			print('No winner!')
+			self.winner = self.ai

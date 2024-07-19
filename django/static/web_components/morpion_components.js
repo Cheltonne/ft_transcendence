@@ -137,32 +137,6 @@ export class MorpionComponent extends HTMLElement {
         return data.authenticated;
     }
 
-   /* async startMatchmaking() {
-        const isAuthenticated = await this.checkAuthenticated();
-        if (!isAuthenticated) {
-            console.error("User not authenticated. Cannot create match.");
-            this.showAlert("danger", "You need to be logged in to start a match.");
-            return;
-        }
-
-        const response = await fetch('create-match/', {
-            method: 'POST',
-        });
-        const data = await response.json();
-        if (data.match_id) {
-            console.log("Match created with ID:", data.match_id);
-            this.matchId = data.match_id;
-            this.player1Name = data.player1_name;
-            this.player2Name = data.player2_name;
-            this.updatePlayerNames();
-            this.resetSeries();
-            this.showAlert("success", "Match created successfully!");
-        } else {
-            console.error("Error creating match");
-            this.showAlert("danger", "Failed to create match. Please try again.");
-        }
-    }*/
-    
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
         this.scorePlayer2.textContent = this.player2Name + ': ' + this.scoreO;
