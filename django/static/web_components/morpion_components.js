@@ -279,10 +279,10 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "You need to be logged in to create a match.");
             return;
         }
-		const csrftoken = getCookie('csrftoken');
-        const response = await fetch('morpion/create-match/', {
+        const csrftoken = getCookie('csrftoken');
+        const response = await fetch('/morpion/create-match/', {
             method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
         });
         const data = await response.json();
         if (data.match_id) {
@@ -294,7 +294,7 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "Failed to create match. Please try again.");
         }
     }
-
+    
     async createMatch_ai(user_score, ia_score) {
         const isAuthenticated = await this.checkAuthenticated();
         if (!isAuthenticated) {
@@ -302,9 +302,10 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "You need to be logged in to create a match.");
             return;
         }
-		const csrftoken = getCookie('csrftoken');
-        const response = await fetch('morpion/create-match-ai/', {
+        const csrftoken = getCookie('csrftoken');
+        const response = await fetch('/morpion/create-match-ai/', {
             method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
         });
         const data = await response.json();
         if (data.match_id) {
@@ -316,28 +317,38 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "Failed to create match. Please try again.");
         }
     }
-
-    // fonctions pour envoyer le score au serveur Django
+    
+    // functions for sending the score to the Django server
     sendScoreToDjango(scoreX, scoreO, match_id, isAI) {
-        var xhr = new XMLHttpRequest();
-        const endpoint = isAI ? "morpion/save-score-ai/" : "morpion/save-score/";
-        xhr.open("POST", endpoint, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                var status = xhr.status;
-                if (status === 200) {
-                    console.log("Score saved successfully.");
-                } else {
-                    console.error("Failed to save score:", status, xhr.statusText);
-                }   
+        const csrftoken = getCookie('csrftoken');
+        const endpoint = isAI ? "/morpion/save-score-ai/" : "/morpion/save-score/";
+        fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken
+            },
+            body: JSON.stringify({
+                player1_score: scoreX,
+                player2_score: isAI ? undefined : scoreO,
+                ai_score: isAI ? scoreO : undefined,
+                match_id: match_id
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                console.log("Score saved successfully.");
+                this.showAlert("success", "Score saved successfully!");
+            } else {
+                console.error("Failed to save score:", data.error);
+                this.showAlert("danger", "Failed to save score. Please try again.");
             }
-        };
-        if (endpoint === "morpion/save-score/") {
-            xhr.send(JSON.stringify({ player1_score: scoreX, player2_score: scoreO, match_id: match_id }));
-        } else {
-            xhr.send(JSON.stringify({ player1_score: scoreX, ai_score: scoreO, match_id: match_id }));
-        }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            this.showAlert("danger", "Failed to save score. Please try again.");
+        });
     }
 
     // fonction pour réinitialiser la série
