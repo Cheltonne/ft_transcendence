@@ -228,38 +228,38 @@ form a {
 
 .canvas-container {
     position: relative;
-    width: 100%; /* Adjust width if necessary */
-    height: 100%; /* Adjust height if necessary */
+    width: 100%;
+    height: 100%;
 }
 
 .alias-container {
     position: absolute;
-    top: -50px; /* Adjust to position just above the canvas */
-    left: 50%; /* Adjust horizontal position */
-    transform: translateX(-50%); /* Center horizontally */
-    font-size: 40px; /* Increase font size */
-    color: #ffffff; /* White color */
-    font-weight: bold; /* Bold text */
-    text-transform: uppercase; /* Uppercase text */
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 40px;
+    color: #ffffff;
+    font-weight: bold;
+    text-transform: uppercase; 
 }
 
 #button-container {
     position: absolute;
-    top: 50%; /* Adjust top position */
-    left: 50%; /* Adjust left position */
-    transform: translate(-50%, -50%); /* Center horizontally and vertically */
-    text-align: center; /* Center button horizontally */
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%);
+    text-align: center;
 }
 
 .myButton {
-  padding: 12px 25px; /* Adjust padding to increase button size */
-  font-size: 20px; /* Increase font size */
-  color: #ffffff; /* Text color */
-  background-color: #a2c11c; /* Button background color */
-  border: none; /* Remove border */
-  border-radius: 10px; /* Rounded corners */
-  cursor: pointer; /* Cursor style */
-  transition: background-color 0.3s ease; /* Smooth transition */
+  padding: 12px 25px;
+  font-size: 20px;
+  color: #ffffff; 
+  background-color: #a2c11c;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .myButton:hover {
@@ -270,6 +270,22 @@ form a {
   display: none;
 }
 
+#textInput {
+  display: none;
+}
+
+#myCanvas {
+  background-color: #22393D;
+  }
+
+#textInput {
+  display: none;
+}
+
+#myCanvas {
+  background-color: #22393D;
+  }
+
 #restartButton {
   display: none;
 }
@@ -278,7 +294,74 @@ form a {
   display: none;
 }
 
-.toast-container {
+#TourneyButton {
+  display: none;
+}
+
+#nameTourney {
+  display: none;
+}
+
+#nextButton {
+  display: none;
+}
+
+.tournament-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
+    margin: -50px 20px 20px 20px;
+}
+
+.round {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+}
+
+.participant {
+  background-color: #a2c11c;
+  padding: 12px 25px;
+  font-size: 20px;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  margin: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.divider {
+    font-size: 16px;
+    color: #ffffffd6;
+    margin: 0 10px;
+}
+
+.final-match {
+  background-color: #22393D;
+  padding: 12px 25px;
+  font-size: 20px;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  margin: 5px;
+  transition: background-color 0.3s ease;
+}
+
+#NextMatchButton {
+  display: none;
+}
+
+#MyButton {
+  display: none;
+}
+
+#EndTourneyButton {
+  display: none;
+}.toast-container {
   position: fixed;
   top: 1.5rem;
   right: 4rem;
@@ -304,4 +387,11 @@ form a {
 .toast-error {
   background-color: #6f1a07;
   color: #ccc;
+}
+
+#message {
+  color: red;
+  height: 20px;
+  margin-top: 10px;
+  visibility: hidden;
 }
