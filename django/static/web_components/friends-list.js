@@ -1,5 +1,5 @@
 import { getFriends, addFriend, removeFriend, getUserByUsername} from "../user_utils.js";
-import { socket, getCookie } from "../utils.js";
+import { socket, getCookie, showToast} from "../utils.js";
 
 export class FriendsComponent extends HTMLElement {
     constructor() {
@@ -89,7 +89,7 @@ export class FriendsComponent extends HTMLElement {
         if (user) {
             await this.sendFriendRequest(username);
             //await addFriend(user.id);
-            await this.loadFriends(); // Reload friends list after adding friend
+            //await this.loadFriends(); // Reload friends list after adding friend
         } else {
             console.log('User search failed');
         }
@@ -115,9 +115,11 @@ export class FriendsComponent extends HTMLElement {
     .then(response => response.json())
     .then(data => {
         if (data.detail === 'Friend request sent successfully.') {
-            console.log('Notification sent');
+            console.log(data.detail);
+            showToast(data.detail);
         } else {
             console.error(data.detail);
+            showToast(data.detail, 'error');
         }
     })
     .catch(error => console.error('Error:', error));
