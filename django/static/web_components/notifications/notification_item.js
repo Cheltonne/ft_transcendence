@@ -42,7 +42,6 @@ export class NotificationItem extends HTMLElement {
 
     set data(notification) {
         this.notification = notification;
-        //console.log(this.notification);
         this.shadowRoot.querySelector('.notification-body').textContent = notification.message;
         this.shadowRoot.querySelector('.sender-pfp-container').innerHTML = `<img src="${notification.sender_pfp.replace('http://localhost/', '')}" class="sender-pfp">`
     }

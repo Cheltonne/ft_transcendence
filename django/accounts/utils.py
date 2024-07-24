@@ -31,3 +31,6 @@ def request_already_sent(sender, recipient):
     except Notification.DoesNotExist:
         return False
     return True
+
+def is_already_friends_with_recipient(sender, recipient):
+    return recipient in sender.friends.all()

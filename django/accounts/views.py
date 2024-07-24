@@ -21,7 +21,8 @@ from rest_framework.views import APIView
 from .serializers import CustomUserSerializer, NotificationSerializer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .utils import send_friend_request_notification, request_already_sent
+from .utils import send_friend_request_notification,\
+ request_already_sent, is_already_friends_with_recipient
 
 def index(request):
     return render(request, 'index.html')
@@ -212,6 +213,8 @@ class FriendRequestView(APIView):
             recipient = CustomUser.objects.get(username=recipient_username)
             if request_already_sent(request.user, recipient) is True:
                 return Response({'detail': f'You\'ve already sent {recipient_username} a friend request!'})
+            elif is_already_friends_with_recipient(request.user, recipient) is True:
+                return Response({'detail': f'You\'re already friends with {recipient}!'})
             send_friend_request_notification(request.user, recipient)
             return Response({'detail': 'Friend request sent successfully.'}, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:

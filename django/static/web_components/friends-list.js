@@ -69,6 +69,7 @@ export class FriendsComponent extends HTMLElement {
         ).join('')}
                 </ul>
                 <input type="text" id="new-friend-username" placeholder="Add a friend by username">
+                <div style="height: 1rem;"></div>
                 <button id="add-friend-button">Add Friend</button>
             </div>
         `;
@@ -88,8 +89,6 @@ export class FriendsComponent extends HTMLElement {
         const user = await getUserByUsername(username);
         if (user) {
             await this.sendFriendRequest(username);
-            //await addFriend(user.id);
-            //await this.loadFriends(); // Reload friends list after adding friend
         } else {
             console.log('User search failed');
         }
@@ -97,7 +96,7 @@ export class FriendsComponent extends HTMLElement {
 
     async removeFriend(userId) {
         await removeFriend(userId);
-        await this.loadFriends(); // Reload friends list after removing friend
+        await this.loadFriends();
     }
 
     async sendFriendRequest(recipientUsername) {
@@ -106,7 +105,6 @@ export class FriendsComponent extends HTMLElement {
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken'),
-            //'Authorization': 'Bearer ' + token,  // Ensure the user is authenticated
         },
         body: JSON.stringify({
             username: recipientUsername,
