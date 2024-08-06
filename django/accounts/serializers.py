@@ -58,6 +58,12 @@ class NotificationSerializer(serializers.ModelSerializer):
     def get_recipient_username(self, obj):
         return obj.recipient.username
 
+    def get_context(self):
+        context = super().get_context()
+        context['request'] = self.context['request']
+        return context
+
     def get_sender_pfp(self, obj):
+        request = self.context.get('request')  
         if obj.sender.profile_picture:
             return self.context['request'].build_absolute_uri(obj.sender.profile_picture.url)

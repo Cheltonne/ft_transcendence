@@ -395,3 +395,14 @@ form a {
   margin-top: 10px;
   visibility: hidden;
 }
+
+.notification-counter {
+  position: absolute; /* Position it relative to the icon */
+  top: -5px; /* Adjust as needed */
+  right: -5px; /* Adjust as needed */
+  background-color: red; /* Customize the color */
+  color: white;
+  border-radius: 50%;
+  padding: 2px 5px; /* Adjust padding for larger numbers */
+  font-size: 12px; /* Customize the font size */
+}

@@ -113,3 +113,22 @@ $(document).ready(function () {
 	history.replaceState('pong', '', 'pong');
 	initializeWebSocket();
 });
+
+const notificationCounter = document.getElementById('notificationCounter');
+let unreadCount = 0;
+
+function updateNotificationCounter() {
+    if (unreadCount > 0) {
+        notificationCounter.textContent = unreadCount;
+        notificationCounter.style.display = 'block'; 
+    } else {
+        notificationCounter.style.display = 'none';
+    }
+}
+
+document.addEventListener('notificationsUpdated', (event) => {
+    unreadCount = event.detail.unreadCount;
+    updateNotificationCounter();
+});
+
+updateNotificationCounter();

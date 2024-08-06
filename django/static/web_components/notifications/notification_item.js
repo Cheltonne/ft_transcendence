@@ -12,8 +12,6 @@ export class NotificationItem extends HTMLElement {
                 <span class="sender-pfp-container"></span>
                 <div class="notification-body"></div>
                 <div class="notification-actions">
-                    <button class="btn btn-success">Accept</button>
-                    <button class="btn btn-danger">Reject</button>
                 </div>
             </div>
         `;
@@ -24,20 +22,46 @@ export class NotificationItem extends HTMLElement {
         const styleLink = document.createElement('link');
 
         styleLink.setAttribute('rel', 'stylesheet');
-        styleLink.setAttribute('href', 'static/css/notification_item.css'); 
+        styleLink.setAttribute('href', 'static/css/notification_item.css');
         this.shadowRoot.appendChild(styleLink);
-        this.shadowRoot.querySelector('.btn-success').addEventListener('click', () => {
-            this.acceptFriendRequest(this.notification.id, this.notification.sender_id);
-        });
-
-        this.shadowRoot.querySelector('.btn-danger').addEventListener('click', () => {
-            this.rejectFriendRequest(this.notification.id);
-        });
+        this.renderNotificationActions();
     }
 
     disconnectedCallback() {
-        this.shadowRoot.querySelector('.btn-success').removeEventListener('click', this.acceptFriendRequest);
-        this.shadowRoot.querySelector('.btn-danger').removeEventListener('click', this.rejectFriendRequest);
+        try {
+            const actionButtons = this.shadowRoot.querySelectorAll('button');
+            actionButtons.forEach(button => button.removeEventListener('click', this.handleButtonClick));
+        }
+        catch (e) {
+            console.error('Ratio: ',e);
+        }
+    }
+
+    renderNotificationActions() {
+        const actionsContainer = this.shadowRoot.querySelector('.notification-actions');
+        actionsContainer.innerHTML = '';
+
+        switch (this.notification.type) {
+            case 'friend_request':
+                actionsContainer.innerHTML = `
+                    <button class="btn btn-success">Accept</button>
+                    <button class="btn btn-danger">Reject</button>
+                `;
+                actionsContainer.querySelector('.btn-success').addEventListener('click', () => {
+                    this.acceptFriendRequest(this.notification.id, this.notification.sender_id);
+                });
+                actionsContainer.querySelector('.btn-danger').addEventListener('click', () => {
+                    this.rejectFriendRequest(this.notification.id);
+                });
+                break;
+            default:
+                actionsContainer.innerHTML = `
+                    <button class="btn btn-primary read-btn">Mark as read</button>
+                `;
+                actionsContainer.querySelector('.read-btn').addEventListener('click', () => {
+                    this.markAsRead(this.notification.id);
+                });
+        }
     }
 
     set data(notification) {
@@ -54,6 +78,11 @@ export class NotificationItem extends HTMLElement {
 
     rejectFriendRequest(notificationId) {
         console.log('notif id: ', this.notification.id);
+        this.toggleNotificationRead(notificationId);
+        this.remove();
+    }
+
+    markAsRead(notificationId) {
         this.toggleNotificationRead(notificationId);
         this.remove();
     }

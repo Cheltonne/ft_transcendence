@@ -22,7 +22,7 @@ from .serializers import CustomUserSerializer, NotificationSerializer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .utils import send_friend_request_notification,\
- request_already_sent, is_already_friends_with_recipient
+request_already_sent, is_already_friends_with_recipient, send_notification
 
 def index(request):
     return render(request, 'index.html')
@@ -170,7 +170,6 @@ def render_update_form(request):
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
 
     @action(detail=True, methods=['post'])
     def add_friend(self, request, pk=None):
@@ -178,6 +177,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         friend = get_object_or_404(CustomUser, pk=pk)
         user.friends.add(friend)
         user.save()
+        send_notification(user, friend, 'friend_request_accepted', f'{user} accepted your friend request!')
         return Response({'detail': 'Friend added successfully'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
@@ -228,17 +228,24 @@ class NotificationListView(generics.ListAPIView):
         user = self.request.user
         return Notification.objects.filter(recipient=user).order_by('-created_at')
 
+    @action(detail=False, methods=['get'], url_path='unread-count') 
+    def unread_count(self, request):
+        user = self.request.user
+        unread_count = Notification.objects.filter(recipient=user, is_read=False).order_by('-created_at').count()
+        return Response({'unread_count': unread_count})
+
+
 @api_view(['PUT'])
 def mark_as_read(request, id):
-    serializer_class = NotificationSerializer
     if request.method != 'PUT':
         return Response({'Error': 'Only PUT requests allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     try:
         notification = Notification.objects.get(id=id)
+        serializer = NotificationSerializer(notification, context={'request': request})
         notification.is_read = True
         notification.save()
-        return Response(NotificationSerializer(notification).data)
+        return Response(NotificationSerializer(notification, context={'request': request}).data)
     except Notification.DoesNotExist:
         return Response ({'Error': 'Error fetching notification. + ratio'})
     
