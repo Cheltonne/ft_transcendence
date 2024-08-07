@@ -2,9 +2,11 @@ from django.urls import path, include
 from . import views
 from rest_framework.routers import DefaultRouter
 from .views import CustomUserViewSet
+from .views import NotificationListView
 
 router = DefaultRouter()
 router.register(r'', CustomUserViewSet)
+router.register(r'notifications', NotificationListView, basename='notification')
 
 urlpatterns = [
 		path("logout/", views.user_logout, name="logout"),

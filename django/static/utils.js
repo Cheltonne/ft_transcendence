@@ -118,6 +118,11 @@ export async function initializeWebSocket() {
 			if (data.sender && data.type === 'friend_request') {
 				showToast(`${data.sender} wants to add you as a friend.`);
 			}
+			const unreadCount = fetch("accounts/unread-count/");
+
+			const eventDetail = { unreadCount: unreadCount };
+			const customEvent = new CustomEvent('notificationsUpdated', { detail: eventDetail });
+			document.dispatchEvent(customEvent);
 		};
 
 		notificationSocket.onclose = function (e) {
