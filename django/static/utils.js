@@ -112,18 +112,32 @@ export async function initializeWebSocket() {
 			console.error('WebSocket encountered error:', error);
 		};
 
-		notificationSocket.onmessage = function (e) {
+		notificationSocket.onmessage = async function (e) {
 			const data = JSON.parse(e.data);
 			console.log('Notification:', data);
 			if (data.sender && data.type === 'friend_request') {
 				showToast(`${data.sender} wants to add you as a friend.`);
 			}
-			const unreadCount = fetch("accounts/unread-count/");
-
-			const eventDetail = { unreadCount: unreadCount };
-			const customEvent = new CustomEvent('notificationsUpdated', { detail: eventDetail });
-			document.dispatchEvent(customEvent);
-		};
+            if (document.querySelector('notification-list') === null) { //avoid showing the counter if the notif list is open
+				fetch("accounts/notifications/unread-count/")
+					.then (response => response.json())
+					.then(data => {
+						const customEvent = new CustomEvent('notificationsUpdated', { 
+							detail: {
+								unreadCount : data.unread_count
+							}
+							});
+						document.dispatchEvent(customEvent);
+					})
+			}
+			else {
+				const newNotificationEvent = new CustomEvent('newNotification', { 
+            		detail: data 
+        		});
+				document.dispatchEvent(newNotificationEvent);
+				console.log('data: ', data)
+			}
+			};
 
 		notificationSocket.onclose = function (e) {
 			console.log('Notification socket closed.');

@@ -15,6 +15,7 @@ def send_friend_request_notification(sender, recipient):
                 'id': notification.id,
                 'message': notification.message,
                 'sender': sender.username,
+                'sender_pfp': sender.profile_picture.url,
                 'created_at': notification.created_at.isoformat(),
                 'is_read': notification.is_read,
                 'type': 'friend_request',

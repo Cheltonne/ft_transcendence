@@ -64,6 +64,6 @@ class NotificationSerializer(serializers.ModelSerializer):
         return context
 
     def get_sender_pfp(self, obj):
-        request = self.context.get('request')  
+        request = self.context.get('request')
         if obj.sender.profile_picture:
             return self.context['request'].build_absolute_uri(obj.sender.profile_picture.url)

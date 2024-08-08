@@ -65,6 +65,33 @@ canvas {
   z-index: 4200;
 }
 
+.notification-btn {
+    position: relative;
+    display: inline-block;
+    font-size: 24px; 
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.notification-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px; 
+    height: 40px; 
+    background-color: rgba(182, 182, 182, 0.233); 
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1; 
+}
+
+.notification-btn:hover::before {
+    opacity: 1;
+}
+
 nav {
   padding: 1rem;
   display: flex;
@@ -397,12 +424,12 @@ form a {
 }
 
 .notification-counter {
-  position: absolute; /* Position it relative to the icon */
-  top: -5px; /* Adjust as needed */
-  right: -5px; /* Adjust as needed */
-  background-color: red; /* Customize the color */
+  position: absolute; 
+  top: -5px; 
+  right: -5px; 
+  background-color: red; 
   color: white;
   border-radius: 50%;
-  padding: 2px 5px; /* Adjust padding for larger numbers */
-  font-size: 12px; /* Customize the font size */
+  padding: 2px 5px; 
+  font-size: 12px; 
 }

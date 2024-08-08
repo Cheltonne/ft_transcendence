@@ -14,8 +14,11 @@ export const userObserver = new UserObserver();
 export const bbc = new BroadcastChannel('bbc');
 export const dropDownButton = document.querySelector('.notification-btn');
 export const dropdownMenu = document.querySelector('.dropdown-menu-items');
+const dropDownList = document.getElementById("notificationDropdown");
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
+const notificationCounter = document.getElementById('notificationCounter');
+let	unreadCount = 0;
 
 export async function getUserInfo() {
 	return fetch("accounts/get-user-info/")
@@ -42,13 +45,23 @@ async function fillUserData(data) {
 	setUserToStorage(data);
 }
 
-document.addEventListener("click", (event) => {	//close sidebar if click detected outside of it
+document.addEventListener("click", (event) => {	//close sidebar if click detected outside of it / same logic w/ notif list
 	if (menu.classList.contains("active") && !event.target.closest(".sidebar")) {
 		toggleMenu();
 	}
-	if (dropDownButton.classList.contains('active') && !event.target.closest("notification-list")){
+	if (dropDownButton.classList.contains('active') && !event.target.closest("notification-list")) {
 		document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
 		dropDownButton.classList.toggle('active');
+fetch("accounts/notifications/unread-count/")
+	.then (response => response.json())
+	.then(data => {
+		const customEvent = new CustomEvent('notificationsUpdated', { 
+			detail: {
+				unreadCount : data.unread_count
+			}
+			});
+		document.dispatchEvent(customEvent);
+	})
 	}
 });
 
@@ -69,6 +82,22 @@ logo.addEventListener("click", () => { //click logo to go back to pong view
 })
 
 dropDownButton.addEventListener('click', (event) => {
+	event.stopImmediatePropagation();
+	const existingList = document.querySelector('notification-list');
+	if (existingList === null) {
+		const list = document.createElement('notification-list');
+		dropDownList.appendChild(list);
+		console.log('clicked');
+		dropDownButton.classList.add('active');
+	}
+	else {
+		console.log('bruh');
+		dropDownList.removeChild(existingList);
+		dropDownButton.classList.toggle('active');
+	}
+})
+
+notificationCounter.addEventListener('click', (event) => {
 	if (document.querySelector('notification-list') === null) {
 		event.stopImmediatePropagation();
 		const list = document.createElement('notification-list');
@@ -112,10 +141,20 @@ $(document).ready(function () {
 	loadNavbar();
 	history.replaceState('pong', '', 'pong');
 	initializeWebSocket();
+	updateNotificationCounter();
 });
 
-const notificationCounter = document.getElementById('notificationCounter');
-let unreadCount = 0;
+
+fetch("accounts/notifications/unread-count/")
+	.then (response => response.json())
+	.then(data => {
+		const customEvent = new CustomEvent('notificationsUpdated', { 
+			detail: {
+				unreadCount : data.unread_count
+			}
+			});
+		document.dispatchEvent(customEvent);
+	})
 
 function updateNotificationCounter() {
     if (unreadCount > 0) {
@@ -131,4 +170,10 @@ document.addEventListener('notificationsUpdated', (event) => {
     updateNotificationCounter();
 });
 
-updateNotificationCounter();
+document.addEventListener('notificationListActive', (e) => {
+	notificationCounter.style.display = 'none';
+})
+
+document.addEventListener('notificationListClosed', (e) => {
+	notificationCounter.style.display = 'block';
+})

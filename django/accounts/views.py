@@ -220,7 +220,7 @@ class FriendRequestView(APIView):
         except CustomUser.DoesNotExist:
             return Response({'detail': 'Recipient not found.'}, status=status.HTTP_404_NOT_FOUND)
         
-class NotificationListView(generics.ListAPIView):
+class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
 
@@ -228,10 +228,10 @@ class NotificationListView(generics.ListAPIView):
         user = self.request.user
         return Notification.objects.filter(recipient=user).order_by('-created_at')
 
-    @action(detail=False, methods=['get'], url_path='unread-count') 
+    @action(detail=False, methods=['get'], url_path='unread-count')
     def unread_count(self, request):
         user = self.request.user
-        unread_count = Notification.objects.filter(recipient=user, is_read=False).order_by('-created_at').count()
+        unread_count = Notification.objects.filter(recipient=user, is_read=False).count()
         return Response({'unread_count': unread_count})
 
 

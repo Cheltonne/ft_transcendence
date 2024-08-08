@@ -13,6 +13,10 @@
     margin-right: 15px;
 }
 
+.notification:hover {
+    background-color: #474c68;
+}
+
 .sender-pfp-container {
     margin-right: 10px;
 }

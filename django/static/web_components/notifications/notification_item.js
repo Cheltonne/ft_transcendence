@@ -25,12 +25,25 @@ export class NotificationItem extends HTMLElement {
         styleLink.setAttribute('href', 'static/css/notification_item.css');
         this.shadowRoot.appendChild(styleLink);
         this.renderNotificationActions();
+        this.addEventListener('click', () => console.log(this.notification.id))
     }
 
     disconnectedCallback() {
         try {
             const actionButtons = this.shadowRoot.querySelectorAll('button');
             actionButtons.forEach(button => button.removeEventListener('click', this.handleButtonClick));
+            if (document.querySelector('notification-list') === null) { //avoid showing the counter if the notif list is open
+                fetch("accounts/notifications/unread-count/")
+                    .then (response => response.json())
+                    .then(data => {
+                        const customEvent = new CustomEvent('notificationsUpdated', { 
+                            detail: {
+                                unreadCount : data.unread_count
+                            }
+                        });
+                        document.dispatchEvent(customEvent);
+                    })
+            }
         }
         catch (e) {
             console.error('Ratio: ',e);
@@ -73,17 +86,35 @@ export class NotificationItem extends HTMLElement {
     acceptFriendRequest(notificationId, senderId) {
         this.toggleNotificationRead(notificationId);
         addFriend(senderId);
+        const customEvent = new CustomEvent('notificationRead', {
+            detail: {
+                'id': this.notification.id
+            }
+        });
+        document.dispatchEvent(customEvent);
         this.remove();
     }
 
     rejectFriendRequest(notificationId) {
-        console.log('notif id: ', this.notification.id);
         this.toggleNotificationRead(notificationId);
+        const customEvent = new CustomEvent('notificationRead', {
+            detail: {
+                'id': this.notification.id
+            }
+        });
+        console.log('removed notification\'s ID: ', this.notification.id)
+        document.dispatchEvent(customEvent);
         this.remove();
     }
 
     markAsRead(notificationId) {
         this.toggleNotificationRead(notificationId);
+        const customEvent = new CustomEvent('notificationRead', {
+            detail: {
+                'id': this.notification.id
+            }
+        });
+        document.dispatchEvent(customEvent);
         this.remove();
     }
 
