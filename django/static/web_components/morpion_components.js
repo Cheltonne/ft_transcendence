@@ -1,8 +1,4 @@
-import {
-    getUserInfo,
-    user
-} from '../scripts.js'
-
+import { getUserInfo, user } from '../scripts.js'
 import { getCookie } from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
@@ -60,11 +56,14 @@ export class MorpionComponent extends HTMLElement {
 	}
 
 
-    connectedCallback() {
+    async connectedCallback() {
 		const styleLink = document.createElement('link');
         styleLink.rel = 'stylesheet';
         styleLink.href = 'static/css/morpion.css';
         this.shadowRoot.appendChild(styleLink);
+
+        // Initialisation WebSocket
+       // await initializeWebSocket();
 
         // initialisation des variables
         this.X_CLASS = 'x';
@@ -127,7 +126,7 @@ export class MorpionComponent extends HTMLElement {
         });
 
         this.matchmakingButton.addEventListener('click', async () => {
-            await this.startMatchmaking();
+            this.startMatchmaking();
             this.showAlert('info', 'Looking for a match...');
         });
     }
@@ -139,34 +138,98 @@ export class MorpionComponent extends HTMLElement {
     }
     
     startMatchmaking() {
-        const socket = new WebSocket('ws://localhost:4343/ws/morpion/');
-        socket.onopen = () => {
-            console.log('WebSocket connection established');
-            socket.send(JSON.stringify({ type: 'matchmaking' }));
-        };
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('Received message:', data);
-            if (data.type === 'match_found') {
-                console.log('Match found!');
-                this.showAlert('success', 'Match found! Starting game...');
+    const socket = new WebSocket(`ws://${window.location.host}/ws/morpion/`);
+    
+    socket.onopen = () => {
+        console.log('WebSocket connection established');
+        socket.send(JSON.stringify({ type: 'matchmaking' }));
+    };
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('Received message:', data);
+
+        if (data.type === 'match_found') {
+            console.log('Match found!');
+            this.showAlert('success', 'Match found! Starting game...');
+            this.isAI = false;
+            this.startGame();
+        } else if (data.type === 'match_request') {
+            const accept = confirm(`${data.player1} wants to play with you. Accept?`);
+            if (accept) {
+                socket.send(JSON.stringify({ type: 'match_accept', match_id: data.match_id }));
+                this.showAlert('success', 'Match accepted! Starting game...');
                 this.isAI = false;
                 this.startGame();
-            } else if (data.type === 'no_match_found') {
-                console.log('No match found. Starting game with AI.');
-                this.showAlert('info', 'No match found. Starting game with AI.');
-                this.isAI = true;
-                this.startGame();
+            } else {
+                socket.send(JSON.stringify({ type: 'match_decline', match_id: data.match_id }));
+                this.showAlert('info', 'Match declined. Looking for another match...');
             }
-        };
-        socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            this.showAlert('danger', 'WebSocket error occurred. Please try again later.');
-        };
-        socket.onclose = () => {
-            console.log('WebSocket connection closed');
-        };
-    }
+        } else if (data.type === 'match_accepted') {
+            console.log('Match accepted by opponent!');
+            this.showAlert('success', `Match accepted by ${data.player2}! Starting game...`);
+            this.isAI = false;
+            this.startGame();
+        } else if (data.type === 'no_match_found') {
+            console.log('No match found. Starting game with AI.');
+            this.showAlert('info', 'No match found. Starting game with AI.');
+            this.isAI = true;
+            this.startGame();
+        }
+    };
+    
+    socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.showAlert('danger', 'WebSocket error occurred. Please try again later.');
+    };
+
+    socket.onclose = () => {
+        console.log('WebSocket connection closed');
+    };
+}
+
+    /*async startMatchmaking() {
+        if (socket) {
+            socket.send(JSON.stringify({ type: 'matchmaking' }));
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Received message:', data);
+                if (data.type === 'match_request') {
+                    console.log('Match request received');
+                    this.showToast(`Match request from ${data.player1}`, 'info');
+                    const accept = confirm(`Do you want to accept the match request from ${data.player1}?`);
+                    if (accept) {
+                        socket.send(JSON.stringify({ type: 'match_accept', match_id: data.match_id }));
+                        this.showToast('Match accepted! Starting game...', 'success');
+                        this.startGame();
+                    } else {
+                        socket.send(JSON.stringify({ type: 'match_decline', match_id: data.match_id }));
+                        this.showToast('Match declined. Searching for another match...', 'info');
+                    }
+                } else if (data.type === 'match_accepted') {
+                    console.log('Match accepted');
+                    this.showToast(`Match accepted by ${data.player2}. Starting game...`, 'success');
+                    this.startGame();
+                } else if (data.type === 'no_match_found') {
+                    console.log('No match found. Starting game with AI.');
+                    this.showToast('No match found. Starting game with AI.', 'info');
+                    this.isAI = true;
+                    this.startGame();
+                }
+            };
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                this.showToast('WebSocket error occurred. Please try again later.', 'error');
+            };
+            socket.onclose = () => {
+                console.log('WebSocket connection closed');
+            };
+        } else {
+            this.showToast('WebSocket is not connected. Please try again later.', 'error');
+        }
+    }*/
+
+    
 
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
@@ -310,10 +373,10 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "You need to be logged in to create a match.");
             return;
         }
-		const csrftoken = getCookie('csrftoken');
-        const response = await fetch('morpion/create-match/', {
+        const csrftoken = getCookie('csrftoken');
+        const response = await fetch('/morpion/create-match/', {
             method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
         });
         const data = await response.json();
         if (data.match_id) {
@@ -325,7 +388,7 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "Failed to create match. Please try again.");
         }
     }
-
+    
     async createMatch_ai(user_score, ia_score) {
         const isAuthenticated = await this.checkAuthenticated();
         if (!isAuthenticated) {
@@ -333,9 +396,10 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "You need to be logged in to create a match.");
             return;
         }
-		const csrftoken = getCookie('csrftoken');
-        const response = await fetch('morpion/create-match-ai/', {
+        const csrftoken = getCookie('csrftoken');
+        const response = await fetch('/morpion/create-match-ai/', {
             method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
         });
         const data = await response.json();
         if (data.match_id) {
@@ -347,28 +411,38 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert("danger", "Failed to create match. Please try again.");
         }
     }
-
-    // fonctions pour envoyer le score au serveur Django
+    
+    // functions for sending the score to the Django server
     sendScoreToDjango(scoreX, scoreO, match_id, isAI) {
-        var xhr = new XMLHttpRequest();
-        const endpoint = isAI ? "morpion/save-score-ai/" : "morpion/save-score/";
-        xhr.open("POST", endpoint, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                var status = xhr.status;
-                if (status === 200) {
-                    console.log("Score saved successfully.");
-                } else {
-                    console.error("Failed to save score:", status, xhr.statusText);
-                }   
+        const csrftoken = getCookie('csrftoken');
+        const endpoint = isAI ? "/morpion/save-score-ai/" : "/morpion/save-score/";
+        fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken
+            },
+            body: JSON.stringify({
+                player1_score: scoreX,
+                player2_score: isAI ? undefined : scoreO,
+                ai_score: isAI ? scoreO : undefined,
+                match_id: match_id
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                console.log("Score saved successfully.");
+                this.showAlert("success", "Score saved successfully!");
+            } else {
+                console.error("Failed to save score:", data.error);
+                this.showAlert("danger", "Failed to save score. Please try again.");
             }
-        };
-        if (endpoint === "morpion/save-score/") {
-            xhr.send(JSON.stringify({ player1_score: scoreX, player2_score: scoreO, match_id: match_id }));
-        } else {
-            xhr.send(JSON.stringify({ player1_score: scoreX, ai_score: scoreO, match_id: match_id }));
-        }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            this.showAlert("danger", "Failed to save score. Please try again.");
+        });
     }
 
     // fonction pour réinitialiser la série

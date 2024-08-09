@@ -38,6 +38,8 @@ export class UserObservable extends Subject {
         this.data.username = data.username;
         this.data.profile_picture = `<img src='${data.profile_picture}' class='profile-picture'></img>`;
         this.data.user_matches = data.user_matches;
+        this.data.morpion_matches = data.morpion_matches;
+        this.data.morpion_ai_matches = data.morpion_ai_matches;
         this.data.wins = data.wins;
         this.data.losses = data.losses;
         this.notifyObservers(this.data);
@@ -48,6 +50,11 @@ export class UserObservable extends Subject {
         this.notifyObservers(this.data);
         console.log('Cleared user data');
     }
+
+    getUserData() {
+        return (this.data);
+    }
+
 
     getObservers() {
         return (this.observers);
