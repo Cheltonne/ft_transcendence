@@ -52,16 +52,6 @@ document.addEventListener("click", (event) => {	//close sidebar if click detecte
 	if (dropDownButton.classList.contains('active') && !event.target.closest("notification-list")) {
 		document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
 		dropDownButton.classList.toggle('active');
-fetch("accounts/notifications/unread-count/")
-	.then (response => response.json())
-	.then(data => {
-		const customEvent = new CustomEvent('notificationsUpdated', { 
-			detail: {
-				unreadCount : data.unread_count
-			}
-			});
-		document.dispatchEvent(customEvent);
-	})
 	}
 });
 
@@ -87,11 +77,9 @@ dropDownButton.addEventListener('click', (event) => {
 	if (existingList === null) {
 		const list = document.createElement('notification-list');
 		dropDownList.appendChild(list);
-		console.log('clicked');
 		dropDownButton.classList.add('active');
 	}
 	else {
-		console.log('bruh');
 		dropDownList.removeChild(existingList);
 		dropDownButton.classList.toggle('active');
 	}
@@ -102,7 +90,6 @@ notificationCounter.addEventListener('click', (event) => {
 		event.stopImmediatePropagation();
 		const list = document.createElement('notification-list');
 		document.getElementById("notificationDropdown").appendChild(list);
-		console.log('clicked');
 		dropDownButton.classList.toggle('active');
 	}
 	else {
@@ -157,9 +144,11 @@ fetch("accounts/notifications/unread-count/")
 	})
 
 function updateNotificationCounter() {
+	const existingList = document.querySelector('notification-list');
     if (unreadCount > 0) {
         notificationCounter.textContent = unreadCount;
-        notificationCounter.style.display = 'block'; 
+		if (existingList === null)
+        	notificationCounter.style.display = 'block'; 
     } else {
         notificationCounter.style.display = 'none';
     }
@@ -175,5 +164,6 @@ document.addEventListener('notificationListActive', (e) => {
 })
 
 document.addEventListener('notificationListClosed', (e) => {
-	notificationCounter.style.display = 'block';
+	if (unreadCount > 0)
+		notificationCounter.style.display = 'block';
 })

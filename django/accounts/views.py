@@ -224,9 +224,9 @@ class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def get_queryset(self): #this will only return unread notifications for performance
         user = self.request.user
-        return Notification.objects.filter(recipient=user).order_by('-created_at')
+        return Notification.objects.filter(recipient=user, is_read=False).order_by('-created_at')
 
     @action(detail=False, methods=['get'], url_path='unread-count')
     def unread_count(self, request):

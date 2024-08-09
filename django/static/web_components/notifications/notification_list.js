@@ -20,23 +20,21 @@ export class NotificationList extends HTMLElement {
                 this.notifications = data;
                 this.displayNotifications();
             })
-            .catch(error => console.error('Error:', error)); this.fetchNotifications();
+            .catch(error => console.error('Error:', error));
         this.displayNotifications(this.notifications);
         const customEvent = new CustomEvent('notificationListActive');
         document.dispatchEvent(customEvent);
         document.addEventListener('newNotification', this.handleNewNotification);
         document.addEventListener('notificationRead', (e) => {
-            console.log(e)
-            console.log('ID to filter: ', e.detail.id);
             this.notifications = this.notifications.filter(notification => e.detail.id !== notification.id);
          })
     }
 
     disconnectedCallback() {
-        console.log('notification list says: bye-bye!');
         const customEvent = new CustomEvent('notificationListClosed');
         document.dispatchEvent(customEvent);
         document.removeEventListener('newNotification', this.handleNewNotification);
+        this.updateUnread();
     }
 
     displayNotifications(notifications) {
@@ -57,12 +55,11 @@ export class NotificationList extends HTMLElement {
 
     handleNewNotification = (event) => {
         const newNotification = event.detail;
-        console.log('handle new noti works');
         this.notifications.push(newNotification); //WRONG ID CRUX OF PROBLEM IS : WHY IS OLD NOTI STILL THERE EVEN AFTER REJECT BUTTON HAS BEEN CLICKED AND WHY IS NEW NOTI NOT BEING PUSHED IN ARRAY
         this.displayNotifications(this.notifications);
     } 
 
-    fetchNotifications() {
+    async fetchNotifications() {
         return fetch('/accounts/notifications/', {
             method: 'GET',
             headers: {
@@ -75,6 +72,19 @@ export class NotificationList extends HTMLElement {
                 return data;
             })
             .catch(error => console.error('Error:', error));
+    }
+
+    updateUnread (){
+        fetch("accounts/notifications/unread-count/")
+            .then(response => response.json())
+            .then(data => {
+                const customEvent = new CustomEvent('notificationsUpdated', {
+                    detail: {
+                        unreadCount: data.unread_count
+                    }
+                });
+                document.dispatchEvent(customEvent);
+            })
     }
 }
 

@@ -114,7 +114,6 @@ export async function initializeWebSocket() {
 
 		notificationSocket.onmessage = async function (e) {
 			const data = JSON.parse(e.data);
-			console.log('Notification:', data);
 			if (data.sender && data.type === 'friend_request') {
 				showToast(`${data.sender} wants to add you as a friend.`);
 			}
@@ -135,7 +134,6 @@ export async function initializeWebSocket() {
             		detail: data 
         		});
 				document.dispatchEvent(newNotificationEvent);
-				console.log('data: ', data)
 			}
 			};
 

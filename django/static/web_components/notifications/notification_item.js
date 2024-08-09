@@ -32,21 +32,9 @@ export class NotificationItem extends HTMLElement {
         try {
             const actionButtons = this.shadowRoot.querySelectorAll('button');
             actionButtons.forEach(button => button.removeEventListener('click', this.handleButtonClick));
-            if (document.querySelector('notification-list') === null) { //avoid showing the counter if the notif list is open
-                fetch("accounts/notifications/unread-count/")
-                    .then (response => response.json())
-                    .then(data => {
-                        const customEvent = new CustomEvent('notificationsUpdated', { 
-                            detail: {
-                                unreadCount : data.unread_count
-                            }
-                        });
-                        document.dispatchEvent(customEvent);
-                    })
-            }
         }
         catch (e) {
-            console.error('Ratio: ',e);
+            console.error('Ratio: ', e);
         }
     }
 
@@ -64,7 +52,7 @@ export class NotificationItem extends HTMLElement {
                     this.acceptFriendRequest(this.notification.id, this.notification.sender_id);
                 });
                 actionsContainer.querySelector('.btn-danger').addEventListener('click', () => {
-                    this.rejectFriendRequest(this.notification.id);
+                    this.markAsRead(this.notification.id);
                 });
                 break;
             default:
@@ -84,42 +72,42 @@ export class NotificationItem extends HTMLElement {
     }
 
     acceptFriendRequest(notificationId, senderId) {
-        this.toggleNotificationRead(notificationId);
-        addFriend(senderId);
-        const customEvent = new CustomEvent('notificationRead', {
-            detail: {
-                'id': this.notification.id
-            }
-        });
-        document.dispatchEvent(customEvent);
-        this.remove();
-    }
-
-    rejectFriendRequest(notificationId) {
-        this.toggleNotificationRead(notificationId);
-        const customEvent = new CustomEvent('notificationRead', {
-            detail: {
-                'id': this.notification.id
-            }
-        });
-        console.log('removed notification\'s ID: ', this.notification.id)
-        document.dispatchEvent(customEvent);
-        this.remove();
+        this.toggleNotificationRead(notificationId)
+            .then(() => {
+                addFriend(senderId);
+                const customEvent = new CustomEvent('notificationRead', {
+                    detail: {
+                        'id': this.notification.id
+                    }
+                });
+                document.dispatchEvent(customEvent);
+                this.remove();
+            })
+            .catch(error => {
+                console.error('Failed to mark notification as read:', error);
+            });
+        this.updateUnread();
     }
 
     markAsRead(notificationId) {
-        this.toggleNotificationRead(notificationId);
-        const customEvent = new CustomEvent('notificationRead', {
-            detail: {
-                'id': this.notification.id
-            }
-        });
-        document.dispatchEvent(customEvent);
-        this.remove();
+        this.toggleNotificationRead(notificationId)
+            .then(() => {
+                const customEvent = new CustomEvent('notificationRead', {
+                    detail: {
+                        'id': this.notification.id
+                    }
+                });
+                document.dispatchEvent(customEvent);
+                this.remove();
+            })
+            .catch(error => {
+                console.error('Failed to mark notification as read:', error);
+            });
+        this.updateUnread();
     }
 
     toggleNotificationRead(notificationId) {
-        fetch(`accounts/notifications/${notificationId}/mark_as_read/`, {
+        return fetch(`accounts/notifications/${notificationId}/mark_as_read/`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -128,6 +116,18 @@ export class NotificationItem extends HTMLElement {
         })
     }
 
+    updateUnread (){
+        fetch("accounts/notifications/unread-count/")
+            .then(response => response.json())
+            .then(data => {
+                const customEvent = new CustomEvent('notificationsUpdated', {
+                    detail: {
+                        unreadCount: data.unread_count
+                    }
+                });
+                document.dispatchEvent(customEvent);
+            })
+    }
 }
 
 customElements.define('notification-item', NotificationItem);
