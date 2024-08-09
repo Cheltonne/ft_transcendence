@@ -1,4 +1,4 @@
-.dockerignore
+dockerignore
 .env
 .swp
 django/media/profile_pictures

@@ -1,5 +1,5 @@
-import { getFriends, addFriend, removeFriend, getUserByUsername } from "../user_utils.js";
-import { socket } from "../utils.js";
+import { getFriends, addFriend, removeFriend, getUserByUsername} from "../user_utils.js";
+import { socket, getCookie, showToast} from "../utils.js";
 
 export class FriendsComponent extends HTMLElement {
     constructor() {
@@ -11,6 +11,10 @@ export class FriendsComponent extends HTMLElement {
     connectedCallback() {
         this.loadFriends();
         this.setupWebSocketListeners();
+        console.log(`reload-${this.tagName.toLowerCase()}`);
+        window.addEventListener(`reload-${this.tagName.toLowerCase()}`, () => {
+            this.loadFriends();
+        });
     }
 
     async loadFriends() {
@@ -65,6 +69,7 @@ export class FriendsComponent extends HTMLElement {
         ).join('')}
                 </ul>
                 <input type="text" id="new-friend-username" placeholder="Add a friend by username">
+                <div style="height: 1rem;"></div>
                 <button id="add-friend-button">Add Friend</button>
             </div>
         `;
@@ -83,8 +88,7 @@ export class FriendsComponent extends HTMLElement {
         const username = this.shadowRoot.querySelector('#new-friend-username').value;
         const user = await getUserByUsername(username);
         if (user) {
-            await addFriend(user.id);
-            await this.loadFriends(); // Reload friends list after adding friend
+            await this.sendFriendRequest(username);
         } else {
             console.log('User search failed');
         }
@@ -92,8 +96,33 @@ export class FriendsComponent extends HTMLElement {
 
     async removeFriend(userId) {
         await removeFriend(userId);
-        await this.loadFriends(); // Reload friends list after removing friend
+        await this.loadFriends();
     }
+
+    async sendFriendRequest(recipientUsername) {
+    fetch('accounts/send-friend-request/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            username: recipientUsername,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.detail === 'Friend request sent successfully.') {
+            console.log(data.detail);
+            showToast(data.detail);
+        } else {
+            console.error(data.detail);
+            showToast(data.detail, 'error');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
 }
 
 customElements.define('friends-view', FriendsComponent);
