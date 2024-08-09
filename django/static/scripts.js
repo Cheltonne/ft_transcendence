@@ -6,13 +6,19 @@ import { UserProfileCard } from './web_components/user_profile_card.js';
 import { FriendsComponent } from './web_components/friends-list.js';
 import { UserObservable, UserObserver} from './observer.js';
 import { getUserFromStorage, setUserToStorage, removeUserFromStorage } from './utils.js';
+import { NotificationList } from './web_components/notifications/notification_list.js';
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
 export const user = new UserObservable();
 export const userObserver = new UserObserver();
 export const bbc = new BroadcastChannel('bbc');
+export const dropDownButton = document.querySelector('.notification-btn');
+export const dropdownMenu = document.querySelector('.dropdown-menu-items');
+const dropDownList = document.getElementById("notificationDropdown");
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
+const notificationCounter = document.getElementById('notificationCounter');
+let	unreadCount = 0;
 
 export async function getUserInfo() {
 	return fetch("accounts/get-user-info/")
@@ -39,9 +45,13 @@ async function fillUserData(data) {
 	setUserToStorage(data);
 }
 
-document.addEventListener("click", (event) => {	//close sidebar if click detected outside of it
+document.addEventListener("click", (event) => {	//close sidebar if click detected outside of it / same logic w/ notif list
 	if (menu.classList.contains("active") && !event.target.closest(".sidebar")) {
 		toggleMenu();
+	}
+	if (dropDownButton.classList.contains('active') && !event.target.closest("notification-list")) {
+		document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
+		dropDownButton.classList.toggle('active');
 	}
 });
 
@@ -51,7 +61,7 @@ hamMenu.addEventListener("click", (event) => {	//"hamburger menu" button -> thre
 }
 );
 
-document.addEventListener("keydown", function (event) { //open sidebar by pressing M on the keyboard
+document.addEventListener("keydown", function (event) { //open sidebar by pressing M on the keyboard, not for final product
 	if (event.key === "m" || event.code === "KeyM") {
 		toggleMenu();
 	}
@@ -59,6 +69,33 @@ document.addEventListener("keydown", function (event) { //open sidebar by pressi
 
 logo.addEventListener("click", () => { //click logo to go back to pong view
 	navigateTo("pong", 1);
+})
+
+dropDownButton.addEventListener('click', (event) => {
+	event.stopImmediatePropagation();
+	const existingList = document.querySelector('notification-list');
+	if (existingList === null) {
+		const list = document.createElement('notification-list');
+		dropDownList.appendChild(list);
+		dropDownButton.classList.add('active');
+	}
+	else {
+		dropDownList.removeChild(existingList);
+		dropDownButton.classList.toggle('active');
+	}
+})
+
+notificationCounter.addEventListener('click', (event) => {
+	if (document.querySelector('notification-list') === null) {
+		event.stopImmediatePropagation();
+		const list = document.createElement('notification-list');
+		document.getElementById("notificationDropdown").appendChild(list);
+		dropDownButton.classList.toggle('active');
+	}
+	else {
+		document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
+		dropDownButton.classList.toggle('active');
+	}
 })
 
 async function loadNavbar() { //always serve correct version of sidebar
@@ -91,4 +128,42 @@ $(document).ready(function () {
 	loadNavbar();
 	history.replaceState('pong', '', 'pong');
 	initializeWebSocket();
+	updateNotificationCounter();
 });
+
+
+fetch("accounts/notifications/unread-count/")
+	.then (response => response.json())
+	.then(data => {
+		const customEvent = new CustomEvent('notificationsUpdated', { 
+			detail: {
+				unreadCount : data.unread_count
+			}
+			});
+		document.dispatchEvent(customEvent);
+	})
+
+function updateNotificationCounter() {
+	const existingList = document.querySelector('notification-list');
+    if (unreadCount > 0) {
+        notificationCounter.textContent = unreadCount;
+		if (existingList === null)
+        	notificationCounter.style.display = 'block'; 
+    } else {
+        notificationCounter.style.display = 'none';
+    }
+}
+
+document.addEventListener('notificationsUpdated', (event) => {
+    unreadCount = event.detail.unreadCount;
+    updateNotificationCounter();
+});
+
+document.addEventListener('notificationListActive', (e) => {
+	notificationCounter.style.display = 'none';
+})
+
+document.addEventListener('notificationListClosed', (e) => {
+	if (unreadCount > 0)
+		notificationCounter.style.display = 'block';
+})

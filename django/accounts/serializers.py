@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import CustomUser
-from django.contrib.auth import authenticate
+from .models import Notification
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -40,3 +40,30 @@ class CustomUserSerializer(serializers.ModelSerializer):
         if obj.profile_picture:
             return self.context['request'].build_absolute_uri(obj.profile_picture.url)
         return None
+
+class NotificationSerializer(serializers.ModelSerializer):
+    sender_id = serializers.PrimaryKeyRelatedField(source='sender', read_only=True)
+    recipient_id = serializers.PrimaryKeyRelatedField(source='recipient', read_only=True)
+    sender_username = serializers.SerializerMethodField()
+    sender_pfp = serializers.SerializerMethodField()
+    recipient_username = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = '__all__'
+
+    def get_sender_username(self, obj):
+        return obj.sender.username
+
+    def get_recipient_username(self, obj):
+        return obj.recipient.username
+
+    def get_context(self):
+        context = super().get_context()
+        context['request'] = self.context['request']
+        return context
+
+    def get_sender_pfp(self, obj):
+        request = self.context.get('request')
+        if obj.sender.profile_picture:
+            return self.context['request'].build_absolute_uri(obj.sender.profile_picture.url)

@@ -12,7 +12,7 @@ export class LoggedInNavbar extends HTMLElement {
           <ul class="nav-list">
             <li><div id="profilePictureContainer" class='profile-picture'></div></li>
             <li><div id="loginHeading" class="fs-5 fw-semibold username" style="color:white;"></div></li>
-            <li><a href="#" class="homeButton">Home</a></li>
+            <li><a class="homeButton">Home</a></li>
             <li class='profile-button-li'><a href="#" class="profileButton">My Profile</a></li>
             <li><a class="morpionButton">Morpion</a></li>
             <li><a class='friendsButton'>Friends</a></li>

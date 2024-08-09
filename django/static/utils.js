@@ -1,6 +1,7 @@
 import { getUserInfo, menu, hamMenu, bbc } from './scripts.js';
 import { navigateTo } from './views.js';
 export let socket = null;
+export let notificationSocket = null;
 export const USER_STORAGE_KEY = 'user';
 
 export function getCookie(cname) { // to get CSRF cookie (necessary for forms)
@@ -92,6 +93,7 @@ export async function initializeWebSocket() {
 
 	if (authToken && socket === null) {
 		socket = new WebSocket('wss://' + window.location.host + '/ws/accounts/');
+		notificationSocket = new WebSocket('wss://' + window.location.host + '/ws/notifications/');
 
 		socket.onopen = function (event) {
 			console.log('WebSocket is open now.');
@@ -108,6 +110,36 @@ export async function initializeWebSocket() {
 
 		socket.onerror = function (error) {
 			console.error('WebSocket encountered error:', error);
+		};
+
+		notificationSocket.onmessage = async function (e) {
+			const data = JSON.parse(e.data);
+			if (data.sender && data.type === 'friend_request') {
+				showToast(`${data.sender} wants to add you as a friend.`);
+			}
+            if (document.querySelector('notification-list') === null) { //avoid showing the counter if the notif list is open
+				fetch("accounts/notifications/unread-count/")
+					.then (response => response.json())
+					.then(data => {
+						const customEvent = new CustomEvent('notificationsUpdated', { 
+							detail: {
+								unreadCount : data.unread_count
+							}
+							});
+						document.dispatchEvent(customEvent);
+					})
+			}
+			else {
+				const newNotificationEvent = new CustomEvent('newNotification', { 
+            		detail: data 
+        		});
+				document.dispatchEvent(newNotificationEvent);
+			}
+			};
+
+		notificationSocket.onclose = function (e) {
+			console.log('Notification socket closed.');
+			notificationSocket = null;
 		};
 	} else {
 		console.log('User is not authenticated.'); // Handle case where authToken is not available
