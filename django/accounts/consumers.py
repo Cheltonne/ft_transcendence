@@ -2,7 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async, async_to_sync
-from accounts.models import Notification
+from accounts.models import Notification, Message, CustomUser
 
 User = get_user_model()
 
@@ -133,3 +133,75 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     async def send_notification(self, event):
         await self.send(text_data=json.dumps(event["notification"]))
+
+class ChatConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user = self.scope["user"]
+        self.room_name = f"user_{self.user.id}"
+        self.room_group_name = f"chat_{self.room_name}"
+
+        # Join room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    # Receive message from WebSocket
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message = text_data_json["message"]
+        recipient_id = text_data_json["recipient_id"]
+
+        try:
+            recipient = await sync_to_async(CustomUser.objects.get)(id=recipient_id)
+
+            # Save message in the database asynchronously
+            new_message = await sync_to_async(Message.objects.create)(
+                sender=self.user, 
+                recipient=recipient, 
+                content=message
+            )
+
+            # Get the sender's profile picture URL
+            sender_profile_picture = self.user.profile_picture.url if self.user.profile_picture else None
+
+            # Send message to recipient's room
+            await self.channel_layer.group_send(
+                f"chat_user_{recipient.id}",
+                {
+                    "type": "chat_message",
+                    "message": message,
+                    "sender": self.user.username,
+                    "timestamp": new_message.timestamp.isoformat(),
+                    "sender_profile_picture": sender_profile_picture,  # Add profile picture URL
+                }
+            )
+
+        except CustomUser.DoesNotExist:
+            await self.send(text_data=json.dumps({
+                "error": "Recipient does not exist."
+            }))
+
+    # Receive message from room group
+    async def chat_message(self, event):
+        message = event["message"]
+        sender = event["sender"]
+        timestamp = event["timestamp"]
+        sender_profile_picture = event.get("sender_profile_picture")  # Get profile picture URL
+
+        # Send message to WebSocket with profile picture
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "sender": sender,
+            "timestamp": timestamp,
+            "sender_profile_picture": sender_profile_picture,  # Include profile picture URL in the response
+        }))

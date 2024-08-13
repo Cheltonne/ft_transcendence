@@ -8,6 +8,7 @@ class CustomUser(AbstractUser):
 	losses = models.IntegerField(default=0)
 	friends = models.ManyToManyField('self', blank=True)
 	online_devices_count = models.IntegerField(default=0)
+	blocked_users = models.ManyToManyField('self', symmetrical=False, related_name='blockers')
 	def __str__(self):
 		return self.username
 
@@ -25,3 +26,13 @@ class Notification(models.Model):
 
 	class Meta:
 		ordering = ['-created_at']
+
+class Message(models.Model):
+    sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='sent_messages')
+    recipient = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='received_messages')
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.sender} -> {self.recipient}: {self.content[:20]}'

@@ -1,8 +1,9 @@
 import json
 from PIL import Image
 from io import BytesIO
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, CustomUserChangeForm
-from .models import CustomUser, Notification
+from .forms import CustomUserCreationForm, \
+CustomAuthenticationForm, CustomUserChangeForm
+from .models import CustomUser, Notification, Message
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -13,12 +14,14 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response 
 from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
-from .serializers import CustomUserSerializer, NotificationSerializer
+from .serializers import CustomUserSerializer, \
+NotificationSerializer, MessageSerializer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .utils import send_friend_request_notification,\
@@ -125,7 +128,8 @@ def render_signup_form(request):
                 output = BytesIO()
                 resized_image.save(output, format='JPEG', quality=75)
                 output.seek(0)
-            user.profile_picture = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % image_file.name.split('.')[0],\
+            user.profile_picture = InMemoryUploadedFile(output,\
+             'ImageField', "%s.jpg" % image_file.name.split('.')[0],\
             'image/jpeg', output.tell(), None)
         elif not 'profile_picture' in request.FILES:
             user.profile_picture = 'default_pfp/waifu.jpg'
@@ -174,6 +178,8 @@ def render_update_form(request):
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['post'])
     def add_friend(self, request, pk=None):
@@ -181,8 +187,10 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         friend = get_object_or_404(CustomUser, pk=pk)
         user.friends.add(friend)
         user.save()
-        send_notification(user, friend, 'friend_request_accepted', f'{user} accepted your friend request!')
-        return Response({'detail': 'Friend added successfully'}, status=status.HTTP_200_OK)
+        send_notification(user, friend, 'friend_request_accepted', \
+        f'{user} accepted your friend request!')
+        return Response({'detail': 'Friend added successfully'}, \
+        status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
     def remove_friend(self, request, pk=None):
@@ -190,13 +198,15 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         friend = get_object_or_404(CustomUser, pk=pk)
         user.friends.remove(friend)
         user.save()
-        return Response({'detail': 'Friend removed successfully'}, status=status.HTTP_200_OK)
+        return Response({'detail': 'Friend removed successfully'}, \
+        status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def my_friends(self, request):
         user = request.user
         friends = user.friends.all()
-        serializer = CustomUserSerializer(friends, many=True, context={'request': request})
+        serializer = CustomUserSerializer(friends, many=True, \
+        context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], url_path='by-username/(?P<username>[^/.]+)')
@@ -206,7 +216,67 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             ret = {'id': user.id, 'username': user.username}
             return Response(ret, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
-            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND) 
+            return Response({'detail': 'User not found'}, \
+            status=status.HTTP_404_NOT_FOUND) 
+
+    @action(detail=False)
+    def users_except_current(self, request):
+        user = request.user
+        users = CustomUser.objects.exclude(id=user.id)
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def get_user_pfp(self, request):
+            user_id = request.query_params.get('user_id')  # Get user_id from query params
+            if not user_id:
+                return Response({"error": "user_id query parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Get the user object or return a 404 if not found
+            user = get_object_or_404(CustomUser, id=user_id)
+
+            # Check if the user has a profile picture
+            if not user.profile_picture:
+                return Response({"error": "User does not have a profile picture"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Construct the full URL to the profile picture
+            profile_picture_url = request.build_absolute_uri(user.profile_picture.url)
+
+            # Return the profile picture URL
+            return Response({"profile_picture_url": profile_picture_url}, status=status.HTTP_200_OK)
+ 
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self): #this will only return unread notifications for performance
+        user = self.request.user
+        return Notification.objects.filter(recipient=user, \
+        is_read=False).order_by('-created_at')
+
+    @action(detail=False, methods=['get'], url_path='unread-count')
+    def unread_count(self, request):
+        user = self.request.user
+        unread_count = Notification.objects.filter(recipient=user, \
+        is_read=False).count()
+        return Response({'unread_count': unread_count})
+
+@api_view(['PUT'])
+def mark_as_read(request, id):
+    if request.method != 'PUT':
+        return Response({'Error': 'Only PUT requests allowed'}, \
+        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    try:
+        notification = Notification.objects.get(id=id)
+        serializer = NotificationSerializer(notification, context={'request': request})
+        notification.is_read = True
+        notification.save()
+        return Response(NotificationSerializer(notification,\
+         context={'request': request}).data)
+    except Notification.DoesNotExist:
+        return Response ({'Error': 'Error fetching notification. + ratio'})
 
 class FriendRequestView(APIView):
     permission_classes = [IsAuthenticated]
@@ -216,40 +286,31 @@ class FriendRequestView(APIView):
         try:
             recipient = CustomUser.objects.get(username=recipient_username)
             if request_already_sent(request.user, recipient) is True:
-                return Response({'detail': f'You\'ve already sent {recipient_username} a friend request!'})
+                return Response({'detail': \
+                f'You\'ve already sent {recipient_username} a friend request!'})
             elif is_already_friends_with_recipient(request.user, recipient) is True:
                 return Response({'detail': f'You\'re already friends with {recipient}!'})
             send_friend_request_notification(request.user, recipient)
-            return Response({'detail': 'Friend request sent successfully.'}, status=status.HTTP_200_OK)
+            return Response({'detail': \
+            'Friend request sent successfully.'}, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
-            return Response({'detail': 'Recipient not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': \
+            'Recipient not found.'}, status=status.HTTP_404_NOT_FOUND)
         
-class NotificationViewSet(viewsets.ModelViewSet):
-    serializer_class = NotificationSerializer
+class MessageViewSet(viewsets.ModelViewSet):
+    serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self): #this will only return unread notifications for performance
+    def get_queryset(self):
         user = self.request.user
-        return Notification.objects.filter(recipient=user, is_read=False).order_by('-created_at')
+        recipient_id = self.request.query_params.get('recipient_id') 
+        try:
+            recipient = CustomUser.objects.get(id=recipient_id)
+        except CustomUser.DoesNotExist:
+            return Message.objects.none()
 
-    @action(detail=False, methods=['get'], url_path='unread-count')
-    def unread_count(self, request):
-        user = self.request.user
-        unread_count = Notification.objects.filter(recipient=user, is_read=False).count()
-        return Response({'unread_count': unread_count})
-
-
-@api_view(['PUT'])
-def mark_as_read(request, id):
-    if request.method != 'PUT':
-        return Response({'Error': 'Only PUT requests allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    try:
-        notification = Notification.objects.get(id=id)
-        serializer = NotificationSerializer(notification, context={'request': request})
-        notification.is_read = True
-        notification.save()
-        return Response(NotificationSerializer(notification, context={'request': request}).data)
-    except Notification.DoesNotExist:
-        return Response ({'Error': 'Error fetching notification. + ratio'})
+        return Message.objects.filter(
+            Q(sender=user, recipient=recipient) |
+            Q(sender=recipient, recipient=user)
+        ).order_by('timestamp')
     

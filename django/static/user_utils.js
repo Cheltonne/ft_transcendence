@@ -1,7 +1,7 @@
 import { getCookie, getUserFromStorage, showToast } from "./utils.js";
 
 export async function addFriend(userId) {
-    const response = await fetch(`/accounts/${userId}/add_friend/`, {
+    const response = await fetch(`/accounts/users/${userId}/add_friend/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -13,7 +13,7 @@ export async function addFriend(userId) {
 }
 
 export async function removeFriend(userId) {
-    const response = await fetch(`/accounts/${userId}/remove_friend/`, {
+    const response = await fetch(`/accounts/users/${userId}/remove_friend/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export async function removeFriend(userId) {
 }
 
 export async function getFriends() {
-    const response = await fetch(`/accounts/my_friends/`, {
+    const response = await fetch(`/accounts/users/my_friends/`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -44,7 +44,7 @@ export async function getFriends() {
 }
 
 export async function getUserByUsername(username) {
-    const response = await fetch(`/accounts/by-username/${username}/`, {
+    const response = await fetch(`/accounts/users/by-username/${username}/`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',

@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser
-from .models import Notification
+from .models import CustomUser, Notification, Message
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -30,7 +29,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 'friends', 'online_devices_count']
+        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 'friends', 'online_devices_count', 'blocked_users']
 
     def get_friends(self, obj):
         friends = obj.friends.all()
@@ -67,3 +66,18 @@ class NotificationSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if obj.sender.profile_picture:
             return self.context['request'].build_absolute_uri(obj.sender.profile_picture.url)
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender = serializers.StringRelatedField()
+    recipient = serializers.StringRelatedField()
+    sender_profile_picture = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Message
+        fields = ['id', 'sender', 'recipient', 'content', 'timestamp', 'is_read', 'sender_profile_picture']
+
+    def get_sender_profile_picture(self, obj):
+        request = self.context.get('request')
+        if obj.sender.profile_picture:
+            return request.build_absolute_uri(obj.sender.profile_picture.url)
+        return None
