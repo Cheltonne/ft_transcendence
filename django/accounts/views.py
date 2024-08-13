@@ -244,7 +244,38 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
             # Return the profile picture URL
             return Response({"profile_picture_url": profile_picture_url}, status=status.HTTP_200_OK)
- 
+
+    @action(detail=False, methods=['post'], url_path='block-user')
+    def block_user(self, request):
+        try:
+            current_user = request.user
+            username_to_block = request.data.get('username')
+
+            user_to_block = CustomUser.objects.get(username=username_to_block)
+
+            current_user.block_user(user_to_block)
+
+            return Response({"message": f"{username_to_block} has been blocked."}, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'], url_path='unblock-user')
+    def unblock_user(request):
+        try:
+            current_user = request.user
+            username_to_unblock = request.data.get('username')
+
+            user_to_unblock = CustomUser.objects.get(username=username_to_unblock)
+
+            current_user.unblock_user(user_to_unblock)
+
+            return Response({"message": f"{username_to_unblock} has been unblocked."}, status=200)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
@@ -306,11 +337,12 @@ class MessageViewSet(viewsets.ModelViewSet):
         recipient_id = self.request.query_params.get('recipient_id') 
         try:
             recipient = CustomUser.objects.get(id=recipient_id)
+            blocked_users = user.blocked_users.all()
         except CustomUser.DoesNotExist:
             return Message.objects.none()
 
         return Message.objects.filter(
-            Q(sender=user, recipient=recipient) |
-            Q(sender=recipient, recipient=user)
+            (Q(sender=user, recipient=recipient)) |
+            (Q(sender=recipient, recipient=user) & ~Q(sender__in=blocked_users))
         ).order_by('timestamp')
     

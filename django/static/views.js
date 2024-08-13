@@ -7,7 +7,7 @@ import { MorpionComponent } from './web_components/morpion_components.js';
 import { ChatView } from './web_components/chat.js';
 import { RequestFrame } from './game/pong.js';
 import { onoffGame } from './game/pong.js';
-const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat'];
+const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat', 'other-user-profile'];
 const nonAuthViews = ['signin', 'signup'];
 
 async function historyNavigation(viewName, type) {	//handles navigation through browser buttons (back/next)

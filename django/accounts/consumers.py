@@ -163,8 +163,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         try:
             recipient = await sync_to_async(CustomUser.objects.get)(id=recipient_id)
-
-            # Save message in the database asynchronously
+            if self.user in recipient.blocked_users.all():
+                return
             new_message = await sync_to_async(Message.objects.create)(
                 sender=self.user, 
                 recipient=recipient, 
@@ -182,7 +182,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "message": message,
                     "sender": self.user.username,
                     "timestamp": new_message.timestamp.isoformat(),
-                    "sender_profile_picture": sender_profile_picture,  # Add profile picture URL
+                    "sender_profile_picture": sender_profile_picture, 
                 }
             )
 
@@ -196,12 +196,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = event["message"]
         sender = event["sender"]
         timestamp = event["timestamp"]
-        sender_profile_picture = event.get("sender_profile_picture")  # Get profile picture URL
-
-        # Send message to WebSocket with profile picture
+        sender_profile_picture = event.get("sender_profile_picture") 
         await self.send(text_data=json.dumps({
             "message": message,
             "sender": sender,
             "timestamp": timestamp,
-            "sender_profile_picture": sender_profile_picture,  # Include profile picture URL in the response
+            "sender_profile_picture": sender_profile_picture,
         }))
