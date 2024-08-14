@@ -5,12 +5,13 @@ import { SignupForm } from './web_components/signup_form.js';
 import { UpdateForm } from './web_components/update_form.js';
 import { MorpionComponent } from './web_components/morpion_components.js';
 import { ChatView } from './web_components/chat.js';
+import { OtherUserProfileCard } from './web_components/other_users_profile.js';
 import { RequestFrame } from './game/pong.js';
 import { onoffGame } from './game/pong.js';
 const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat', 'other-user-profile'];
 const nonAuthViews = ['signin', 'signup'];
 
-async function historyNavigation(viewName, type) {	//handles navigation through browser buttons (back/next)
+async function historyNavigation(viewName, type, userId = null) {	//handles navigation through browser buttons (back/next)
     const isAuthenticated = await userIsAuthenticated();
 	console.log('History navigation called, isAuth =', isAuthenticated);
 
@@ -25,11 +26,13 @@ async function historyNavigation(viewName, type) {	//handles navigation through 
 
     if (type === 1)
         showView(viewName);
+	else if (type === 3 && userId !== null)
+        showView(viewName, userId);
     else
         showForm(viewName);
 }
 
-export async function navigateTo(viewName, type) { // handles regular navigation through clicking on the app elements
+export async function navigateTo(viewName, type, userId = null) { // handles regular navigation through clicking on the app elements
     const isAuthenticated = await userIsAuthenticated();
 	history.pushState(viewName, '', viewName);
 
@@ -45,6 +48,8 @@ export async function navigateTo(viewName, type) { // handles regular navigation
     window.dispatchEvent(event);
 	if (type === 1)
 		showView(viewName);
+	else if (type === 3 && userId !== null)
+        showView(viewName, userId);
 	else
 		showForm(viewName);
 }
@@ -105,12 +110,14 @@ export async function handleFormSubmit(formType) {
 	}
 }
 
-export function showView(viewName) {
+export function showView(viewName, userId = null) {
 	const allViews = document.querySelectorAll('[data-view]');
 
 	if (document.querySelector(`${viewName}-view`) === null) {
 		const new_component = document.createElement(`${viewName}-view`);
 		new_component.classList.add(`${viewName}-view`);
+		if (userId !== null)
+			new_component.setAttribute('user-id', userId);
 		document.querySelector(`#${viewName}-content`).appendChild(new_component);
 	}
 	for (const view of allViews) {

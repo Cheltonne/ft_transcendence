@@ -140,7 +140,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_name = f"user_{self.user.id}"
         self.room_group_name = f"chat_{self.room_name}"
 
-        # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -149,13 +148,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        # Leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
 
-    # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
@@ -163,18 +160,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         try:
             recipient = await sync_to_async(CustomUser.objects.get)(id=recipient_id)
-            if self.user in recipient.blocked_users.all():
+            blocked_users = await sync_to_async(list)(recipient.blocked_users.all())
+
+            if self.user in blocked_users:
                 return
             new_message = await sync_to_async(Message.objects.create)(
                 sender=self.user, 
                 recipient=recipient, 
                 content=message
             )
-
-            # Get the sender's profile picture URL
             sender_profile_picture = self.user.profile_picture.url if self.user.profile_picture else None
-
-            # Send message to recipient's room
             await self.channel_layer.group_send(
                 f"chat_user_{recipient.id}",
                 {
@@ -191,7 +186,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "error": "Recipient does not exist."
             }))
 
-    # Receive message from room group
     async def chat_message(self, event):
         message = event["message"]
         sender = event["sender"]

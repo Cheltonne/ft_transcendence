@@ -13,11 +13,9 @@ class CustomUser(AbstractUser):
 		return self.username
 		
 	def block_user(self, user):
-		"""Block another user."""
 		self.blocked_users.add(user)
 
 	def unblock_user(self, user):
-		"""Unblock a previously blocked user."""
 		self.blocked_users.remove(user)
 
 class Notification(models.Model):

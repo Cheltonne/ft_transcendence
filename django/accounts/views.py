@@ -59,6 +59,7 @@ def get_user_info(request):
                 'morpion_ai_matches': user_morpion_ai_matches,
                 'wins': user.wins,
                 'losses': user.losses,
+                'id': user.id,
         }
         return JsonResponse(user_info)
     else:
@@ -228,54 +229,70 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def get_user_pfp(self, request):
-            user_id = request.query_params.get('user_id')  # Get user_id from query params
+            user_id = request.query_params.get('user_id') 
             if not user_id:
                 return Response({"error": "user_id query parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Get the user object or return a 404 if not found
             user = get_object_or_404(CustomUser, id=user_id)
-
-            # Check if the user has a profile picture
             if not user.profile_picture:
                 return Response({"error": "User does not have a profile picture"}, status=status.HTTP_404_NOT_FOUND)
-
-            # Construct the full URL to the profile picture
             profile_picture_url = request.build_absolute_uri(user.profile_picture.url)
-
-            # Return the profile picture URL
             return Response({"profile_picture_url": profile_picture_url}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post'], url_path='block-user')
-    def block_user(self, request):
+    @action(detail=True, methods=['get'], url_path='user-info')
+    def get_user_info(self, request, pk=None):
+        user = self.get_object()  # Retrieves the specific user by ID (pk)
+        
+        user_matches = list(user.matches.all().order_by('id').values('alias', 'user_score', 'alias_score', 'winner__username'))
+        user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values('player1__username', 'player2__username', 'player1_score', 'player2_score', 'winner__username'))
+        user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values('player1__username', 'player1_score', 'ai_score', 'winner__username'))
+        
+        user_info = {
+            'id': user.id,
+            'username': user.username,
+            'profile_picture': request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None,
+            'user_matches': user_matches,
+            'morpion_matches': user_morpion_matches,
+            'morpion_ai_matches': user_morpion_ai_matches,
+            'wins': user.wins,
+            'losses': user.losses,
+        }
+        return Response(user_info)
+
+    @action(detail=True, methods=['post'], url_path='block-user')
+    def block_user(self, request, pk=None):
         try:
             current_user = request.user
-            username_to_block = request.data.get('username')
-
-            user_to_block = CustomUser.objects.get(username=username_to_block)
-
+            user_to_block = self.get_object()
             current_user.block_user(user_to_block)
-
-            return Response({"message": f"{username_to_block} has been blocked."}, status=status.HTTP_200_OK)
+            return Response({"message": f"{user_to_block.username} has been blocked."}, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'], url_path='unblock-user')
-    def unblock_user(request):
+    @action(detail=True, methods=['post'], url_path='unblock-user')
+    def unblock_user(self, request, pk=None):
         try:
             current_user = request.user
-            username_to_unblock = request.data.get('username')
-
-            user_to_unblock = CustomUser.objects.get(username=username_to_unblock)
-
+            user_to_unblock = self.get_object()
             current_user.unblock_user(user_to_unblock)
-
-            return Response({"message": f"{username_to_unblock} has been unblocked."}, status=200)
+            return Response({"message": f"{user_to_unblock.username} has been unblocked."}, status=200)
         except CustomUser.DoesNotExist:
             return Response({"error": "User not found."}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'], url_path='profile-info')
+    def get_user_profile_info(self, request, pk=None):
+        user = self.get_object()
+        data = {
+            'username': user.username,
+            'id': user.id,
+            'wins': user.wins,
+            'losses': user.losses,
+            'profile_picture': request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None
+        }
+        return Response(data)
 
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer

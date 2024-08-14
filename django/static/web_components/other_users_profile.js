@@ -28,56 +28,65 @@ export class OtherUserProfileCard extends HTMLElement {
         `;
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.userId = null;
+        this.user = null;
+        this.username = this.shadowRoot.querySelector(".username");
+        this.pfp = this.shadowRoot.querySelector(".profile-picture");
     }
 
     connectedCallback() {
-        this.setupObservers();
+        this.userId = this.getAttribute('user-id');
+        this.loadUserProfile();
         this.addEventListeners();
-        this.loadUserData();
-    }
-
-    setupObservers() {
-        let user_observer;
         const styleLink = document.createElement('link');
 
         styleLink.setAttribute('rel', 'stylesheet');
         styleLink.setAttribute('href', 'static/css/user_profile.css');
         this.shadowRoot.appendChild(styleLink);
-        const elements = {
-            username: this.shadowRoot.querySelectorAll(".username"),
-            profile_picture: this.shadowRoot.querySelectorAll(".profile-picture"),
-            match_history_cards: this.shadowRoot.querySelector(".match-history-cards"),
-            wins: this.shadowRoot.querySelectorAll(".wins"),
-            losses: this.shadowRoot.querySelectorAll(".losses"),
-        };
-        user_observer = new UserObserver(elements);
-        user.addObserver(user_observer);
     }
 
     addEventListeners() {
         this.shadowRoot.querySelector('#blockUserButton').addEventListener('click', () => this.blockUser());
         this.shadowRoot.querySelector('#unblockUserButton').addEventListener('click', () => this.unblockUser());
         this.shadowRoot.addEventListener('click', (event) => {
-            if (!event.target.closest('.match-history-card') && this.shadowRoot.querySelector('.match-history-cards').classList.contains('active')) {
+            if (!event.target.closest('.match-history-card') && 
+            this.shadowRoot.querySelector('.match-history-cards').classList.contains('active')) {
                 this.shadowRoot.querySelector('.match-history-cards').classList.remove('active');
                 this.shadowRoot.querySelector('.match-history-veil').classList.remove('active');
             } else if (event.target.classList.contains('view-matches-link')) {
                 user.setUserData(getUserFromStorage());
                 const matchType = event.target.id === 'view-pong-matches' ? 'pong' : 'morpion';
-                this.renderUserProfile(user.getUserData(), matchType);
+                this.renderUserProfile(this.user, matchType);
                 this.shadowRoot.querySelector('.match-history-cards').classList.toggle('active');
                 this.shadowRoot.querySelector('.match-history-veil').classList.toggle('active');
             }
         });
     }
 
-    async loadUserData() {
-        const userInfo = getUserFromStorage();
-        this.renderUserProfile(userInfo);
-    }
+   async loadUserProfile() {
+        try {
+            const response = await fetch(`/accounts/users/${this.userId}/user-info/`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${getCookie('token')}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.user = data;
+                this.username.innerHTML = `<h1>${data.username}</h1>`;
+                this.pfp.innerHTML = `<img src="${data.profile_picture.replace('http://localhost/', '')}"></img>`;
+            } else 
+                showToast('Failed to load user profile', 'error');
+        } catch (error) {
+            console.error('Error loading user profile:', error);
+            showToast('Error loading user profile', 'error');
+        }
+    } 
 
     renderUserProfile(userInfo, matchType = 'pong') {
-        console.log("renderUserProfile() called.");
         const matchHistoryCards = this.shadowRoot.querySelector('.match-history-cards');
         matchHistoryCards.innerHTML = '';
 
@@ -138,11 +147,12 @@ export class OtherUserProfileCard extends HTMLElement {
     async blockUser() {
         const username = this.shadowRoot.querySelector('.username').textContent.trim();
         try {
-            const response = await fetch(`/accounts/block-user/`, {
+            const response = await fetch(`/accounts/users/${this.userId}/block-user/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`
+                    'Authorization': `Bearer ${getCookie('token')}`,
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({ username })
             });
@@ -161,11 +171,12 @@ export class OtherUserProfileCard extends HTMLElement {
     async unblockUser() {
         const username = this.shadowRoot.querySelector('.username').textContent.trim();
         try {
-            const response = await fetch(`/accounts/unblock-user/`, {
+            const response = await fetch(`/accounts/users/${this.userId}/unblock-user/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`
+                    'Authorization': `Bearer ${getCookie('token')}`,
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({ username })
             });
@@ -182,7 +193,6 @@ export class OtherUserProfileCard extends HTMLElement {
     }
 
     disconnectedCallback() {
-        // Cleanup code if necessary
     }
 }
 

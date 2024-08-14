@@ -23,6 +23,7 @@ def send_friend_request_notification(sender, recipient):
             }
         }
     )
+
 def send_notification(sender, recipient, type, message):
     notification = Notification.objects.create(type=type, sender=sender, recipient=recipient, message=message)
     
