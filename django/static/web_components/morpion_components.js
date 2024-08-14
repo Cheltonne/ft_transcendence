@@ -138,55 +138,58 @@ export class MorpionComponent extends HTMLElement {
     }
     
     startMatchmaking() {
-    const socket = new WebSocket(`ws://${window.location.host}/ws/morpion/`);
+        // Determine WebSocket protocol (ws or wss based on http or https)
+        //const socketProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
     
-    socket.onopen = () => {
-        console.log('WebSocket connection established');
-        socket.send(JSON.stringify({ type: 'matchmaking' }));
-    };
-
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log('Received message:', data);
-
-        if (data.type === 'match_found') {
-            console.log('Match found!');
-            this.showAlert('success', 'Match found! Starting game...');
-            this.isAI = false;
-            this.startGame();
-        } else if (data.type === 'match_request') {
-            const accept = confirm(`${data.player1} wants to play with you. Accept?`);
-            if (accept) {
-                socket.send(JSON.stringify({ type: 'match_accept', match_id: data.match_id }));
-                this.showAlert('success', 'Match accepted! Starting game...');
-                this.isAI = false;
-                this.startGame();
-            } else {
-                socket.send(JSON.stringify({ type: 'match_decline', match_id: data.match_id }));
-                this.showAlert('info', 'Match declined. Looking for another match...');
+        socket.onopen = () => {
+            console.log('WebSocket connection established');
+            socket.send(JSON.stringify({ type: 'matchmaking' }));
+        };
+    
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('Received message:', event.data);
+    
+            if (data.type === 'match_request') {
+                const accept = confirm(`${data.player1} wants to play with you. Accept?`);
+                if (accept) {
+                    socket.send(JSON.stringify({ type: 'match_accept', match_id: data.match_id }));
+                    this.showAlert('success', 'Match accepted! Starting game...');
+                    this.isAI = false; 
+                    this.startGame(); 
+                } else {
+                    socket.send(JSON.stringify({ type: 'match_decline', match_id: data.match_id }));
+                    this.showAlert('info', 'Match declined. Looking for another match...');
+                }
+            } else if (data.type === 'match_accepted') {
+                console.log('Match accepted by opponent!');
+                this.showAlert('success', `Match accepted by ${data.player2}! Starting game...`);
+                this.isAI = false;  
+                this.startGame();  
+            } else if (data.type === 'no_match_found') {
+                console.log('No match found. Starting game with AI.');
+                this.showAlert('info', 'No match found. Starting game with AI.');
+                this.isAI = true;  
+                this.startGame(); 
+            } else if (data.type === 'ai_match_started') {
+                // AI match has been started by the backend
+                console.log('AI match started.');
+                this.showAlert('info', 'Playing against AI.');
+                this.isAI = true;  // Set flag for AI opponent
+                this.startGame();  // Start game logic
             }
-        } else if (data.type === 'match_accepted') {
-            console.log('Match accepted by opponent!');
-            this.showAlert('success', `Match accepted by ${data.player2}! Starting game...`);
-            this.isAI = false;
-            this.startGame();
-        } else if (data.type === 'no_match_found') {
-            console.log('No match found. Starting game with AI.');
-            this.showAlert('info', 'No match found. Starting game with AI.');
-            this.isAI = true;
-            this.startGame();
-        }
-    };
+        };
     
-    socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        this.showAlert('danger', 'WebSocket error occurred. Please try again later.');
-    };
-
-    socket.onclose = () => {
-        console.log('WebSocket connection closed');
-    };
-}
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.showAlert('danger', 'WebSocket error occurred. Please try again later.');
+        };
+    
+        socket.onclose = (event) => {
+            console.log('WebSocket connection closed with code:', event.code, "reason:", event.reason);
+        };
+    }
 
     /*async startMatchmaking() {
         if (socket) {

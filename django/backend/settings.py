@@ -92,11 +92,11 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tsuioku_base',
-		'USER': 'RSO',
-		'PASSWORD': 'kauserie',
-		'HOST': 'postgres',
-		'PORT': '5432',
+        'NAME': os.environ.get('POSTGRES_DB', 'tsuioku_base'),
+        'USER': os.environ.get('POSTGRES_USER', 'RSO'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'kauserie'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'postgres'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 

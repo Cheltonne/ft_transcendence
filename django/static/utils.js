@@ -100,7 +100,8 @@ export async function initializeWebSocket() {
 		};
 
 		socket.onclose = function (event) {
-			console.log('WebSocket is closed.');
+			//console.log('WebSocket is closed.');
+			console.log('WebSocket is closed. Code:', event.code, 'Reason:', event.reason);
 			socket = null; // Reset socket variable when closed
 		};
 
@@ -136,9 +137,15 @@ export async function initializeWebSocket() {
 				document.dispatchEvent(newNotificationEvent);
 			}
 			};
-
+		
+		notificationSocket.onerror = function (error) {
+			console.error('Notification WebSocket encountered error:', error);
+			notificationSocket.close();
+		};
+		
 		notificationSocket.onclose = function (e) {
-			console.log('Notification socket closed.');
+			//console.log('Notification socket closed.');
+			console.log('Notification WebSocket is closed. Code:', e.code, 'Reason:', e.reason);
 			notificationSocket = null;
 		};
 	} else {
