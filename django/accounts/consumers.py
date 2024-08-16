@@ -157,6 +157,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
         recipient_id = text_data_json["recipient_id"]
+        sender_id = text_data_json["sender_id"]
 
         try:
             recipient = await sync_to_async(CustomUser.objects.get)(id=recipient_id)
@@ -176,6 +177,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "type": "chat_message",
                     "message": message,
                     "sender": self.user.username,
+                    "sender_id": sender_id,
                     "timestamp": new_message.timestamp.isoformat(),
                     "sender_profile_picture": sender_profile_picture, 
                 }
@@ -189,11 +191,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         message = event["message"]
         sender = event["sender"]
+        sender_id = event["sender_id"]
         timestamp = event["timestamp"]
         sender_profile_picture = event.get("sender_profile_picture") 
         await self.send(text_data=json.dumps({
             "message": message,
             "sender": sender,
+            "sender_id": sender_id,
             "timestamp": timestamp,
             "sender_profile_picture": sender_profile_picture,
         }))

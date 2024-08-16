@@ -126,11 +126,11 @@ async function loadNavbar() { //always serve correct version of sidebar
 $(document).ready(function () {
 	getUserInfo();
 	loadNavbar();
-	history.replaceState('pong', '', 'pong');
+	const initialState = { viewName: 'pong', type: 1, userId: null };
+	history.replaceState(initialState, '', 'pong');
 	initializeWebSocket();
 	updateNotificationCounter();
 });
-
 
 fetch("accounts/notifications/unread-count/")
 	.then (response => response.json())

@@ -34,8 +34,6 @@ export class ChatView extends HTMLElement {
         }
     }
 
-    
-
     render() {
         const styleLink = document.createElement('link');
         styleLink.setAttribute('rel', 'stylesheet');
@@ -46,7 +44,6 @@ export class ChatView extends HTMLElement {
                 <div class="user-list">
                     <h2>Users</h2>
                     <ul id="userList">
-                        <!-- User list will be populated here -->
                     </ul>
                 </div>
                 <div class="chat-box">
@@ -61,7 +58,8 @@ export class ChatView extends HTMLElement {
         const userList = this.shadowRoot.querySelector('#userList');
         userList.innerHTML = this.users.map(user => `
             <li class="user-item" data-id="${user.id}">
-                ${user.username}
+                <img src="${user.profile_picture.replace('http://localhost/', '')}">
+                <h2>${user.username}</h2>
                 <button class="start-chat-button" data-id="${user.id}">Send Message</button>
             </li>
         `).join('');
@@ -80,7 +78,7 @@ export class ChatView extends HTMLElement {
             if (existingChatComponent)
                 existingChatComponent.remove();
             const chatComponent = document.createElement('user-chat-view');
-            chatComponent.userData = user;
+            chatComponent.interlocutor = user;
             this.shadowRoot.querySelector('.chat-box').appendChild(chatComponent);
         }
     }

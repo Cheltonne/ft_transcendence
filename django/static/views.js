@@ -11,9 +11,10 @@ import { onoffGame } from './game/pong.js';
 const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat', 'other-user-profile'];
 const nonAuthViews = ['signin', 'signup'];
 
-async function historyNavigation(viewName, type, userId = null) {	//handles navigation through browser buttons (back/next)
+async function historyNavigation(state) {	//handles navigation through browser buttons (back/next)
     const isAuthenticated = await userIsAuthenticated();
-	console.log('History navigation called, isAuth =', isAuthenticated);
+	const { viewName, type, userId } = state;
+	console.log('History navigation called, isAuth = ', isAuthenticated);
 
     if (authRequiredViews.includes(viewName) && !isAuthenticated) {
         handleError('You need to be logged in to access this view.');
@@ -34,7 +35,10 @@ async function historyNavigation(viewName, type, userId = null) {	//handles navi
 
 export async function navigateTo(viewName, type, userId = null) { // handles regular navigation through clicking on the app elements
     const isAuthenticated = await userIsAuthenticated();
-	history.pushState(viewName, '', viewName);
+	const state = { viewName, type, userId };
+
+    history.pushState(state, '', viewName);	
+	console.log('Just pushed this in the history stack: ', state);
 
     if (authRequiredViews.includes(viewName) && !isAuthenticated) {
         handleError('You need to be logged in to access this view.');
@@ -52,6 +56,47 @@ export async function navigateTo(viewName, type, userId = null) { // handles reg
         showView(viewName, userId);
 	else
 		showForm(viewName);
+}
+
+export function showView(viewName, userId = null) {
+	const allViews = document.querySelectorAll('[data-view]');
+
+	if (document.querySelector(`${viewName}-view`) === null) {
+		const new_component = document.createElement(`${viewName}-view`);
+		new_component.classList.add(`${viewName}-view`);
+		if (userId !== null)
+			new_component.setAttribute('user-id', userId);
+		document.querySelector(`#${viewName}-content`).appendChild(new_component);
+	}
+	for (const view of allViews) {
+		const currentView = view.dataset.view;
+		view.classList.toggle('hidden', currentView !== viewName);
+		if (viewName !== 'pong') {
+            onoffGame('off');
+        } else if (viewName === 'pong') {
+            onoffGame('on'); 
+        }
+	}
+	const sidebar = document.querySelector('.sidebar');
+	if (sidebar && sidebar.classList.contains('active'))
+		toggleMenu();
+}
+
+export function showForm(viewName) {
+	const allViews = document.querySelectorAll('[data-view]');
+
+	if (document.querySelector(`${viewName}-form`) === null) {
+		const new_component = document.createElement(`${viewName}-form`);
+		new_component.classList.add(`${viewName}-form`);
+		document.querySelector(`#${viewName}-content`).appendChild(new_component);
+	}
+	for (const view of allViews) {
+		const currentView = view.dataset.view;
+		view.classList.toggle('hidden', currentView !== viewName);
+	}
+	const sidebar = document.querySelector('.sidebar');
+	if (sidebar && sidebar.classList.contains('active'))
+		toggleMenu();
 }
 
 export async function handleFormSubmit(formType) {
@@ -110,50 +155,9 @@ export async function handleFormSubmit(formType) {
 	}
 }
 
-export function showView(viewName, userId = null) {
-	const allViews = document.querySelectorAll('[data-view]');
-
-	if (document.querySelector(`${viewName}-view`) === null) {
-		const new_component = document.createElement(`${viewName}-view`);
-		new_component.classList.add(`${viewName}-view`);
-		if (userId !== null)
-			new_component.setAttribute('user-id', userId);
-		document.querySelector(`#${viewName}-content`).appendChild(new_component);
-	}
-	for (const view of allViews) {
-		const currentView = view.dataset.view;
-		view.classList.toggle('hidden', currentView !== viewName);
-		if (viewName !== 'pong') {
-            onoffGame('off');
-        } else if (viewName === 'pong') {
-            onoffGame('on'); 
-        }
-	}
-	const sidebar = document.querySelector('.sidebar');
-	if (sidebar && sidebar.classList.contains('active'))
-		toggleMenu();
-}
-
-export function showForm(viewName) {
-	const allViews = document.querySelectorAll('[data-view]');
-
-	if (document.querySelector(`${viewName}-form`) === null) {
-		const new_component = document.createElement(`${viewName}-form`);
-		new_component.classList.add(`${viewName}-form`);
-		document.querySelector(`#${viewName}-content`).appendChild(new_component);
-	}
-	for (const view of allViews) {
-		const currentView = view.dataset.view;
-		view.classList.toggle('hidden', currentView !== viewName);
-	}
-	const sidebar = document.querySelector('.sidebar');
-	if (sidebar && sidebar.classList.contains('active'))
-		toggleMenu();
-}
-
 window.addEventListener('popstate', (event) => {
-	console.log('popped state:', event.state);
 	 if (event.state) {
-        historyNavigation(event.state); 
+		console.log('Just popped this out of the history stack: ', event.state);
+    	historyNavigation(event.state); 
     }
 });

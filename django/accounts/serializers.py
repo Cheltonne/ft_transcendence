@@ -46,12 +46,13 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = serializers.StringRelatedField()
+    sender_id = serializers.IntegerField(source='sender.id')
     recipient = serializers.StringRelatedField()
     sender_profile_picture = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['id', 'sender', 'recipient', 'content', 'timestamp', 'is_read', 'sender_profile_picture']
+        fields = ['id', 'sender', 'sender_id', 'recipient', 'content', 'timestamp', 'is_read', 'sender_profile_picture']
 
     def get_sender_profile_picture(self, obj):
         request = self.context.get('request')

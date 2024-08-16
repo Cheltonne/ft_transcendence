@@ -29,6 +29,13 @@ user-chat-view {
     box-sizing: border-box;
 }
 
+img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 .user-item {
     display: flex;
     justify-content: space-between;
@@ -49,30 +56,8 @@ user-chat-view {
 .user-item button:hover {
     background-color: #206090;
 }
-
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-}
-
-.modal-content {
-    background-color: #292929;
-    margin: 15% auto; /* 15% from the top and centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
-    max-width: 400px;
-    text-align: center;
-}
-
 .close {
+
     color: #aaa;
     float: right;
     font-size: 28px;
@@ -84,63 +69,6 @@ user-chat-view {
     color: black;
     text-decoration: none;
     cursor: pointer;
-}
-
-.modal-profile-picture {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    margin-bottom: 20px;
-}
-
-.modal-body button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.menu-container {
-    position: relative;
-    display: inline-block;
-}
-
-.menu-button {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.dropdown-menu {
-    display: block;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: white;
-    border: 1px solid #ddd;
-    padding: 5px;
-    z-index: 1000;
-    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-    min-width: 150px;
-}
-
-.dropdown-menu.hidden {
-    display: none;
-}
-
-.dropdown-item {
-    background: none;
-    border: none;
-    padding: 10px;
-    text-align: left;
-    width: 100%;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.dropdown-item:hover {
-    background-color: #f1f1f1;
 }
 
 * {
