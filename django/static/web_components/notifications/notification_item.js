@@ -25,7 +25,6 @@ export class NotificationItem extends HTMLElement {
         styleLink.setAttribute('href', 'static/css/notification_item.css');
         this.shadowRoot.appendChild(styleLink);
         this.renderNotificationActions();
-        this.addEventListener('click', () => console.log(this.notification.id))
     }
 
     disconnectedCallback() {
@@ -81,12 +80,12 @@ export class NotificationItem extends HTMLElement {
                     }
                 });
                 document.dispatchEvent(customEvent);
+                this.updateUnread();
                 this.remove();
             })
             .catch(error => {
                 console.error('Failed to mark notification as read:', error);
             });
-        this.updateUnread();
     }
 
     markAsRead(notificationId) {
@@ -98,12 +97,12 @@ export class NotificationItem extends HTMLElement {
                     }
                 });
                 document.dispatchEvent(customEvent);
+                this.updateUnread();
                 this.remove();
             })
             .catch(error => {
                 console.error('Failed to mark notification as read:', error);
             });
-        this.updateUnread();
     }
 
     toggleNotificationRead(notificationId) {

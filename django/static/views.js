@@ -38,7 +38,6 @@ export async function navigateTo(viewName, type, userId = null) { // handles reg
 	const state = { viewName, type, userId };
 
 	history.pushState(state, '', viewName);
-	console.log('Just pushed this in the history stack: ', state);
 
 	if (authRequiredViews.includes(viewName) && !isAuthenticated) {
 		handleError('You need to be logged in to access this view.');

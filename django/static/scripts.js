@@ -15,11 +15,8 @@ export const userObserver = new UserObserver();
 export const bbc = new BroadcastChannel('bbc');
 export const dropDownButton = document.querySelector('.notification-btn');
 export const dropdownMenu = document.querySelector('.dropdown-menu-items');
-const dropDownList = document.getElementById("notificationDropdown");
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
-const notificationCounter = document.getElementById('notificationCounter');
-let unreadCount = 0;
 
 export async function getUserInfo() {
 	return fetch("accounts/get-user-info/")
@@ -101,30 +98,6 @@ $(document).ready(function () {
 	initializeWebSocket();
 });
 
-fetch("accounts/notifications/unread-count/")
-	.then(response => response.json())
-	.then(data => {
-		const customEvent = new CustomEvent('notificationsUpdated', {
-			detail: {
-				unreadCount: data.unread_count
-			}
-		});
-		document.dispatchEvent(customEvent);
-	})
-
-document.addEventListener('notificationsUpdated', (event) => {
-	unreadCount = event.detail.unreadCount;
-});
-
-document.addEventListener('notificationListActive', () => {
-	notificationCounter.style.display = 'none';
-})
-
-document.addEventListener('notificationListClosed', () => {
-	if (unreadCount > 0)
-		notificationCounter.style.display = 'block';
-})
-
 document.addEventListener('DOMContentLoaded', function () {
 	async function isUserAuthenticated() {
 		return await userIsAuthenticated();
@@ -162,9 +135,3 @@ document.addEventListener('DOMContentLoaded', function () {
 	//window.addEventListener('user-logout', toggleNotificationIcon);
 });
 
-document.addEventListener('notificationsUpdated', (event) => {
-	const notificationIcon = document.querySelector('notification-icon');
-	if (notificationIcon) {
-		notificationIcon.updateCounter(event.detail.unreadCount);
-	}
-});

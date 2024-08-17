@@ -54,7 +54,6 @@ export async function getUserByUsername(username) {
 
     if (response.ok) {
         const user = await response.json();
-        console.log(user);
         if (username === getUserFromStorage().username){
             showToast('Cant\'t add yourself as friend!', 'error');
             return null;

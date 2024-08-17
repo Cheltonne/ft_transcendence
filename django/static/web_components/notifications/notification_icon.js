@@ -53,14 +53,47 @@ export class NotificationIcon extends HTMLElement {
 
     connectedCallback(){
         const dropDownButton = this.shadowRoot.querySelector('.notification-btn');
+        let unreadCount = 0;
 
         document.addEventListener("click", (event) => {	
             if (dropDownButton.classList.contains('active') && !event.target.closest("notification-list")) {
-                document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
+                this.shadowRoot.getElementById("notificationDropdown").removeChild(this.shadowRoot.querySelector('notification-list'));
                 dropDownButton.classList.toggle('active');
             }
         });
+
+        document.addEventListener('notificationListActive', () => {
+            const notificationCounter = this.shadowRoot.getElementById('notificationCounter');
+            notificationCounter.style.display = 'none';
+        })
+
+        document.addEventListener('notificationListClosed', () => {
+            const notificationCounter = this.shadowRoot.getElementById('notificationCounter');
+            if (unreadCount > 0)
+                notificationCounter.style.display = 'block';
+        })
+
+        document.addEventListener('notificationsUpdated', (event) => {
+            this.updateCounter(event.detail.unreadCount);
+        });
+
+        fetch("accounts/notifications/unread-count/")
+            .then(response => response.json())
+            .then(data => {
+                const customEvent = new CustomEvent('notificationsUpdated', {
+                    detail: {
+                        unreadCount: data.unread_count
+                    }
+                });
+                document.dispatchEvent(customEvent);
+            })
+
+        document.addEventListener('notificationsUpdated', (event) => {
+            unreadCount = event.detail.unreadCount;
+        });
+
     }
+
     toggleDropdown(event) {
         event.stopImmediatePropagation();
         const existingList = this.shadowRoot.querySelector('notification-list');
