@@ -4,9 +4,10 @@ import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
 import { UserProfileCard } from './web_components/user_profile_card.js';
 import { FriendsComponent } from './web_components/friends-list.js';
-import { UserObservable, UserObserver} from './observer.js';
+import { UserObservable, UserObserver } from './observer.js';
 import { getUserFromStorage, setUserToStorage, removeUserFromStorage } from './utils.js';
 import { NotificationList } from './web_components/notifications/notification_list.js';
+import { NotificationIcon } from './web_components/notifications/notification_icon.js';
 export const hamMenu = document.querySelector(".ham-menu");
 export let menu;
 export const user = new UserObservable();
@@ -18,7 +19,7 @@ const dropDownList = document.getElementById("notificationDropdown");
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
 const notificationCounter = document.getElementById('notificationCounter');
-let	unreadCount = 0;
+let unreadCount = 0;
 
 export async function getUserInfo() {
 	return fetch("accounts/get-user-info/")
@@ -49,10 +50,6 @@ document.addEventListener("click", (event) => {	//close sidebar if click detecte
 	if (menu.classList.contains("active") && !event.target.closest(".sidebar")) {
 		toggleMenu();
 	}
-	if (dropDownButton.classList.contains('active') && !event.target.closest("notification-list")) {
-		document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
-		dropDownButton.classList.toggle('active');
-	}
 });
 
 hamMenu.addEventListener("click", (event) => {	//"hamburger menu" button -> three lines icon to open sidebar
@@ -69,33 +66,6 @@ document.addEventListener("keydown", function (event) { //open sidebar by pressi
 
 logo.addEventListener("click", () => { //click logo to go back to pong view
 	navigateTo("pong", 1);
-})
-
-dropDownButton.addEventListener('click', (event) => {
-	event.stopImmediatePropagation();
-	const existingList = document.querySelector('notification-list');
-	if (existingList === null) {
-		const list = document.createElement('notification-list');
-		dropDownList.appendChild(list);
-		dropDownButton.classList.add('active');
-	}
-	else {
-		dropDownList.removeChild(existingList);
-		dropDownButton.classList.toggle('active');
-	}
-})
-
-notificationCounter.addEventListener('click', (event) => {
-	if (document.querySelector('notification-list') === null) {
-		event.stopImmediatePropagation();
-		const list = document.createElement('notification-list');
-		document.getElementById("notificationDropdown").appendChild(list);
-		dropDownButton.classList.toggle('active');
-	}
-	else {
-		document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
-		dropDownButton.classList.toggle('active');
-	}
 })
 
 async function loadNavbar() { //always serve correct version of sidebar
@@ -129,34 +99,21 @@ $(document).ready(function () {
 	const initialState = { viewName: 'pong', type: 1, userId: null };
 	history.replaceState(initialState, '', 'pong');
 	initializeWebSocket();
-	updateNotificationCounter();
 });
 
 fetch("accounts/notifications/unread-count/")
-	.then (response => response.json())
+	.then(response => response.json())
 	.then(data => {
-		const customEvent = new CustomEvent('notificationsUpdated', { 
+		const customEvent = new CustomEvent('notificationsUpdated', {
 			detail: {
-				unreadCount : data.unread_count
+				unreadCount: data.unread_count
 			}
-			});
+		});
 		document.dispatchEvent(customEvent);
 	})
 
-function updateNotificationCounter() {
-	const existingList = document.querySelector('notification-list');
-    if (unreadCount > 0) {
-        notificationCounter.textContent = unreadCount;
-		if (existingList === null)
-        	notificationCounter.style.display = 'block'; 
-    } else {
-        notificationCounter.style.display = 'none';
-    }
-}
-
 document.addEventListener('notificationsUpdated', (event) => {
-    unreadCount = event.detail.unreadCount;
-    updateNotificationCounter();
+	unreadCount = event.detail.unreadCount;
 });
 
 document.addEventListener('notificationListActive', (e) => {
@@ -168,48 +125,45 @@ document.addEventListener('notificationListClosed', (e) => {
 		notificationCounter.style.display = 'block';
 })
 
-document.addEventListener('DOMContentLoaded', function() {
-    async function isUserAuthenticated() {
-		const authToken = await userIsAuthenticated();
-        return authToken ? true : false;
-    }
+document.addEventListener('DOMContentLoaded', function () {
+	async function isUserAuthenticated() {
+		return await userIsAuthenticated();
+	}
 
-    function createNotificationIcon() {
-        const notificationDropdown = document.createElement('div');
-        notificationDropdown.id = 'notificationDropdown';
-        notificationDropdown.type = 'button';
+	function appendNotificationIcon() {
+		const navBar = document.querySelector('nav');
+		const existingIcon = navBar.querySelector('notification-icon');
+		if (!existingIcon) {
+			const notificationIcon = document.createElement('notification-icon');
+			navBar.insertBefore(notificationIcon, navBar.querySelector('.ham-menu'));
+		}
+	}
 
-        notificationDropdown.innerHTML = `
-            <span class="material-symbols-outlined notification-btn">
-                notifications
-            </span>
-            <span id="notificationCounter" class="notification-counter"></span>
-            <div class="dropdown-menu-items"></div>
-        `;
-        
-        const navBar = document.querySelector('nav');
-        navBar.insertBefore(notificationDropdown, navBar.querySelector('.ham-menu'));
-    }
+	function removeNotificationIcon() {
+		const navBar = document.querySelector('nav');
+		const existingIcon = navBar.querySelector('notification-icon');
+		if (existingIcon) {
+			navBar.removeChild(existingIcon);
+		}
+	}
 
-    function removeNotificationIcon() {
-        const notificationDropdown = document.querySelector('#notificationDropdown');
-        if (notificationDropdown) {
-            notificationDropdown.remove();
-        }
-    }
+	async function toggleNotificationIcon() {
+		if (await isUserAuthenticated()) {
+			appendNotificationIcon();
+		} else {
+			removeNotificationIcon();
+		}
+	}
 
-    async function toggleNotificationIcon() {
-        if (await isUserAuthenticated() === true) {
-			console.log('creating notification dropdown')
-            createNotificationIcon();
-        } else {
-			console.log('removing that shi')
-            removeNotificationIcon();
-        }
-    }
+	toggleNotificationIcon();
 
-    toggleNotificationIcon();
+	window.addEventListener('user-login', toggleNotificationIcon);
+	window.addEventListener('user-logout', toggleNotificationIcon);
+});
 
-    window.addEventListener('user-login', toggleNotificationIcon);
-    window.addEventListener('user-logout', toggleNotificationIcon);
+document.addEventListener('notificationsUpdated', (event) => {
+	const notificationIcon = document.querySelector('notification-icon');
+	if (notificationIcon) {
+		notificationIcon.updateCounter(event.detail.unreadCount);
+	}
 });
