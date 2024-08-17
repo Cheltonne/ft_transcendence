@@ -161,7 +161,7 @@ export async function handleFormSubmit(formType) {
 						navigateTo('pong');
 						initializeWebSocket();
 						const customEvent = new CustomEvent('user-login');
-						document.dispatchEvent(customEvent);
+						window.dispatchEvent(customEvent);
 					}
 				}
 				else {

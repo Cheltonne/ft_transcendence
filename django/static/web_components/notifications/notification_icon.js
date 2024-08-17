@@ -2,14 +2,13 @@ export class NotificationIcon extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-
         const container = document.createElement('div');
         container.id = 'notificationDropdown';
         container.type = 'button';
 
-        const notificationBtn = document.createElement('span');
-        notificationBtn.classList.add('material-symbols-outlined', 'notification-btn');
-        notificationBtn.textContent = 'notifications';
+        const notificationBtn = document.createElement('img');
+        notificationBtn.classList.add('notification-btn');
+        notificationBtn.src = '/media/bell.png';
 
         const notificationCounter = document.createElement('span');
         notificationCounter.id = 'notificationCounter';
@@ -18,17 +17,28 @@ export class NotificationIcon extends HTMLElement {
         const dropdownMenu = document.createElement('div');
         dropdownMenu.classList.add('dropdown-menu-items');
 
-        css.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200';
-        css.rel = 'stylesheet';
-        const styleLink = document.createElement('link');
+        const styleLink2 = document.createElement('link');
+        styleLink2.setAttribute('rel', 'stylesheet');
+        styleLink2.setAttribute('href', '/static/css/pong_theme.css');
+        this.shadowRoot.appendChild(styleLink2);
 
-        styleLink.setAttribute('rel', 'stylesheet');
-        styleLink.setAttribute('href', 'static/css/pong_theme.css');
-        this.shadowRoot.appendChild(styleLink);
-        styleLink.setAttribute('rel', 'stylesheet');
-        styleLink.setAttribute('href', 'static/css/pong_theme.css');
-        this.shadowRoot.appendChild(styleLink);
-        this.shadowRoot.appendChild(css);
+        const style = document.createElement('style');
+        style.textContent = `
+            #notificationDropdown {
+            position: absolute;
+            margin-left:75%;
+            z-index: 4200;
+            }
+
+            .notification-btn {
+                position: relative;
+                display: inline-block;
+                width: 24px; 
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+        `;
+        this.shadowRoot.appendChild(style);
 
         container.appendChild(notificationBtn);
         container.appendChild(notificationCounter);
@@ -41,6 +51,16 @@ export class NotificationIcon extends HTMLElement {
         notificationCounter.addEventListener('click', (event) => this.toggleDropdown(event));
     }
 
+    connectedCallback(){
+        const dropDownButton = this.shadowRoot.querySelector('.notification-btn');
+
+        document.addEventListener("click", (event) => {	
+            if (dropDownButton.classList.contains('active') && !event.target.closest("notification-list")) {
+                document.getElementById("notificationDropdown").removeChild(document.querySelector('notification-list'));
+                dropDownButton.classList.toggle('active');
+            }
+        });
+    }
     toggleDropdown(event) {
         event.stopImmediatePropagation();
         const existingList = this.shadowRoot.querySelector('notification-list');

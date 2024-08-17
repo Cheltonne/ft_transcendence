@@ -116,11 +116,11 @@ document.addEventListener('notificationsUpdated', (event) => {
 	unreadCount = event.detail.unreadCount;
 });
 
-document.addEventListener('notificationListActive', (e) => {
+document.addEventListener('notificationListActive', () => {
 	notificationCounter.style.display = 'none';
 })
 
-document.addEventListener('notificationListClosed', (e) => {
+document.addEventListener('notificationListClosed', () => {
 	if (unreadCount > 0)
 		notificationCounter.style.display = 'block';
 })
@@ -157,8 +157,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	toggleNotificationIcon();
 
-	window.addEventListener('user-login', toggleNotificationIcon);
-	window.addEventListener('user-logout', toggleNotificationIcon);
+	window.addEventListener('user-login', () => { toggleNotificationIcon(); console.log('caught login event') });
+	window.addEventListener('user-logout', () => { toggleNotificationIcon(); console.log('caught logout event') });
+	//window.addEventListener('user-logout', toggleNotificationIcon);
 });
 
 document.addEventListener('notificationsUpdated', (event) => {
