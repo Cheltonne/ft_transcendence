@@ -7,6 +7,7 @@ class Match(models.Model):
 	player1_score = models.IntegerField(null=True, blank=True)
 	player2_score = models.IntegerField(null=True, blank=True)
 	winner = models.ForeignKey(CustomUser, related_name='morpion_matches_won', on_delete=models.CASCADE, null=True, blank=True)
+	timestamp = models.DateTimeField(auto_now_add=True)
 
 	def set_winner(self):
 		if self.player1_score is not None and self.player2_score is not None:
@@ -29,6 +30,7 @@ class MatchAI(models.Model):
 	]
 	winner_type = models.CharField(max_length=10, choices=WINNER_CHOICES, null=True, blank=True)
 	winner = models.ForeignKey(CustomUser, related_name='morpion_ai_matches_won', on_delete=models.CASCADE, null=True, blank=True)
+	timestamp = models.DateTimeField(auto_now_add=True)
 
 	def set_winner(self):
 		if self.player1_score is not None and self.ai_score is not None:

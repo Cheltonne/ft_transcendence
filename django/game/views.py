@@ -13,7 +13,8 @@ def save_score(request):
 		user_score = data.get('user_score')
 		match_id = data.get('match_id')
 		if alias_value is None and user_score is None and match_id is None :
-			return JsonResponse({'error': 'Score value or match ID is missing.'}, status=400)
+			return JsonResponse({'error': 'Score value or match ID is missing.'},
+				status=400)
 		try:
 			match = Match.objects.get(pk=match_id)
 		except Match.DoesNotExist:

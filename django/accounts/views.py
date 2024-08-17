@@ -40,7 +40,6 @@ def logout_required(function):
             return function(request, *args, **kwargs)
     return wrap
 
-
 def user_logout(request):
     logout(request)
     return JsonResponse({'success': True, 'message': 'Logged out successfully!'})
@@ -48,9 +47,14 @@ def user_logout(request):
 def get_user_info(request):
     if request.user.is_authenticated:
         user = request.user
-        user_matches = list(user.matches.all().order_by('id').values('alias', 'user_score', 'alias_score', 'winner__username'))
-        user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values('player1__username', 'player2__username', 'player1_score', 'player2_score', 'winner__username'))
-        user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values('player1__username', 'player1_score', 'ai_score', 'winner__username'))
+        user_matches = list(user.matches.all().order_by('id').values
+                ('alias', 'user_score', 'alias_score', 'winner__username', 'timestamp'))
+        user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values
+                ('player1__username', 'player2__username', 'player1_score', 'player2_score',
+                  'winner__username', 'timestamp'))
+        user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values
+                ('player1__username', 'player1_score', 'ai_score', 'winner__username',
+                'timestamp'))
         user_info = {
                 'username': user.username,
                 'profile_picture': user.profile_picture.url,
@@ -242,9 +246,17 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     def get_user_info(self, request, pk=None):
         user = self.get_object()  # Retrieves the specific user by ID (pk)
         
-        user_matches = list(user.matches.all().order_by('id').values('alias', 'user_score', 'alias_score', 'winner__username'))
-        user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values('player1__username', 'player2__username', 'player1_score', 'player2_score', 'winner__username'))
-        user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values('player1__username', 'player1_score', 'ai_score', 'winner__username'))
+        user_matches = \
+        list(user.matches.all().order_by('id').values('alias', 'user_score',
+            'alias_score', 'winner__username', 'timestamp'))
+        user_morpion_matches = \
+        list(user.morpion_matches_as1.all().order_by('id').values(
+            'player1__username', 'player2__username', 'player1_score',
+            'player2_score', 'winner__username', 'timestamp'))
+        user_morpion_ai_matches = \
+        list(user.morpion_ai_matches.all().order_by('id').values(
+            'player1__username', 'player1_score', 'ai_score', 'winner__username',
+            'timestamp'))
         
         user_info = {
             'id': user.id,

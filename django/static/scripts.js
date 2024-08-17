@@ -167,3 +167,49 @@ document.addEventListener('notificationListClosed', (e) => {
 	if (unreadCount > 0)
 		notificationCounter.style.display = 'block';
 })
+
+document.addEventListener('DOMContentLoaded', function() {
+    async function isUserAuthenticated() {
+		const authToken = await userIsAuthenticated();
+        return authToken ? true : false;
+    }
+
+    function createNotificationIcon() {
+        const notificationDropdown = document.createElement('div');
+        notificationDropdown.id = 'notificationDropdown';
+        notificationDropdown.type = 'button';
+
+        notificationDropdown.innerHTML = `
+            <span class="material-symbols-outlined notification-btn">
+                notifications
+            </span>
+            <span id="notificationCounter" class="notification-counter"></span>
+            <div class="dropdown-menu-items"></div>
+        `;
+        
+        const navBar = document.querySelector('nav');
+        navBar.insertBefore(notificationDropdown, navBar.querySelector('.ham-menu'));
+    }
+
+    function removeNotificationIcon() {
+        const notificationDropdown = document.querySelector('#notificationDropdown');
+        if (notificationDropdown) {
+            notificationDropdown.remove();
+        }
+    }
+
+    async function toggleNotificationIcon() {
+        if (await isUserAuthenticated() === true) {
+			console.log('creating notification dropdown')
+            createNotificationIcon();
+        } else {
+			console.log('removing that shi')
+            removeNotificationIcon();
+        }
+    }
+
+    toggleNotificationIcon();
+
+    window.addEventListener('user-login', toggleNotificationIcon);
+    window.addEventListener('user-logout', toggleNotificationIcon);
+});

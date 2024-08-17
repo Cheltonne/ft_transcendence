@@ -173,7 +173,7 @@ export class UserChatView extends HTMLElement {
             this._interlocutor.profile_picture.replace('http://localhost/', '');
         const username = isCurrentUser ? this.currentUser.username : sender;
         messageElement.classList.add('message', isCurrentUser ? 'sent' : 'received');
-        const id = isCurrentUser ? this.currentUser.id : sender_id;
+        const id = isCurrentUser ? this.currentUser.id : this._interlocutor.id;
 
         messageElement.innerHTML = `
             <div class="message-bubble">
@@ -186,7 +186,10 @@ export class UserChatView extends HTMLElement {
         `;
 
         const profilePicture = messageElement.querySelector('.profile-picture');
-        profilePicture.addEventListener('click', () => this.openUserProfileModal(username, pfp, id));
+        profilePicture.addEventListener('click', () => {
+            this.openUserProfileModal(username, pfp, id);
+            console.log(id)
+        })
 
         const usernameElement = messageElement.querySelector('.sender-name');
         usernameElement.addEventListener('click', () => this.openUserProfileModal(username, pfp, id));
@@ -209,6 +212,7 @@ export class UserChatView extends HTMLElement {
             if (id === this.currentUser.id) {
                 navigateTo('user-profile', 1);
             } else {
+                console.log("entering", id)
                 navigateTo('other-user-profile', 3, id);
             }
         };

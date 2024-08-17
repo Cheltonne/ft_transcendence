@@ -70,11 +70,9 @@ export function handleLogout() {
 					console.log('closed socket after logout.');
 				}
 				removeUserFromStorage();
-				const friendsListElement = document.querySelector('friends-view');
-				if (friendsListElement) {
-					friendsListElement.remove();
-				}
 				bbc.postMessage('loggedOut');
+				const customEvent = new CustomEvent('user-logout');
+				window.dispatchEvent(customEvent);
 			} else {
 				showToast('Error during logout:', data.message || 'Unknown error')
 			}

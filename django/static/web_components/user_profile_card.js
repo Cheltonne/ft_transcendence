@@ -89,16 +89,20 @@ export class UserProfileCard extends HTMLElement {
         if (matchType === 'pong' && userInfo.user_matches) {
             let i = 0;
             userInfo.user_matches.forEach(match => {
+                const matchDate = match.timestamp ? new Date(match.timestamp) : null;
+                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
-                    <h1>Match ${++i}</h1>
+                    <h1>Pong Match ${++i}</h1>
                     <b>Opponent</b>
                     <p>CPU</p>
                     <b>Winner</b>
                     <p>${match.winner__username === userInfo.username ? match.winner__username : "CPU"}</p>
                     <b>Score</b>
                     <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
+                    <b>Played at</b>
+                    <p>${formattedDate}</p>
                 `;
                 matchHistoryCards.appendChild(matchCard);
             });
@@ -106,6 +110,8 @@ export class UserProfileCard extends HTMLElement {
             let i = 0;
             userInfo.morpion_matches.forEach(match => {
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                const matchDate = match.timestamp ? new Date(match.timestamp) : null;
+                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Morpion Match ${++i}</h1>
@@ -117,12 +123,16 @@ export class UserProfileCard extends HTMLElement {
                     <p>${match.winner__username}</p>
                     <b>Score</b>
                     <p>${match.player1__username}: ${match.player1_score} - ${match.player2__username}: ${match.player2_score}</p>
+                    <b>Played at</b>
+                    <p>${formattedDate}</p>
                 `;
                 matchHistoryCards.appendChild(matchCard);
             });
             let y = 0;
             userInfo.morpion_ai_matches.forEach(match => {
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                const matchDate = match.timestamp ? new Date(match.timestamp) : null;
+                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Morpion Ai Match ${++y}</h1>
@@ -134,6 +144,8 @@ export class UserProfileCard extends HTMLElement {
                     <p>${match.winner__username ? match.winner__username : 'AI'}</p>
                     <b>Score</b>
                     <p>${match.player1__username}: ${match.player1_score} - CPU: ${match.ai_score}</p>
+                    <b>Played at</b>
+                    <p>${formattedDate}</p>
                 `;
                 matchHistoryCards.appendChild(matchCard);
             });
