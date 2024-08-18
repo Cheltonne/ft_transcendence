@@ -1,6 +1,6 @@
 import { navigateTo } from "../views.js";
-
-navigateTo
+import { getCookie, showToast, initializeWebSocket } from "../utils.js";
+import { getUserInfo } from "../scripts.js";
 
 export class ChooseUsernameForm extends HTMLElement {
     constructor() {
@@ -18,7 +18,20 @@ export class ChooseUsernameForm extends HTMLElement {
                 <button type="submit">Submit</button>
             </form>
         `;
+        const styleLink = document.createElement('link');
 
+        styleLink.setAttribute('rel', 'stylesheet');
+        styleLink.setAttribute('href', 'static/css/pong_theme.css');
+        this.shadowRoot.appendChild(styleLink);
+        const custom_style = document.createElement('template');
+        custom_style.innerHTML = `
+        <style>
+            #username {
+                width: 25%;
+            }
+        </style>
+        `
+        this.shadowRoot.appendChild(custom_style.content.cloneNode(true));
         const formElement = this.shadowRoot.querySelector('#choose-username-form');
         formElement.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -28,6 +41,7 @@ export class ChooseUsernameForm extends HTMLElement {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
                 },
                 body: JSON.stringify({
                     username: newUsername,
@@ -39,10 +53,17 @@ export class ChooseUsernameForm extends HTMLElement {
 
             const result = await response.json();
             if (result.status === 'success') {
-                showToast('Username set successfully. Logging you in...');
-                navigateTo('pong');
+                showToast('Succesfully created an account! Logging you in.');
+                navigateTo('pong', 1);
+                getUserInfo();
+                initializeWebSocket();
+                const customEvent = new CustomEvent('user-login');
+                window.dispatchEvent(customEvent);
             } else {
-                showToast(result.error, 'error');
+                if (result.error === 'Username already taken')
+                    showToast('Username already taken, please choose another one.', 'error');
+                else
+                    showToast(result.error, 'error');
             }
         });
     }

@@ -9,6 +9,7 @@ import urllib.parse
 import random
 import string
 import requests
+import json
 from accounts.models import CustomUser
 
 def index(request):
@@ -103,24 +104,36 @@ def oauth_callback(request):
     email = user_info.get('email', 'unknown')
 
     suggested_username = f"{user_login}-cacs"
-    if CustomUser.objects.filter(username=suggested_username).exists():
-        return redirect(f'/choose-username/?oauth_id={user_id}&email={email}&profile_picture={profile_picture}')
+    user = CustomUser.objects.filter(id=user_id).first()
+    if user:
+        # The user already exists, log them in directly
+        login(request, user)
+        return render(request, 'oauth_callback.html', {
+            'status': 'success',
+            'message': 'Authenticated successfully'
+        })
+    else:
+        # Check if the suggested username is taken by another user
+        if CustomUser.objects.filter(username=suggested_username).exists():
+            return render(request, 'oauth_callback.html', {
+                'error': 'Username taken',
+                'oauth_id': user_id,
+                'email': email,
+                'profile_picture': profile_picture
+            })
 
-    user, created = CustomUser.objects.get_or_create(
-        id=user_id,
-        defaults={
-            'username': suggested_username,
-            'email': email,
-            'profile_picture': profile_picture
-        }
-    ) 
-    login(request, user)
-    #return JsonResponse(user_info) #Easily check the user object as return bby 42Auth
-
-    return render(request, 'oauth_callback.html', {
-        'status': 'success',
-        'message': 'Authenticated successfully'
-    })
+        # If username is available, create the new user
+        user = CustomUser.objects.create(
+            id=user_id,
+            username=suggested_username,
+            email=email,
+            profile_picture=profile_picture
+        )
+        login(request, user)
+        return render(request, 'oauth_callback.html', {
+            'status': 'success',
+            'message': 'Authenticated successfully'
+        }) 
 
 @login_required
 def oauth_status(request):
@@ -138,14 +151,13 @@ def choose_username(request):
             return JsonResponse({'status': 'error', 'error': 'Username already taken'})
 
         user, created = CustomUser.objects.get_or_create(
-            oauth_id=oauth_id,
+            id=oauth_id,
             defaults={
                 'username': new_username,
                 'email': email,
                 'profile_picture': profile_picture
             }
         )
-
         if created:
             login(request, user)
             return JsonResponse({'status': 'success', 'message': 'User created and logged in'})

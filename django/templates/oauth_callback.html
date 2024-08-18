@@ -7,35 +7,26 @@
 <body>
     <script>
         (function() {
-            // Access the data passed from the server
             const error = "{{ error|escapejs }}";
             const oauth_id = "{{ oauth_id|escapejs }}";
             const email = "{{ email|escapejs }}";
             const profile_picture = "{{ profile_picture|escapejs }}";
 
-            // If there's an error, communicate it to the main window
             if (error === 'Username taken') {
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'username_taken',
-                        oauth_id: oauth_id,
-                        email: email,
-                        profile_picture: profile_picture
-                    }, '*');
-                }
+                localStorage.setItem('oauth_message', JSON.stringify({
+                    type: 'username_taken',
+                    oauth_id: oauth_id,
+                    email: email,
+                    profile_picture: profile_picture
+                }));
             } else {
-                // No error, proceed with success logic
-                if (window.opener) {
-                    window.opener.postMessage({ type: 'oauth_success' }, '*');
-                } else {
-                    window.location.href = '/';
-                }
+                localStorage.setItem('oauth_message', JSON.stringify({
+                    type: 'oauth_success'
+                }));
+                console.log('succ')
             }
-
-            // Close the OAuth window
-            window.close();
+           // window.close();
         })();
     </script>
-    <p>Redirecting...</p>
 </body>
 </html>
