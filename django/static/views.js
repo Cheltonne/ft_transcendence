@@ -7,9 +7,10 @@ import { MorpionComponent } from './web_components/morpion_components.js';
 import { ChatView } from './web_components/chat.js';
 import { OtherUserProfileCard } from './web_components/other_users_profile.js';
 import { RequestFrame } from './game/pong.js';
+import { ChooseUsernameForm } from './web_components/choose_username_form.js';
 import { onoffGame } from './game/pong.js';
 const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat', 'other-user-profile'];
-const nonAuthViews = ['signin', 'signup'];
+const nonAuthViews = ['signin', 'signup', 'choose-username'];
 
 async function historyNavigation(state) {	//handles navigation through browser buttons (back/next)
 	const isAuthenticated = await userIsAuthenticated();

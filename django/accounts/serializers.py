@@ -6,15 +6,19 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 'friends', 'online_devices_count', 'blocked_users']
+        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 
+                  'friends', 'online_devices_count', 'blocked_users']
 
     def get_friends(self, obj):
         friends = obj.friends.all()
         return CustomUserSerializer(friends, many=True, context=self.context).data
 
     def get_profile_picture(self, obj):
-        if obj.profile_picture:
-            return self.context['request'].build_absolute_uri(obj.profile_picture.url)
+        if obj.email:
+            if obj.profile_picture:
+                return obj.profile_picture.url
+        else:
+                return self.context['request'].build_absolute_uri(obj.profile_picture.url)
         return None
 
 class NotificationSerializer(serializers.ModelSerializer):

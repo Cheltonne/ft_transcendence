@@ -77,7 +77,10 @@ export class OtherUserProfileCard extends HTMLElement {
                 const data = await response.json();
                 this.user = data;
                 this.username.innerHTML = `<h1>${data.username}</h1>`;
-                this.pfp.innerHTML = `<img src="${data.profile_picture.replace('http://localhost/', '')}"></img>`;
+                let profilePictureUrl = data.profile_picture;
+                if (profilePictureUrl.includes('intra.42.fr'))
+                    profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
+                this.pfp.innerHTML = `<img src="${profilePictureUrl.replace('http://localhost/', '')}"></img>`;
             } else 
                 showToast('Failed to load user profile', 'error');
         } catch (error) {

@@ -169,8 +169,10 @@ export class UserChatView extends HTMLElement {
         const chatMessages = this.shadowRoot.querySelector('#chatMessages');
         const messageElement = document.createElement('div');
         const isCurrentUser = sender === this.currentUser.username;
-        const pfp = isCurrentUser ? this.currentUser.profile_picture.replace('http://localhost/', '') :
-            this._interlocutor.profile_picture.replace('http://localhost/', '');
+        let profilePictureUrl = isCurrentUser ? this.currentUser.profile_picture : this._interlocutor.profile_picture;
+        if (profilePictureUrl.includes('intra.42.fr'))
+            profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
+        const pfp = profilePictureUrl.replace('http://localhost/', '');
         const username = isCurrentUser ? this.currentUser.username : sender;
         messageElement.classList.add('message', isCurrentUser ? 'sent' : 'received');
         const id = isCurrentUser ? this.currentUser.id : this._interlocutor.id;

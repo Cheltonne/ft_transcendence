@@ -59,14 +59,19 @@ export class FriendsComponent extends HTMLElement {
             <div class="friends-container">
                 <h2>Friends</h2>
                 <ul>
-                    ${this.friends.map(friend =>
-            `<li class="friend-card">
-                            <img src="${friend.profile_picture.replace('http://localhost/', '')}" alt="Profile Picture"></img>
+                    ${this.friends.map(friend => {
+                        let profilePictureUrl = friend.profile_picture.replace('http://localhost/', '');
+                    if (profilePictureUrl.includes('intra.42.fr')) {
+                        profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
+                    }
+                    return  `
+                            <li class="friend-card">
+                            <img src="${profilePictureUrl}" alt="Profile Picture"></img>
                             ${friend.username} 
                             <span data-id="${friend.id}" class="status ${friend.online_devices_count != 0 ? 'online' : 'offline'}"></span>
                             <button data-id="${friend.id}" class="remove-friend">Remove</button>
                         </li>`
-        ).join('')}
+                    }).join('')}
                 </ul>
                 <input type="text" id="new-friend-username" placeholder="Add a friend by username">
                 <div style="height: 1rem;"></div>

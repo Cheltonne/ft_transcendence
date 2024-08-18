@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'daphne',
+    'oauth2_provider',
 	"accounts",
 	"game",
 	"morpion",
@@ -156,3 +157,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CSRF_TRUSTED_ORIGINS = ['https://fftactics','https://localhost:4343']
 CSRF_COOKIE_SECURE = True
+
+OAUTH2_PROVIDER = {
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 36000,
+    'AUTHORIZATION_CODE_EXPIRE_SECONDS': 600,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 1209600,
+    'CLIENT_ID_GENERATOR_CLASS': 'oauth2_provider.generators.ClientIdGenerator',
+    'CLIENT_SECRET_GENERATOR_CLASS': 'oauth2_provider.generators.ClientSecretGenerator',
+    'SCOPES': {
+        'read': 'Read scope',
+        'write': 'Write scope',
+    },
+}
+
+OAUTH_REDIRECT_URI = 'https://localhost:4343.com/oauth/callback/'

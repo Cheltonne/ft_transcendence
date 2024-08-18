@@ -56,18 +56,25 @@ export class ChatView extends HTMLElement {
 
     renderUserList() {
         const userList = this.shadowRoot.querySelector('#userList');
-        userList.innerHTML = this.users.map(user => `
-            <li class="user-item" data-id="${user.id}">
-                <img src="${user.profile_picture.replace('http://localhost/', '')}">
-                <h2>${user.username}</h2>
-                <button class="start-chat-button" data-id="${user.id}">Send Message</button>
-            </li>
-        `).join('');
+        userList.innerHTML = this.users.map(user => {
+            let profilePictureUrl = user.profile_picture.replace('http://localhost/', '');
+            if (profilePictureUrl.includes('intra.42.fr')) {
+                profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
+            }
+
+            return `
+        <li class="user-item" data-id="${user.id}">
+            <img src="${profilePictureUrl}">
+            <h2>${user.username}</h2>
+            <button class="start-chat-button" data-id="${user.id}">Send Message</button>
+        </li>
+    `;
+        }).join('');
 
         this.shadowRoot.querySelectorAll('.start-chat-button').forEach(button => {
-            button.addEventListener('click', (event) =>{
+            button.addEventListener('click', (event) => {
                 this.startChat(event.target.dataset.id)
-        });
+            });
         });
     }
 
