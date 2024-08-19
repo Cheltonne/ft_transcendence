@@ -52,42 +52,55 @@ export class SigninForm extends HTMLElement {
         }
     }
 
-async loginWithOAuth() {
-    try {
-        const response = await fetch('/oauth/url/');
-        const data = await response.json();
-        const authWindow = window.open(data.auth_url, '_blank', 'width=500,height=720');
+    async loginWithOAuth() {
+        try {
+            const response = await fetch('/oauth/url/');
+            const data = await response.json();
+            const authWindow = window.open(data.auth_url, '_blank', 'width=500,height=720');
 
-        // Polling to check localStorage for messages from the auth window
-        const pollTimer = window.setInterval(() => {
-            const message = localStorage.getItem('oauth_message');
-            if (message) {
-                window.clearInterval(pollTimer);
-                localStorage.removeItem('oauth_message'); // Clean up after reading the message to avoid utter destruction
-                this.handleOAuthMessage(JSON.parse(message));
-            }
-            if (authWindow.closed) {
-                window.clearInterval(pollTimer);
-            }
-        }, 1000);
+            // Polling to check the cookie for messages from the auth window
+            const pollTimer = window.setInterval(() => {
+                const message = this.getCookie('oauth_message');
+                if (message) {
+                    window.clearInterval(pollTimer);
+                    this.deleteCookie('oauth_message'); // Clean up after reading the message
+                    this.handleOAuthMessage(JSON.parse(message));
+                }
+                if (authWindow.closed) {
+                    window.clearInterval(pollTimer);
+                }
+            }, 1000);
 
-    } catch (error) {
-        console.log('Error during OAuth login:', error);
-        showToast(`Error during OAuth login: ${error}`, 'error');
+        } catch (error) {
+            console.log('Error during OAuth login:', error);
+            showToast(`Error during OAuth login: ${error}`, 'error');
+        }
     }
-}
+
+    getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    deleteCookie(name) {
+        document.cookie = name + '=; Max-Age=-99999999;';
+    }
 
     handleOAuthMessage(message) {
         if (message.type === 'username_taken') {
             console.log('Username is taken. Please choose another one.');
+            showToast(`Username ${message.would_be_username} is taken. 
+                Please choose another one.`, 'error');
             navigateTo('choose-username', 2, message.oauth_id);
             window.userInfo = {
                 oauth_id: message.oauth_id,
                 email: message.email,
                 profile_picture: message.profile_picture
             };
-        } else if (message.type === 'oauth_success')
+        } else if (message.type === 'oauth_success') {
             this.handleLoginSucc();
+        }
     }
 
     handleLoginSucc() {

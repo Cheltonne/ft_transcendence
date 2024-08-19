@@ -96,7 +96,6 @@ def oauth_callback(request):
     if not email:
         return JsonResponse({'error': 'No email found in user information'}, status=400)
 
-    # Correctly access the dictionary keys
     user_id = user_info.get('id', 'unknown')
     user_kind = user_info.get('kind', 'unknown')
     user_login = user_info.get('login', 'unknown')
@@ -106,23 +105,21 @@ def oauth_callback(request):
     suggested_username = f"{user_login}-cacs"
     user = CustomUser.objects.filter(id=user_id).first()
     if user:
-        # The user already exists, log them in directly
         login(request, user)
         return render(request, 'oauth_callback.html', {
             'status': 'success',
             'message': 'Authenticated successfully'
         })
     else:
-        # Check if the suggested username is taken by another user
         if CustomUser.objects.filter(username=suggested_username).exists():
             return render(request, 'oauth_callback.html', {
                 'error': 'Username taken',
+                'would_be_username': suggested_username,
                 'oauth_id': user_id,
                 'email': email,
                 'profile_picture': profile_picture
             })
 
-        # If username is available, create the new user
         user = CustomUser.objects.create(
             id=user_id,
             username=suggested_username,
