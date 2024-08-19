@@ -61,7 +61,9 @@ export class ChatView extends HTMLElement {
             if (profilePictureUrl.includes('intra.42.fr')) {
                 profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
             }
-
+        const regex = /http:\/\/made-[^\/]+\/?/;
+        if (profilePictureUrl.match(regex))
+            profilePictureUrl = profilePictureUrl.replace(regex, '');
             return `
         <li class="user-item" data-id="${user.id}">
             <img src="${profilePictureUrl}">

@@ -70,6 +70,9 @@ export class NotificationItem extends HTMLElement {
         let pfpUrl = notification.sender_pfp;
         if (pfpUrl.includes('intra.42.fr'))
             pfpUrl = pfpUrl.replace('media/https%3A/', 'https://');
+        const regex = /http:\/\/made-[^\/]+\/?/;
+        if (pfpUrl.match(regex))
+            pfpUrl = pfpUrl.replace(regex, '');
         this.shadowRoot.querySelector('.sender-pfp-container').innerHTML = `<img src="${pfpUrl.replace('http://localhost/', '')}" class="sender-pfp">`
     }
 

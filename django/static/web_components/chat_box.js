@@ -74,6 +74,11 @@ export class UserChatView extends HTMLElement {
         this.setupEventListeners();
         this.setupWebSocketListeners();
         this.loadChatHistory();
+        console.log(this._interlocutor.username)
+    }
+
+    disconnectedCallback() {
+        this.socket.close();
     }
 
     set interlocutor(data) {
@@ -87,7 +92,8 @@ export class UserChatView extends HTMLElement {
         if (this.socket) {
             this.socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id);
+                if (data.sender === this._interlocutor.username)
+                    this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id);
             };
         }
     }
@@ -172,6 +178,9 @@ export class UserChatView extends HTMLElement {
         let profilePictureUrl = isCurrentUser ? this.currentUser.profile_picture : this._interlocutor.profile_picture;
         if (profilePictureUrl.includes('intra.42.fr'))
             profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
+        const regex = /http:\/\/made-[^\/]+\/?/;
+        if (profilePictureUrl.match(regex))
+            profilePictureUrl = profilePictureUrl.replace(regex, '');
         const pfp = profilePictureUrl.replace('http://localhost/', '');
         const username = isCurrentUser ? this.currentUser.username : sender;
         messageElement.classList.add('message', isCurrentUser ? 'sent' : 'received');
@@ -179,7 +188,7 @@ export class UserChatView extends HTMLElement {
 
         messageElement.innerHTML = `
             <div class="message-bubble">
-                <img src="${pfp}" 
+                <img src="${pfp.replace('/http', 'http')}" 
                 alt="profile picture" class="profile-picture">
                 <strong class="sender-name">${username}</strong>
                 <p class="message-text">${message}</p>

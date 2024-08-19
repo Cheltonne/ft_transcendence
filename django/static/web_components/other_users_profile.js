@@ -49,8 +49,8 @@ export class OtherUserProfileCard extends HTMLElement {
         this.shadowRoot.querySelector('#blockUserButton').addEventListener('click', () => this.blockUser());
         this.shadowRoot.querySelector('#unblockUserButton').addEventListener('click', () => this.unblockUser());
         this.shadowRoot.addEventListener('click', (event) => {
-            if (!event.target.closest('.match-history-card') && 
-            this.shadowRoot.querySelector('.match-history-cards').classList.contains('active')) {
+            if (!event.target.closest('.match-history-card') &&
+                this.shadowRoot.querySelector('.match-history-cards').classList.contains('active')) {
                 this.shadowRoot.querySelector('.match-history-cards').classList.remove('active');
                 this.shadowRoot.querySelector('.match-history-veil').classList.remove('active');
             } else if (event.target.classList.contains('view-matches-link')) {
@@ -63,7 +63,7 @@ export class OtherUserProfileCard extends HTMLElement {
         });
     }
 
-   async loadUserProfile() {
+    async loadUserProfile() {
         try {
             const response = await fetch(`/accounts/users/${this.userId}/user-info/`, {
                 headers: {
@@ -80,14 +80,17 @@ export class OtherUserProfileCard extends HTMLElement {
                 let profilePictureUrl = data.profile_picture;
                 if (profilePictureUrl.includes('intra.42.fr'))
                     profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
+                const regex = /http:\/\/made-[^\/]+\/?/;
+                if (pfpUrl.match(regex))
+                    pfpUrl = pfpUrl.replace(regex, '');
                 this.pfp.innerHTML = `<img src="${profilePictureUrl.replace('http://localhost/', '')}"></img>`;
-            } else 
+            } else
                 showToast('Failed to load user profile', 'error');
         } catch (error) {
             console.error('Error loading user profile:', error);
             showToast('Error loading user profile', 'error');
         }
-    } 
+    }
 
     renderUserProfile(userInfo, matchType = 'pong') {
         console.log("renderUserProfile() called.");

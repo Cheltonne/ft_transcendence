@@ -36,7 +36,6 @@ urlpatterns = [
     path('oauth/url/', views.get_oauth_url, name='oauth-url'),
     path('oauth/status/', views.oauth_status, name='oauth-status'),
     path('oauth/choose-username/', views.choose_username, name='choose-username'),
-    path("render-template/<str:folder>/<str:template_name>/", views.render_template, name='render-template'),
     re_path(r'^(?!api/)(?!admin/)(?!static/)(?!.*\.(jpg|jpeg|png|gif|svg)$).*$', TemplateView.as_view(template_name='index.html'))
 ]
 

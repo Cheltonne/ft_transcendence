@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import itertools
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +27,10 @@ SECRET_KEY = 'django-insecure-*@=k@^3t$sqi-0#j3@(iwkebhvirzju^4zz!*3au_=240_jcas
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
+combinations = itertools.product(range(0, 255), repeat=2)
+additional_allowed_hosts = [f'made-f0br{b}s{c}' for b, c in combinations]
+ALLOWED_HOSTS.extend(additional_allowed_hosts)
 
 
 # Application definition
@@ -155,7 +159,10 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ['https://fftactics','https://localhost:4343']
+CSRF_TRUSTED_ORIGINS = ['https://localhost:4343']
+combinations = itertools.product(range(0, 255), repeat=2)
+additional_allowed_hosts = [f'https://made-f0br{b}s{c}:4343' for b, c in combinations]
+CSRF_TRUSTED_ORIGINS.extend(additional_allowed_hosts)
 CSRF_COOKIE_SECURE = True
 
 OAUTH2_PROVIDER = {
@@ -169,5 +176,3 @@ OAUTH2_PROVIDER = {
         'write': 'Write scope',
     },
 }
-
-OAUTH_REDIRECT_URI = 'https://localhost:4343.com/oauth/callback/'

@@ -1,5 +1,5 @@
 import { navigateTo, showForm, handleFormSubmit } from '../views.js';
-import { showToast } from '../utils.js';
+import { showToast, getCookie } from '../utils.js';
 import { getUserInfo } from '../scripts.js';
 import { ChooseUsernameForm } from './choose_username_form.js';
 import { initializeWebSocket } from '../utils.js';
@@ -58,16 +58,21 @@ export class SigninForm extends HTMLElement {
             const data = await response.json();
             const authWindow = window.open(data.auth_url, '_blank', 'width=500,height=720');
 
-            // Polling to check the cookie for messages from the auth window
             const pollTimer = window.setInterval(() => {
-                const message = this.getCookie('oauth_message');
+                const message = getCookie('oauth_message');
                 if (message) {
                     window.clearInterval(pollTimer);
-                    this.deleteCookie('oauth_message'); // Clean up after reading the message
+                    this.deleteCookie('oauth_message');
                     this.handleOAuthMessage(JSON.parse(message));
                 }
                 if (authWindow.closed) {
                     window.clearInterval(pollTimer);
+                    if (message) {
+                        window.clearInterval(pollTimer);
+                        this.deleteCookie('oauth_message');
+                        this.handleOAuthMessage(JSON.parse(message));
+                    }
+                    console.log('OAuth BIGG fucc shit!!!')
                 }
             }, 1000);
 
@@ -75,12 +80,6 @@ export class SigninForm extends HTMLElement {
             console.log('Error during OAuth login:', error);
             showToast(`Error during OAuth login: ${error}`, 'error');
         }
-    }
-
-    getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
     deleteCookie(name) {
@@ -101,6 +100,10 @@ export class SigninForm extends HTMLElement {
         } else if (message.type === 'oauth_success') {
             this.handleLoginSucc();
         }
+        else{
+
+        console.log('OAuth BIGG fucc!!')
+        }
     }
 
     handleLoginSucc() {
@@ -110,6 +113,7 @@ export class SigninForm extends HTMLElement {
         initializeWebSocket();
         const customEvent = new CustomEvent('user-login');
         window.dispatchEvent(customEvent);
+        console.log('OAuth BIGG succ!')
     }
 
     getFormElement() {

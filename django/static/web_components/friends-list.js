@@ -1,5 +1,5 @@
-import { getFriends, addFriend, removeFriend, getUserByUsername} from "../user_utils.js";
-import { socket, getCookie, showToast} from "../utils.js";
+import { getFriends, addFriend, removeFriend, getUserByUsername } from "../user_utils.js";
+import { socket, getCookie, showToast } from "../utils.js";
 
 export class FriendsComponent extends HTMLElement {
     constructor() {
@@ -60,18 +60,21 @@ export class FriendsComponent extends HTMLElement {
                 <h2>Friends</h2>
                 <ul>
                     ${this.friends.map(friend => {
-                        let profilePictureUrl = friend.profile_picture.replace('http://localhost/', '');
-                    if (profilePictureUrl.includes('intra.42.fr')) {
-                        profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
-                    }
-                    return  `
-                            <li class="friend-card">
-                            <img src="${profilePictureUrl}" alt="Profile Picture"></img>
-                            ${friend.username} 
-                            <span data-id="${friend.id}" class="status ${friend.online_devices_count != 0 ? 'online' : 'offline'}"></span>
-                            <button data-id="${friend.id}" class="remove-friend">Remove</button>
-                        </li>`
-                    }).join('')}
+            let profilePictureUrl = friend.profile_picture.replace('http://localhost/', '');
+            if (profilePictureUrl.includes('intra.42.fr')) {
+                profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
+            }
+            const regex = /http:\/\/made-[^\/]+\/?/;
+            if (profilePictureUrl.match(regex))
+                profilePictureUrl = profilePictureUrl.replace(regex, '');
+            return `
+                <li class="friend-card">
+                    <img src="${profilePictureUrl}" alt="Profile Picture"></img>
+                    ${friend.username} 
+                    <span data-id="${friend.id}" class="status ${friend.online_devices_count != 0 ? 'online' : 'offline'}"></span>
+                    <button data-id="${friend.id}" class="remove-friend">Remove</button>
+                </li>`
+                        }).join('')}
                 </ul>
                 <input type="text" id="new-friend-username" placeholder="Add a friend by username">
                 <div style="height: 1rem;"></div>
@@ -105,28 +108,28 @@ export class FriendsComponent extends HTMLElement {
     }
 
     async sendFriendRequest(recipientUsername) {
-    fetch('accounts/send-friend-request/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'),
-        },
-        body: JSON.stringify({
-            username: recipientUsername,
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.detail === 'Friend request sent successfully.') {
-            console.log(data.detail);
-            showToast(data.detail);
-        } else {
-            console.error(data.detail);
-            showToast(data.detail, 'error');
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
+        fetch('accounts/send-friend-request/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                username: recipientUsername,
+            }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail === 'Friend request sent successfully.') {
+                    console.log(data.detail);
+                    showToast(data.detail);
+                } else {
+                    console.error(data.detail);
+                    showToast(data.detail, 'error');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
 
 }
 

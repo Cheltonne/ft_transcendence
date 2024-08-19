@@ -15,39 +15,18 @@ from accounts.models import CustomUser
 def index(request):
     return render(request, 'index.html')
 
-def render_template(request, folder, template_name):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method.'})
-    try:
-        user = request.user
-        context = {'userInfo': user}
-        url = folder + '/' + template_name + '.html'
-        html_content = render_to_string(url, context)
-        return JsonResponse({'success': True, 'html': html_content})
-
-    except TemplateDoesNotExist as e:
-        url = folder + '/' + template_name
-        error_message = f"Template '{url}.html' does not exist."
-        return JsonResponse({'success': False, 'error': error_message})
-
-    except Exception as e:
-        error_message = f"An error occurred while rendering the template: {str(e)}"
-        return JsonResponse({'success': False, 'error': error_message})
-
-def generate_random_state(length=40):
+def generate_random_state(length=42):
     """Generate a random string for the OAuth2 state parameter"""
     letters = string.ascii_letters + string.digits
     return ''.join(random.choice(letters) for i in range(length))
 
 def get_oauth_url(request):
     client_id = 'u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7'
-    redirect_uri = settings.OAUTH_REDIRECT_URI
-    scope = 'public'  # Ensure this scope matches your needs
-    state = generate_random_state()  # Generate a secure, random state parameter
+    scope = 'public'
+    state = generate_random_state()
     
-    auth_url = f"https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7&redirect_uri=https%3A%2F%2Flocalhost%3A4343%2Foauth%2Fcallback%2F&response_type=code&scope={scope}&state={state}"
+    auth_url = f"https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7&redirect_uri=https%3A%2F%2Fmade-f0br7s14%3A4343%2Foauth%2Fcallback%2F&response_type=code&scope={scope}&state={state}"
     
-    # Save the state in the session for later validation
     request.session['oauth_state'] = state
 
     return JsonResponse({'auth_url': auth_url})
@@ -59,9 +38,8 @@ def oauth_callback(request):
 
     client_id = 'u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7'
     client_secret = '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'
-    redirect_uri = 'https://localhost:4343/oauth/callback/'
+    redirect_uri = 'https://made-f0br7s14:4343/oauth/callback/'
 
-    # Step 3: Exchange authorization code for access token
     token_url = 'https://api.intra.42.fr/oauth/token'
     token_data = {
         'grant_type': 'authorization_code',
@@ -71,7 +49,6 @@ def oauth_callback(request):
         'client_secret': client_secret,
     }
 
-    # Use requests to post the data to the token endpoint
     try:
         token_response = requests.post(token_url, data=token_data)
         token_response.raise_for_status()  # Raises an HTTPError if the response code was unsuccessful
@@ -103,7 +80,7 @@ def oauth_callback(request):
     email = user_info.get('email', 'unknown')
 
     suggested_username = f"{user_login}-cacs"
-    user = CustomUser.objects.filter(id=user_id).first()
+    user = CustomUser.objects.filter(id=user_id).first() #if a user with that 42 ID exists
     if user:
         login(request, user)
         return render(request, 'oauth_callback.html', {
