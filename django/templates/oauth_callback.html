@@ -28,11 +28,14 @@
                     profile_picture: profile_picture,
                     would_be_username: would_be_username
                 }), 5);
+                window.alert('if')
             } else {
                 setCookie('oauth_message', JSON.stringify({
                     type: 'oauth_success'
                 }), 5);
                 console.log('succ');
+                if (window.opener)
+                    window.alert('else')
             }
             window.close();
         })();

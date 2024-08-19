@@ -24,8 +24,20 @@ def get_oauth_url(request):
     client_id = 'u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7'
     scope = 'public'
     state = generate_random_state()
-    
-    auth_url = f"https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7&redirect_uri=https%3A%2F%2Fmade-f0br7s14%3A4343%2Foauth%2Fcallback%2F&response_type=code&scope={scope}&state={state}"
+
+    if 'localhost' in request.get_host():
+        redirect_uri = 'https://localhost:4343/oauth/callback/'
+    else:
+        redirect_uri = 'https://made-f0br7s14:4343/oauth/callback/'
+
+    auth_url = (
+        f"https://api.intra.42.fr/oauth/authorize?"
+        f"client_id={client_id}&"
+        f"redirect_uri={urllib.parse.quote(redirect_uri)}&"
+        f"response_type=code&"
+        f"scope={scope}&"
+        f"state={state}"
+    )
     
     request.session['oauth_state'] = state
 
@@ -38,7 +50,12 @@ def oauth_callback(request):
 
     client_id = 'u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7'
     client_secret = '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'
-    redirect_uri = 'https://made-f0br7s14:4343/oauth/callback/'
+    
+    # Use the same logic to detect the correct redirect_uri
+    if 'localhost' in request.get_host():
+        redirect_uri = 'https://localhost:4343/oauth/callback/'
+    else:
+        redirect_uri = 'https://made-f0br7s14:4343/oauth/callback/'
 
     token_url = 'https://api.intra.42.fr/oauth/token'
     token_data = {
@@ -51,7 +68,7 @@ def oauth_callback(request):
 
     try:
         token_response = requests.post(token_url, data=token_data)
-        token_response.raise_for_status()  # Raises an HTTPError if the response code was unsuccessful
+        token_response.raise_for_status()
     except requests.exceptions.RequestException as e:
         return JsonResponse({'error': f'Failed to retrieve access token: {e}'}, status=500)
 
@@ -80,7 +97,8 @@ def oauth_callback(request):
     email = user_info.get('email', 'unknown')
 
     suggested_username = f"{user_login}-cacs"
-    user = CustomUser.objects.filter(id=user_id).first() #if a user with that 42 ID exists
+    user = CustomUser.objects.filter(id=user_id).first()
+    
     if user:
         login(request, user)
         return render(request, 'oauth_callback.html', {
@@ -107,7 +125,7 @@ def oauth_callback(request):
         return render(request, 'oauth_callback.html', {
             'status': 'success',
             'message': 'Authenticated successfully'
-        }) 
+        })
 
 @login_required
 def oauth_status(request):
