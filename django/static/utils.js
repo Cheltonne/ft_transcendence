@@ -119,19 +119,8 @@ export async function initializeWebSocket() {
 				showToast(`${data.sender} wants to add you as a friend.`);
 			}
 
-			else if (data.type === 'match_request') {
-                showToast(`Match request: ${data.player1} wants to play with you!`, 'info');
-                
-                const newNotificationEvent = new CustomEvent('newNotification', { 
-                    detail: {
-                        type: 'match_request',
-                        match_id: data.match_id,
-                        message: `${data.player1} wants to play with you.`,
-                        sender_pfp: '/path/to/player1_pfp.jpg', // Replace with actual data if available
-                        is_read: false
-                    }
-                });
-                document.dispatchEvent(newNotificationEvent);
+			else if (data.player1 && data.type === 'match_request') {
+                showToast(`Match request: ${data.player1} wants to play with you!`);
             }
 			
             if (document.querySelector('notification-list') === null) { //avoid showing the counter if the notif list is open

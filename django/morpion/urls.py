@@ -1,5 +1,5 @@
 from django.urls import path
-
+from accounts import utils
 from . import views
 
 urlpatterns = [
@@ -8,4 +8,5 @@ urlpatterns = [
 		path("create-match/", views.create_match, name="create_match"),
 		path("save-score-ai/", views.save_score_ai, name="save-score-ai"),
 		path("create-match-ai/", views.create_match_ai, name="create_match_ai"),
+		path("send-notification/", utils.send_notification, name="send_notification"),
 		]

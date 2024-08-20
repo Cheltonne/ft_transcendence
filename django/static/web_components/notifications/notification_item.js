@@ -102,14 +102,27 @@ export class NotificationItem extends HTMLElement {
     }
 
     acceptMatchRequest(matchId) {
-        // Send an accept message to the server
+        //Send an accept message to the server
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
         socket.onopen = () => {
             socket.send(JSON.stringify({ type: 'match_accept', match_id: matchId }));
         };
-        this.markAsRead(matchId);
-        this.remove();
+        this.toggleNotificationRead(this.notification.id)
+            .then(() => {
+                this.remove();
+                const customEvent = new CustomEvent('notificationRead', {
+                    detail: {
+                        'id': this.notification.id
+                    }
+                });
+                document.dispatchEvent(customEvent);
+            })
+            .catch(error => {
+                console.error('Failed to mark notification as read:', error);
+            });
+        this.updateUnread();
     }
+
     
     declineMatchRequest(matchId) {
         // Send a decline message to the server

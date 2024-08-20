@@ -152,17 +152,17 @@ export class MorpionComponent extends HTMLElement {
             console.log('Received message:', event.data);
     
             if (data.type === 'match_request') {
-                const accept = confirm(`${data.player1} wants to play with you. Accept?`);
+                //const accept = confirm(`${data.player1} wants to play with you. Accept?`);
                 if (accept) {
                     socket.send(JSON.stringify({ type: 'match_accept', match_id: data.match_id }));
                     this.showAlert('success', 'Match accepted! Starting game...');
                     this.isAI = false; 
-                    this.startGame(); 
+                this.startGame(); 
                 } else {
                     socket.send(JSON.stringify({ type: 'match_decline', match_id: data.match_id }));
                     this.showAlert('info', 'Match declined. Looking for another match...');
                 }
-            } else if (data.type === 'match_accepted') {
+            } else if (data.type === 'match_accept') {
                 console.log('Match accepted by opponent!');
                 this.showAlert('success', `Match accepted by ${data.player2}! Starting game...`);
                 this.isAI = false;  
@@ -173,11 +173,10 @@ export class MorpionComponent extends HTMLElement {
                 this.isAI = true;  
                 this.startGame(); 
             } else if (data.type === 'ai_match_started') {
-                // AI match has been started by the backend
                 console.log('AI match started.');
                 this.showAlert('info', 'Playing against AI.');
-                this.isAI = true;  // Set flag for AI opponent
-                this.startGame();  // Start game logic
+                this.isAI = true;  
+                this.startGame();
             }
         };
     
@@ -189,50 +188,7 @@ export class MorpionComponent extends HTMLElement {
         socket.onclose = (event) => {
             console.log('WebSocket connection closed with code:', event.code, "reason:", event.reason);
         };
-    }
-
-    /*async startMatchmaking() {
-        if (socket) {
-            socket.send(JSON.stringify({ type: 'matchmaking' }));
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                console.log('Received message:', data);
-                if (data.type === 'match_request') {
-                    console.log('Match request received');
-                    this.showToast(`Match request from ${data.player1}`, 'info');
-                    const accept = confirm(`Do you want to accept the match request from ${data.player1}?`);
-                    if (accept) {
-                        socket.send(JSON.stringify({ type: 'match_accept', match_id: data.match_id }));
-                        this.showToast('Match accepted! Starting game...', 'success');
-                        this.startGame();
-                    } else {
-                        socket.send(JSON.stringify({ type: 'match_decline', match_id: data.match_id }));
-                        this.showToast('Match declined. Searching for another match...', 'info');
-                    }
-                } else if (data.type === 'match_accepted') {
-                    console.log('Match accepted');
-                    this.showToast(`Match accepted by ${data.player2}. Starting game...`, 'success');
-                    this.startGame();
-                } else if (data.type === 'no_match_found') {
-                    console.log('No match found. Starting game with AI.');
-                    this.showToast('No match found. Starting game with AI.', 'info');
-                    this.isAI = true;
-                    this.startGame();
-                }
-            };
-            socket.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                this.showToast('WebSocket error occurred. Please try again later.', 'error');
-            };
-            socket.onclose = () => {
-                console.log('WebSocket connection closed');
-            };
-        } else {
-            this.showToast('WebSocket is not connected. Please try again later.', 'error');
-        }
-    }*/
-
-    
+    }   
 
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
