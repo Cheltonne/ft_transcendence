@@ -130,7 +130,21 @@ export class NotificationItem extends HTMLElement {
         socket.onopen = () => {
             socket.send(JSON.stringify({ type: 'match_decline', match_id: matchId }));
         };
-        this.markAsRead(matchId);
+        this.toggleNotificationRead(this.notification.id)
+            .then(() => {
+                this.remove();
+                const customEvent = new CustomEvent('notificationRead', {
+                    detail: {
+                        'id': this.notification.id
+                    }
+                });
+                document.dispatchEvent(customEvent);
+            })
+            .catch(error => {
+                console.error('Failed to mark notification as read:', error);
+            });
+        this.updateUnread();
+        //this.markAsRead(matchId);
         this.remove();
     }
 

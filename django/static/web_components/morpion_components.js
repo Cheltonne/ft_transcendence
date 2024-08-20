@@ -188,7 +188,30 @@ export class MorpionComponent extends HTMLElement {
         socket.onclose = (event) => {
             console.log('WebSocket connection closed with code:', event.code, "reason:", event.reason);
         };
-    }   
+    }
+   
+   /*async startMatchmaking() {
+        //const isAuthenticated = await this.checkAuthenticated();
+        //if (!isAuthenticated) {
+           // this.showAlert('danger', 'You need to be logged in to start matchmaking.');
+            //return;
+        //}
+        
+        const response = await fetch('/morpion/start-matchmaking/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'Match found') {
+            this.showAlert('success', `Match found with ${data.player2}.`);
+            this.startGame(data.match_id, data.player2);
+        } else if (data.status === 'No players available, starting game with AI') {
+            this.showAlert('info', 'No players found, starting game with AI.');
+            this.startAIGame(data.match_id);
+        }
+    }*/
 
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;

@@ -23,7 +23,7 @@ def send_friend_request_notification(sender, recipient):
             }
         }
     )
-def send_notification(sender, recipient, type, message):
+"""def send_notification(sender, recipient, type, message):
     notification = Notification.objects.create(type=type, sender=sender, recipient=recipient, message=message)
     
     sender_data = {
@@ -44,6 +44,35 @@ def send_notification(sender, recipient, type, message):
                 'is_read': notification.is_read,
                 'type': notification.type,
             }
+        }
+    )"""
+
+def send_notification(sender, recipient, type, message, match_id=None):
+    notification = Notification.objects.create(type=type, sender=sender, recipient=recipient, message=message)
+    
+    sender_data = {
+        'id': sender.id,
+        'username': sender.username,
+    }
+    
+    notification_data = {
+        'id': notification.id,
+        'message': notification.message,
+        'sender': sender_data,
+        'sender_pfp': sender.profile_picture.url,
+        'created_at': notification.created_at.isoformat(),
+        'is_read': notification.is_read,
+        'type': notification.type,
+    }
+    
+    if match_id is not None:
+        notification_data['match_id'] = match_id
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f'user_{recipient.id}',
+        {
+            'type': 'send_notification',
+            'notification': notification_data
         }
     )
 

@@ -91,4 +91,5 @@ def start_matchmaking(request):
         return JsonResponse({"status": "Match found", "player2": player2.username})
     else:
         # No players available, propose game against AI
+        match_ai = MatchAI.objects.create(player1=user)
         return JsonResponse({"status": "No players available, start game with AI"})
