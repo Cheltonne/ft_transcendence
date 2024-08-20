@@ -55,6 +55,18 @@ export class NotificationItem extends HTMLElement {
                     this.markAsRead(this.notification.id);
                 });
                 break;
+            case 'match_request':
+                actionsContainer.innerHTML = `
+                    <button class="btn btn-success">Accept Match</button>
+                    <button class="btn btn-danger">Reject Match</button>
+                `;
+                actionsContainer.querySelector('.btn-success').addEventListener('click', () => {
+                    this.acceptMatchRequest(this.notification.match_id);
+                });
+                actionsContainer.querySelector('.btn-danger').addEventListener('click', () => {
+                    this.declineMatchRequest(this.notification.match_id);
+                });
+                break;
             default:
                 actionsContainer.innerHTML = `
                     <button class="btn btn-primary read-btn">Mark as read</button>
@@ -87,6 +99,26 @@ export class NotificationItem extends HTMLElement {
                 console.error('Failed to mark notification as read:', error);
             });
         this.updateUnread();
+    }
+
+    acceptMatchRequest(matchId) {
+        // Send an accept message to the server
+        const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
+        socket.onopen = () => {
+            socket.send(JSON.stringify({ type: 'match_accept', match_id: matchId }));
+        };
+        this.markAsRead(matchId);
+        this.remove();
+    }
+    
+    declineMatchRequest(matchId) {
+        // Send a decline message to the server
+        const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
+        socket.onopen = () => {
+            socket.send(JSON.stringify({ type: 'match_decline', match_id: matchId }));
+        };
+        this.markAsRead(matchId);
+        this.remove();
     }
 
     markAsRead(notificationId) {

@@ -147,13 +147,27 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         elif data['type'] == 'match_request':
             await self.handle_match_request(data)
 
-    async def handle_match_request(self, data):
-        # You can customize this to include more details about the match
+    """async def handle_match_request(self, data):
         await self.send(text_data=json.dumps({
             'type': 'match_request',
             'player1': data['player1'],
             'match_id': data['match_id']
-        }))
+        }))"""
+    
+    async def handle_match_request(self, data):
+        await self.channel_layer.group_send(
+            f'user_{self.user.id}',
+            {
+                'type': 'send_notification',
+                'notification': {
+                    'type': 'match_request',
+                    'player1': data['player1'],
+                    'match_id': data['match_id'],
+                    'message': f"{data['player1']} wants to play with you."
+                }
+            }
+        )
+
 
     async def send_notification(self, event):
         await self.send(text_data=json.dumps(event["notification"]))
