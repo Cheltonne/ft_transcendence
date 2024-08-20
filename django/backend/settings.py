@@ -28,10 +28,9 @@ SECRET_KEY = 'django-insecure-*@=k@^3t$sqi-0#j3@(iwkebhvirzju^4zz!*3au_=240_jcas
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost']
-combinations = itertools.product(range(0, 255), repeat=2)
+combinations = itertools.product(range(1, 19), repeat=2)
 additional_allowed_hosts = [f'made-f0br{b}s{c}' for b, c in combinations]
 ALLOWED_HOSTS.extend(additional_allowed_hosts)
-
 
 # Application definition
 

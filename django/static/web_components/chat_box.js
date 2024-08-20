@@ -31,8 +31,9 @@ export class UserChatView extends HTMLElement {
                     <div class="dropdown">
                         <button class="dropbtn">⋮</button>
                         <div id="dropdownMenu" class="dropdown-content" style="color: black; cursor: pointer;">
-                            <a id="goToProfile">Go to User Profile</a>
-                            <a id="unblockUser">Unblock User</a>
+                            <a id="goToProfile" class="btn btn-primary">Go to User Profile</a>
+                            <a id="blockUser" class="btn btn-danger">Block User</a>
+                            <a id="unblockUser" class="btn btn-primary">Unblock User</a>
                         </div>
                     </div>
 
@@ -74,7 +75,7 @@ export class UserChatView extends HTMLElement {
         this.setupEventListeners();
         this.setupWebSocketListeners();
         this.loadChatHistory();
-        console.log(this._interlocutor.username)
+        console.log(this._interlocutor.username, this._interlocutor.id)
     }
 
     disconnectedCallback() {
@@ -129,6 +130,7 @@ export class UserChatView extends HTMLElement {
         });
 
         const goToProfileButton = this.shadowRoot.querySelector('#goToProfile');
+        const blockUserButton = this.shadowRoot.querySelector('#blockUser');
         const unblockUserButton = this.shadowRoot.querySelector('#unblockUser');
 
         goToProfileButton.addEventListener('click', () => {
@@ -136,7 +138,11 @@ export class UserChatView extends HTMLElement {
         });
 
         unblockUserButton.addEventListener('click', () => {
-            this.unblockUser();
+            this.unblockUser(this._interlocutor.id);
+        });
+
+        blockUserButton.addEventListener('click', () => {
+            this.blockUser(this._interlocutor.id);
         });
     }
 
@@ -251,17 +257,8 @@ export class UserChatView extends HTMLElement {
     }
 
     async blockUser(userId) {
-        console.log(`Blocking user with ID: ${userId}`);
-        await fetch(`accounts/users/${userId}/block-user/`);
-    }
-
-    async unblockUser(userId) {
-        console.log(`Unblocking user with ID: ${userId}`);
-        await fetch(`accounts/users/${userId}/unblock-user/`);
-    }
-
-    async blockUser(userId) {
         const username = this._interlocutor.username; 
+        userId = this._interlocutor.id;
         try {
             const response = await fetch(`/accounts/users/${userId}/block-user/`, {
                 method: 'POST',
@@ -275,6 +272,7 @@ export class UserChatView extends HTMLElement {
 
             if (response.ok) {
                 showToast(`${username} has been blocked.`, 'success');
+                this.loadChatHistory();
             } else {
                 showToast('Failed to block user', 'error');
             }
@@ -299,6 +297,7 @@ export class UserChatView extends HTMLElement {
 
             if (response.ok) {
                 showToast(`${username} has been unblocked.`, 'success');
+                this.loadChatHistory();
             } else {
                 showToast('Failed to unblock user', 'error');
             }

@@ -76,9 +76,7 @@ export function showView(viewName, userId = null) {
 			}
 		}
 	}
-
 	const targetView = document.querySelector(`#${viewName}-content`);
-
 	if (targetView) {
 		if (!document.querySelector(`${viewName}-view`)) {
 			const new_component = document.createElement(`${viewName}-view`);
@@ -90,17 +88,13 @@ export function showView(viewName, userId = null) {
 		}
 		targetView.classList.remove('hidden');
 	}
-
 	const sidebar = document.querySelector('.sidebar');
-	if (sidebar && sidebar.classList.contains('active')) {
+	if (sidebar && sidebar.classList.contains('active'))
 		toggleMenu();
-	}
-
-	if (viewName !== 'pong') {
+	if (viewName !== 'pong')
 		onoffGame('off');
-	} else if (viewName === 'pong') {
+	else if (viewName === 'pong')
 		onoffGame('on');
-	}
 }
 
 
@@ -114,7 +108,17 @@ export function showForm(viewName) {
 	}
 	for (const view of allViews) {
 		const currentView = view.dataset.view;
-		view.classList.toggle('hidden', currentView !== viewName);
+		if (currentView !== viewName) {
+			view.classList.add('hidden');
+			while (view.firstChild) {
+				if (view.getAttribute('data-view') !== 'pong')
+					view.removeChild(view.firstChild);
+				else
+					break;
+			}
+		}
+		else
+		view.classList.remove('hidden');
 	}
 	const sidebar = document.querySelector('.sidebar');
 	if (sidebar && sidebar.classList.contains('active'))

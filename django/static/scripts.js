@@ -132,6 +132,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	window.addEventListener('user-login', () => { toggleNotificationIcon(); console.log('caught login event') });
 	window.addEventListener('user-logout', () => { toggleNotificationIcon(); console.log('caught logout event') });
-	//window.addEventListener('user-logout', toggleNotificationIcon);
+});
+
+window.addEventListener('beforeunload', function () { // close online status socket upon closing tab/window
+    if (socket && socket.readyState === WebSocket.OPEN)
+        socket.close();
 });
 

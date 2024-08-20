@@ -81,8 +81,8 @@ export class OtherUserProfileCard extends HTMLElement {
                 if (profilePictureUrl.includes('intra.42.fr'))
                     profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
                 const regex = /http:\/\/made-[^\/]+\/?/;
-                if (pfpUrl.match(regex))
-                    pfpUrl = pfpUrl.replace(regex, '');
+                if (profilePictureUrl.match(regex))
+                    profilePictureUrl = profilePictureUrl.replace(regex, '');
                 this.pfp.innerHTML = `<img src="${profilePictureUrl.replace('http://localhost/', '')}"></img>`;
             } else
                 showToast('Failed to load user profile', 'error');

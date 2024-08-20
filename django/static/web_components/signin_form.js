@@ -64,15 +64,7 @@ export class SigninForm extends HTMLElement {
                     window.clearInterval(pollTimer);
                     this.deleteCookie('oauth_message');
                     this.handleOAuthMessage(JSON.parse(message));
-                }
-                if (authWindow.closed) {
-                    window.clearInterval(pollTimer);
-                    if (message) {
-                        window.clearInterval(pollTimer);
-                        this.deleteCookie('oauth_message');
-                        this.handleOAuthMessage(JSON.parse(message));
-                    }
-                    console.log('OAuth BIGG fucc shit!!!')
+                    authWindow.close();
                 }
             }, 1000);
 

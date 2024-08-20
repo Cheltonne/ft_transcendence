@@ -28,7 +28,7 @@ def get_oauth_url(request):
     if 'localhost' in request.get_host():
         redirect_uri = 'https://localhost:4343/oauth/callback/'
     else:
-        redirect_uri = 'https://made-f0br7s14:4343/oauth/callback/'
+        redirect_uri = 'https://made-f0br4s7:4343/oauth/callback/'
 
     auth_url = (
         f"https://api.intra.42.fr/oauth/authorize?"
@@ -51,11 +51,10 @@ def oauth_callback(request):
     client_id = 'u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7'
     client_secret = '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'
     
-    # Use the same logic to detect the correct redirect_uri
     if 'localhost' in request.get_host():
         redirect_uri = 'https://localhost:4343/oauth/callback/'
     else:
-        redirect_uri = 'https://made-f0br7s14:4343/oauth/callback/'
+        redirect_uri = 'https://made-f0br4s7:4343/oauth/callback/'
 
     token_url = 'https://api.intra.42.fr/oauth/token'
     token_data = {
@@ -91,12 +90,11 @@ def oauth_callback(request):
         return JsonResponse({'error': 'No email found in user information'}, status=400)
 
     user_id = user_info.get('id', 'unknown')
-    user_kind = user_info.get('kind', 'unknown')
     user_login = user_info.get('login', 'unknown')
     profile_picture = user_info.get('image', {}).get('link', '')
     email = user_info.get('email', 'unknown')
 
-    suggested_username = f"{user_login}-cacs"
+    suggested_username = user_login
     user = CustomUser.objects.filter(id=user_id).first()
     
     if user:

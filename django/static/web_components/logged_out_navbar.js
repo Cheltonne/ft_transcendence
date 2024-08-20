@@ -10,7 +10,7 @@ export class LoggedOutNavbar extends HTMLElement {
 	        <ul class="nav-list">
 		        <li><div class="fs-5 fw-semibold" style="color:white;">Hey anon!</div></li>
 		        <li><a href="#" class="homeButton">Home</a></li>
-		        <li><a class="button loginButton" id="loginButton" href="#">Login</a></li>
+		        <li><a class="button loginButton" id="loginButton" href="#">Sign in</a></li>
 	        </ul>
         </div>
         `;
