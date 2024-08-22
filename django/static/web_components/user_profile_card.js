@@ -22,19 +22,23 @@ export class UserProfileCard extends HTMLElement {
             <img id="pfp" src='${pfp}'>
             <h1 id="username">${this.currentUser.username}</h1>
             <div  class='container text-center'>
-                <div class="wins">
-                    ${this.currentUser.wins}
+                <div class="stats">
+                    Pong stats :
+                    ${this.currentUser.wins} win(s) |   
+                    ${this.currentUser.losses} loss(es)
                 </div>
-                <div class="losses">
-                    ${this.currentUser.losses}
+            </div>
+            <div class='container text-center' style="margin-top:1rem;">
+                <div>
+                    Game History:
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm text-center">
-                    <img src="media/pong_icon.png" class="icon view-matches-link" id="view-pong-matches">
+                    <img src="media/pong_icon.png" title="Pong matches" class="icon view-matches-link" id="view-pong-matches">
                 </div>
                 <div class="col-sm text-center">
-                    <img src="media/tictactoe_icon.png" class="icon view-matches-link" id="view-morpion-matches">
+                    <img src="media/tictactoe_icon.png" title="Tic Tac Toe matches" class="icon view-matches-link" id="view-morpion-matches">
                 </div>
             </div>
             <a class="btn updateButton">Update Profile</a>
@@ -64,7 +68,7 @@ export class UserProfileCard extends HTMLElement {
         };
         user_observer = new UserObserver(elements);
         user.addObserver(user_observer);
-        this.shadowRoot.querySelector('.updateButton').addEventListener('click', (event) => {
+        this.shadowRoot.querySelector('.updateButton').addEventListener('click', () => {
             navigateTo('update', 2);
         });
         this.shadowRoot.addEventListener('click', (event) => {

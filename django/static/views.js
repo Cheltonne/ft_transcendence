@@ -154,7 +154,7 @@ export async function handleFormSubmit(formType) {
 							.then(data => {
 								if (userIsAuthenticated()) {
 									user.setUserData(data);
-									navigateTo('user-profile',);
+									navigateTo('user-profile', 1);
 								}
 								else
 									handleError('You\'re not authenticated anymore!');

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.template.exceptions import TemplateDoesNotExist
 from django.conf import settings
+from django.core.files import File
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth import login
@@ -10,6 +11,7 @@ import random
 import string
 import requests
 import json
+import os
 from accounts.models import CustomUser
 
 def index(request):
@@ -27,8 +29,10 @@ def get_oauth_url(request):
 
     if 'localhost' in request.get_host():
         redirect_uri = 'https://localhost:4343/oauth/callback/'
-    else:
+    elif 'f0br4s7' in request.get_host():
         redirect_uri = 'https://made-f0br4s7:4343/oauth/callback/'
+    else:
+        redirect_uri = 'https://made-f0Cr8s2:4343/oauth/callback/'
 
     auth_url = (
         f"https://api.intra.42.fr/oauth/authorize?"
@@ -53,8 +57,10 @@ def oauth_callback(request):
     
     if 'localhost' in request.get_host():
         redirect_uri = 'https://localhost:4343/oauth/callback/'
-    else:
+    elif 'f0br4s7' in request.get_host():
         redirect_uri = 'https://made-f0br4s7:4343/oauth/callback/'
+    else:
+        redirect_uri = 'https://made-f0Cr8s2:4343/oauth/callback/'
 
     token_url = 'https://api.intra.42.fr/oauth/token'
     token_data = {
@@ -104,6 +110,14 @@ def oauth_callback(request):
             'message': 'Authenticated successfully'
         })
     else:
+        file_path = os.path.join(settings.MEDIA_ROOT, f'{user_id}.jpg')
+
+        response = requests.get(profile_picture, stream=True)
+        if response.status_code == 200:
+            with open(file_path, 'wb') as out_file:
+                out_file.write(response.content)
+            profile_picture = str(user_id) + '.jpg'
+
         if CustomUser.objects.filter(username=suggested_username).exists():
             return render(request, 'oauth_callback.html', {
                 'error': 'Username taken',

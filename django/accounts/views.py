@@ -306,6 +306,25 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         }
         return Response(data)
 
+    @action(detail=True, methods=['get'], url_path='profile')
+    def retrieve_user(self, request, pk=None):
+        user = self.get_object()
+        serializer = self.get_serializer(user)
+        user_matches = list(user.matches.all().order_by('id').values
+                ('alias', 'user_score', 'alias_score', 'winner__username', 'timestamp'))
+        user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values
+                ('player1__username', 'player2__username', 'player1_score', 'player2_score',
+                  'winner__username', 'timestamp'))
+        user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values
+                ('player1__username', 'player1_score', 'ai_score', 'winner__username',
+                'timestamp'))
+        response_data = serializer.data
+        response_data['user_matches'] = user_matches
+        response_data['morpion_matches'] = user_morpion_matches
+        response_data['morpion_ai_matches'] = user_morpion_ai_matches
+        return Response(response_data)
+
+
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]

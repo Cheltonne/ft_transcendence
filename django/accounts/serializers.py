@@ -3,10 +3,11 @@ from .models import CustomUser, Notification, Message
 
 class CustomUserSerializer(serializers.ModelSerializer):
     friends = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    user_matches = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'profile_picture', 'wins', 'losses', 
+        fields = ['id', 'username', 'profile_picture', 'user_matches', 'wins', 'losses', 
                   'friends', 'online_devices_count', 'blocked_users']
 
     def get_friends(self, obj):

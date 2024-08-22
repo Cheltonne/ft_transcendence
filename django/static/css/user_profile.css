@@ -23,7 +23,7 @@
     display: flex;
     flex-direction: column;
     width: 450px;
-    max-height: 720px;
+    height: 720px;
     margin: 50px auto;
     background-color: #7bb6ac;
     border-radius: 5px;
@@ -115,4 +115,10 @@
     background-color: #e9dacb;
     color: brown;
     padding: 1rem;
+}
+
+.stats {
+    background-color: #e9dacbb6;
+    color: brown;
+    padding: 0.5rem;
 }

@@ -56,7 +56,7 @@ export class SigninForm extends HTMLElement {
         try {
             const response = await fetch('/oauth/url/');
             const data = await response.json();
-            const authWindow = window.open(data.auth_url, '_blank', 'width=500,height=720');
+            const authWindow = window.location.replace(data.auth_url, '_blank', 'width=500,height=720');
 
             const pollTimer = window.setInterval(() => {
                 const message = getCookie('oauth_message');
@@ -64,7 +64,7 @@ export class SigninForm extends HTMLElement {
                     window.clearInterval(pollTimer);
                     this.deleteCookie('oauth_message');
                     this.handleOAuthMessage(JSON.parse(message));
-                    authWindow.close();
+                    //authWindow.close();
                 }
             }, 1000);
 
