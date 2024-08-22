@@ -204,20 +204,97 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
 class PongConsumer(AsyncWebsocketConsumer):
+    rooms = {}
+
     async def connect(self):
         self.player_uuid = str(uuid.uuid4())
         self.room_name = None
+        await self.accept()
         print(f'Client {self.player_uuid} connected')
 
-    async def connect(self):
-        await self.accept()
-        print('Client connected')
-
     async def disconnect(self, close_code):
-        print('Client disconnected')
+        if self.room_name and self.room_name in self.rooms:
+            self.rooms[self.room_name].remove(self.player_uuid)
+            if not self.rooms[self.room_name]:
+                del self.rooms[self.room_name]
+        print(f'Client {self.player_uuid} disconnected')
 
     async def receive(self, text_data):
-        print('Received message:', text_data)
+        data = json.loads(text_data)
+        command = data.get('command')
+
+        if command == 'create_room':
+            await self.create_room(data['room_name'])
+        elif command == 'join_room':
+            await self.join_room(data['room_name'])
+        elif command == 'start_game':
+            await self.start_game()
+
+    async def create_room(self, room_name):
+        if room_name in self.rooms:
+            await self.send(text_data=json.dumps({
+                'message': 'Room already exists'
+            }))
+        else:
+            self.rooms[room_name] = [self.player_uuid]
+            self.room_name = room_name
+            await self.send(text_data=json.dumps({
+                'message': 'Room created',
+                'room_name': room_name
+            }))
+            print(f'Room {room_name} created by {self.player_uuid}')
+
+    async def join_room(self, room_name):
+        if room_name in self.rooms:
+            if len(self.rooms[room_name]) < 3:
+                self.rooms[room_name].append(self.player_uuid)
+                self.room_name = room_name
+
+                await self.send(text_data=json.dumps({
+                    'message': 'Joined room',
+                    'room_name': room_name
+                }))
+                await self.channel_layer.group_add(
+                    self.room_name,
+                    self.channel_name
+                )
+                print(f'{self.player_uuid} joined room {room_name}')
+
+                await self.channel_layer.group_send(
+                    self.room_name,
+                    {
+                        'type': 'player_joined',
+                        'player_uuid': self.player_uuid,
+                        'room_name': self.room_name
+                    }
+                )
+            else:
+                await self.send(text_data=json.dumps({
+                    'message': 'Room is full'
+                }))
+        else:
+            await self.send(text_data=json.dumps({
+                'message': 'Room does not exist'
+            }))
+
+    async def start_game(self):
+        if self.room_name:
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'game_started',
+                    'message': 'The game has started!'
+                }
+            )
+            print(f'Game started in room {self.room_name}')
+
+    async def player_joined(self, event):
+        player_uuid = event['player_uuid']
         await self.send(text_data=json.dumps({
-            'message': 'Hello, client'
+            'message': f'Player {player_uuid} joined the room {self.room_name}'
+        }))
+
+    async def game_started(self, event):
+        await self.send(text_data=json.dumps({
+            'message': event['message']
         }))
