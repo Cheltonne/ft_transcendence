@@ -1,3 +1,4 @@
+import { OnlineChoice } from './online.js';
 export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
@@ -28,6 +29,7 @@ let matches = [];
 const tournamentTree = document.getElementById('tournamentTree');
 const EndTourneyButton = document.getElementById("EndTourneyButton");
 const myButton = document.getElementById("myButton");
+const LiveButton = document.getElementById("LiveButton");
 let TourneyMode = false;
 const message = document.getElementById("message");
 
@@ -259,6 +261,7 @@ function clear(){
     Paddle1 = null;
     Paddle2 = null;
     nameTourney.value = "";
+    document.getElementById('onlineChoiceUI').style.display = 'hidden';
     EndTourneyButton.style.display = 'none';
     NextMatchButton.style.display = 'none';
     keysPressed = {};
@@ -295,7 +298,13 @@ document.addEventListener("DOMContentLoaded", function() {
     EnterScreen();
     myButton.addEventListener("click", function() {
         myButton.style.display = "none";
+        LiveButton.style.display = "none";
         ModeChoice();
+    });
+    LiveButton.addEventListener("click", function() {
+        LiveButton.style.display = "none";
+        myButton.style.display = "none";
+        OnlineChoice();
     });
 });
 

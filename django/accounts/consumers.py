@@ -1,4 +1,5 @@
 import json
+import uuid
 from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async, async_to_sync
@@ -200,4 +201,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "sender_id": sender_id,
             "timestamp": timestamp,
             "sender_profile_picture": sender_profile_picture,
+        }))
+
+class PongConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.player_uuid = str(uuid.uuid4())
+        self.room_name = None
+        print(f'Client {self.player_uuid} connected')
+
+    async def connect(self):
+        await self.accept()
+        print('Client connected')
+
+    async def disconnect(self, close_code):
+        print('Client disconnected')
+
+    async def receive(self, text_data):
+        print('Received message:', text_data)
+        await self.send(text_data=json.dumps({
+            'message': 'Hello, client'
         }))
