@@ -29,7 +29,7 @@ export class OtherUserProfileCard extends HTMLElement {
         <div class="user-info-card" id="user-info-card">
             <img id="pfp" src='${this.pfpUrl}'>
             <h1 id="username">${this.user.username}</h1>
-            <div  class='container text-center'>
+            <div class='container text-center'>
                 <div class="stats">
                     Pong stats :
                     ${this.user.wins} win(s) |   
