@@ -24,8 +24,11 @@ export class OtherUserProfileCard extends HTMLElement {
         const regex = /http:\/\/made-[^\/]+\/?/;
         if (this.pfpUrl.match(regex))
             this.pfpUrl = this.pfpUrl.replace(regex, '');
+        this.pfpUrl = this.pfpUrl.replace("http://localhost/", '');
         template.innerHTML = `
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
         <div class="user-info-card" id="user-info-card">
             <img id="pfp" src='${this.pfpUrl}'>
             <h1 id="username">${this.user.username}</h1>
@@ -43,10 +46,14 @@ export class OtherUserProfileCard extends HTMLElement {
             </div>
             <div class="row">
                 <div class="col-sm text-center">
-                    <img src="media/pong_icon.png" title="Pong matches" class="icon view-matches-link" id="view-pong-matches">
+                    <img src="media/pong_icon.png"
+                    title="Pong matches" class="icon view-matches-link"
+                    id="view-pong-matches">
                 </div>
                 <div class="col-sm text-center">
-                    <img src="media/tictactoe_icon.png" title="Tic Tac Toe matches" class="icon view-matches-link" id="view-morpion-matches">
+                    <img src="media/tictactoe_icon.png"
+                    title="Tic Tac Toe matches" class="icon view-matches-link"
+                    id="view-morpion-matches">
                 </div>
             </div>
             <button class="btn btn-danger" id="blockUserButton">Block User</button>

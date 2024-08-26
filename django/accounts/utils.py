@@ -1,6 +1,16 @@
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import Notification
+from PIL import Image
+
+def resize_image(image_file, max_width):
+    image = Image.open(image_file)
+    original_width, original_height = image.size
+    aspect_ratio = original_width / original_height
+    new_height = int(max_width / aspect_ratio)
+    resized_image = image.resize((max_width, new_height), Image.LANCZOS)
+
+    return resized_image
 
 def send_friend_request_notification(sender, recipient):
     message = f'{sender.username} wants to add you as a friend.'

@@ -27,7 +27,8 @@
                 }));
                 console.log('succ');
             }
-            window.location.replace("https://" + sessionStorage.getItem("host").replace("oauth/callback/pong", ""));
+            window.location.replace("https://" + sessionStorage.getItem("host").replace(
+                "oauth/callback/pong", ""));
         })();
     </script>
 </body>

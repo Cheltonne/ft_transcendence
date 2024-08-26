@@ -39,7 +39,8 @@ export class SigninForm extends HTMLElement {
                 });
             }
             handleFormSubmit('signin');
-            this.shadowRoot.querySelector("#signupButton").addEventListener("click", (event) => {
+            this.shadowRoot.querySelector("#signupButton").addEventListener("click",
+                 (event) => {
                 event.preventDefault();
                 navigateTo('signup', 2);
             });
@@ -56,7 +57,8 @@ export class SigninForm extends HTMLElement {
         try {
             const response = await fetch('/oauth/url/');
             const data = await response.json();
-            const authWindow = window.location.replace(data.auth_url, '_blank', 'width=500,height=720');
+            const authWindow = window.location.replace(data.auth_url, '_blank',
+                'width=500,height=720');
             sessionStorage.setItem("host", window.location.host);
 
             const pollTimer = window.setInterval(() => {

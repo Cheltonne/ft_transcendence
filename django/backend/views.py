@@ -89,7 +89,8 @@ def oauth_callback(request):
         user_info_response = requests.get(user_info_url, headers={'Authorization': f'Bearer {access_token}'})
         user_info_response.raise_for_status()
     except requests.exceptions.RequestException as e:
-        return JsonResponse({'error': f'Failed to retrieve user information: {e}'}, status=500)
+        return JsonResponse({'error': f'Failed to retrieve user information: {e}'},
+                            status=500)
 
     user_info = user_info_response.json()
     email = user_info.get('email')

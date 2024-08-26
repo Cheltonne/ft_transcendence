@@ -1,9 +1,7 @@
-import json
 from PIL import Image
 from io import BytesIO
 from .forms import CustomUserCreationForm, \
 CustomAuthenticationForm, CustomUserChangeForm
-from .models import CustomUser, Notification, Message
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -13,19 +11,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate
-from django.shortcuts import get_object_or_404
-from django.db.models import Q
-from rest_framework import viewsets, status, generics
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response 
-from rest_framework.decorators import action, api_view
-from rest_framework.views import APIView
-from .serializers import CustomUserSerializer, \
-NotificationSerializer, MessageSerializer
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-from .utils import send_friend_request_notification,\
-request_already_sent, is_already_friends_with_recipient, send_notification
+from .utils import resize_image
 
 def logout_required(function):
     def wrap(request, *args, **kwargs):
