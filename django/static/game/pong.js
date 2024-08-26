@@ -94,6 +94,7 @@ NextMatchButton.addEventListener("click", function() {
     TourneyButton.style.display = 'none';
     let array = findMatchWithNullWinner();
     $("#aliasContainer").text(array.player1 + " VS " + array.player2);
+    // NOTIF TOURNOI CHAT
     clear();
     tournamentTree.style.display = 'none';
     NextMatchButton.style.display = 'none';
@@ -466,6 +467,7 @@ class PongBall {
                 this.speed += 0.04;
         } else {
             this.pos = this.nextPos;
+            // ENVOIE SERVEUR
         }
     
             if (this.pos.x <= 0 && this.goal == false) {
@@ -584,21 +586,6 @@ function draw() {
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
-    // AI DRAW RED BALL
-    //if (AIplayer && AIplayer.prediction) {
-    //ctx.beginPath();
-    //ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
-    //ctx.fillStyle = 'red';
-    //ctx.fill();
-    //}
-
-    //Draw trails and other dynamic elements
-    //for (let i = 0; i < Ball.trailPositions.length; i++) {
-    //ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
-    //ctx.beginPath();
-    //ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
-    //ctx.fill();
-    //}
 }
 
 //////////////////////////////////////////////////////////
