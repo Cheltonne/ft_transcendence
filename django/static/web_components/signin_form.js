@@ -57,14 +57,14 @@ export class SigninForm extends HTMLElement {
             const response = await fetch('/oauth/url/');
             const data = await response.json();
             const authWindow = window.location.replace(data.auth_url, '_blank', 'width=500,height=720');
+            sessionStorage.setItem("host", window.location.host);
 
             const pollTimer = window.setInterval(() => {
-                const message = getCookie('oauth_message');
+                const message = sessionStorage.getItem('oauth_message');
                 if (message) {
                     window.clearInterval(pollTimer);
-                    this.deleteCookie('oauth_message');
                     this.handleOAuthMessage(JSON.parse(message));
-                    //authWindow.close();
+                    window.alert("This a friendly fade");
                 }
             }, 1000);
 
@@ -72,10 +72,6 @@ export class SigninForm extends HTMLElement {
             console.log('Error during OAuth login:', error);
             showToast(`Error during OAuth login: ${error}`, 'error');
         }
-    }
-
-    deleteCookie(name) {
-        document.cookie = name + '=; Max-Age=-99999999;';
     }
 
     handleOAuthMessage(message) {
@@ -92,9 +88,8 @@ export class SigninForm extends HTMLElement {
         } else if (message.type === 'oauth_success') {
             this.handleLoginSucc();
         }
-        else{
-
-        console.log('OAuth BIGG fucc!!')
+        else {
+            console.log('OAuth BIGG fucc!!')
         }
     }
 

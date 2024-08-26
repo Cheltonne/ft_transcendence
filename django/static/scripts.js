@@ -1,4 +1,4 @@
-import { toggleMenu, userIsAuthenticated, initializeWebSocket } from './utils.js';
+import { toggleMenu, userIsAuthenticated, initializeWebSocket, showToast } from './utils.js';
 import { navigateTo, showView } from './views.js';
 import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
@@ -17,6 +17,7 @@ export const dropDownButton = document.querySelector('.notification-btn');
 export const dropdownMenu = document.querySelector('.dropdown-menu-items');
 const userProfileContainer = document.getElementById('user-profile-content');
 const logo = document.querySelector(".logo");
+let	oauth_message;
 
 export async function getUserInfo() {
 	return fetch("accounts/get-user-info/")
@@ -90,14 +91,6 @@ async function loadNavbar() { //always serve correct version of sidebar
 	menu = document.querySelector('.sidebar');
 }
 
-$(document).ready(function () {
-	getUserInfo();
-	loadNavbar();
-	const initialState = { viewName: 'pong', type: 1, userId: null };
-	history.replaceState(initialState, '', 'pong');
-	initializeWebSocket();
-});
-
 document.addEventListener('DOMContentLoaded', function () {
 	async function isUserAuthenticated() {
 		return await userIsAuthenticated();
@@ -139,3 +132,24 @@ window.addEventListener('beforeunload', function () { // close online status soc
         socket.close();
 });
 
+$(document).ready(function () {
+	getUserInfo();
+	loadNavbar();
+	const initialState = { viewName: 'pong', type: 1, userId: null };
+	history.replaceState(initialState, '', 'pong');
+	initializeWebSocket();
+	oauth_message = JSON.parse(sessionStorage.getItem('oauth_message'));
+	if (oauth_message && oauth_message.type === 'username_taken') {
+		console.log('Username is taken. Please choose another one.');
+		showToast(`Username ${oauth_message.would_be_username} is taken. 
+			Please choose another one.`, 'error');
+		navigateTo('choose-username', 2, oauth_message.oauth_id);
+		window.userInfo = {
+			oauth_id: oauth_message.oauth_id,
+			email: oauth_message.email,
+			profile_picture: oauth_message.profile_picture
+		};
+	}
+	sessionStorage.removeItem("oauth_message");
+	sessionStorage.removeItem("host");
+});

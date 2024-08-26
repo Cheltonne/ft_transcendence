@@ -13,6 +13,7 @@ import requests
 import json
 import os
 from accounts.models import CustomUser
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 def index(request):
     return render(request, 'index.html')
@@ -32,7 +33,7 @@ def get_oauth_url(request):
     elif 'f0br4s7' in request.get_host():
         redirect_uri = 'https://made-f0br4s7:4343/oauth/callback/'
     else:
-        redirect_uri = 'https://made-f0Cr8s2:4343/oauth/callback/'
+        redirect_uri = 'https://' + request.get_host() + ':4343/oauth/callback/'
 
     auth_url = (
         f"https://api.intra.42.fr/oauth/authorize?"
@@ -60,7 +61,7 @@ def oauth_callback(request):
     elif 'f0br4s7' in request.get_host():
         redirect_uri = 'https://made-f0br4s7:4343/oauth/callback/'
     else:
-        redirect_uri = 'https://made-f0Cr8s2:4343/oauth/callback/'
+        redirect_uri = 'https://' + request.get_host() + ':4343/oauth/callback/'
 
     token_url = 'https://api.intra.42.fr/oauth/token'
     token_data = {
@@ -143,6 +144,7 @@ def oauth_callback(request):
 def oauth_status(request):
     return JsonResponse({'is_authenticated': True})
 
+@ensure_csrf_cookie
 def choose_username(request):
     if request.method == 'POST':
         data = json.loads(request.body)

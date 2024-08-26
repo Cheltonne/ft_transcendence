@@ -7,13 +7,6 @@
 <body>
     <script>
         (function() {
-            function setCookie(name, value, minutes) {
-                const date = new Date();
-                date.setTime(date.getTime() + (minutes * 60 * 1000));
-                const expires = "expires=" + date.toUTCString();
-                document.cookie = name + "=" + value + ";" + expires + ";path=/";
-            }
-
             const error = "{{ error|escapejs }}";
             const oauth_id = "{{ oauth_id|escapejs }}";
             const email = "{{ email|escapejs }}";
@@ -21,23 +14,20 @@
             const would_be_username = "{{ would_be_username|escapejs }}";
 
             if (error === 'Username taken') {
-                setCookie('oauth_message', JSON.stringify({
+                sessionStorage.setItem('oauth_message', JSON.stringify({
                     type: 'username_taken',
                     oauth_id: oauth_id,
                     email: email,
                     profile_picture: profile_picture,
                     would_be_username: would_be_username
-                }), 5);
-                window.alert('if')
+                }));
             } else {
-                setCookie('oauth_message', JSON.stringify({
+                sessionStorage.setItem('oauth_message', JSON.stringify({
                     type: 'oauth_success'
-                }), 5);
+                }));
                 console.log('succ');
             }
-            //window.close();
-            //document.write('<p>You can close this window now.</p>');
-            window.location.replace('https://made-f0Cr8s2:4343/');
+            window.location.replace("https://" + sessionStorage.getItem("host").replace("oauth/callback/pong", ""));
         })();
     </script>
 </body>
