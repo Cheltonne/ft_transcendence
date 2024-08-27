@@ -30,8 +30,6 @@ def get_oauth_url(request):
 
     if 'localhost' in request.get_host():
         redirect_uri = 'https://localhost:4343/oauth/callback/'
-    elif 'f0br4s7' in request.get_host():
-        redirect_uri = 'https://made-f0br4s7:4343/oauth/callback/'
     else:
         redirect_uri = 'https://' + request.get_host() + ':4343/oauth/callback/'
 
@@ -58,8 +56,6 @@ def oauth_callback(request):
     
     if 'localhost' in request.get_host():
         redirect_uri = 'https://localhost:4343/oauth/callback/'
-    elif 'f0br4s7' in request.get_host():
-        redirect_uri = 'https://made-f0br4s7:4343/oauth/callback/'
     else:
         redirect_uri = 'https://' + request.get_host() + ':4343/oauth/callback/'
 

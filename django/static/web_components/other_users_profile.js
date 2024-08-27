@@ -90,20 +90,20 @@ export class OtherUserProfileCard extends HTMLElement {
         });
     }
 
-renderUserProfile(userInfo, matchType = 'pong') {
-    console.log("renderUserProfile() called.");
-    const matchHistoryCards = this.shadowRoot.querySelector('.match-history-cards');
-    matchHistoryCards.innerHTML = '';
+    renderUserProfile(userInfo, matchType = 'pong') {
+        console.log("renderUserProfile() called.");
+        const matchHistoryCards = this.shadowRoot.querySelector('.match-history-cards');
+        matchHistoryCards.innerHTML = '';
 
-    if (matchType === 'pong' && userInfo.user_matches) {
-        let i = 0;
-        userInfo.user_matches.forEach(match => {
-            console.log(match)
-            const matchDate = match.timestamp ? new Date(match.timestamp) : null;
-            const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
-            const matchCard = this.shadowRoot.ownerDocument.createElement('div');
-            matchCard.classList.add('match-history-card');
-            matchCard.innerHTML = `
+        if (matchType === 'pong' && userInfo.user_matches) {
+            let i = 0;
+            userInfo.user_matches.forEach(match => {
+                console.log(match)
+                const matchDate = match.timestamp ? new Date(match.timestamp) : null;
+                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                matchCard.classList.add('match-history-card');
+                matchCard.innerHTML = `
                     <h1>Pong Match ${++i}</h1>
                     <b>Opponent</b>
                     <p>CPU</p>
@@ -114,16 +114,16 @@ renderUserProfile(userInfo, matchType = 'pong') {
                     <b>Played at</b>
                     <p>${formattedDate}</p>
                 `;
-            matchHistoryCards.appendChild(matchCard);
-        });
-    } else if (matchType === 'morpion' && userInfo.morpion_matches) {
-        let i = 0;
-        userInfo.morpion_matches.forEach(match => {
-            const matchCard = this.shadowRoot.ownerDocument.createElement('div');
-            const matchDate = match.timestamp ? new Date(match.timestamp) : null;
-            const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
-            matchCard.classList.add('match-history-card');
-            matchCard.innerHTML = `
+                matchHistoryCards.appendChild(matchCard);
+            });
+        } else if (matchType === 'morpion' && userInfo.morpion_matches) {
+            let i = 0;
+            userInfo.morpion_matches.forEach(match => {
+                const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                const matchDate = match.timestamp ? new Date(match.timestamp) : null;
+                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                matchCard.classList.add('match-history-card');
+                matchCard.innerHTML = `
                     <h1>Morpion Match ${++i}</h1>
                     <b>Player 1</b>
                     <p>${match.player1__username}</p>
@@ -136,15 +136,15 @@ renderUserProfile(userInfo, matchType = 'pong') {
                     <b>Played at</b>
                     <p>${formattedDate}</p>
                 `;
-            matchHistoryCards.appendChild(matchCard);
-        });
-        let y = 0;
-        userInfo.morpion_ai_matches.forEach(match => {
-            const matchCard = this.shadowRoot.ownerDocument.createElement('div');
-            const matchDate = match.timestamp ? new Date(match.timestamp) : null;
-            const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
-            matchCard.classList.add('match-history-card');
-            matchCard.innerHTML = `
+                matchHistoryCards.appendChild(matchCard);
+            });
+            let y = 0;
+            userInfo.morpion_ai_matches.forEach(match => {
+                const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                const matchDate = match.timestamp ? new Date(match.timestamp) : null;
+                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                matchCard.classList.add('match-history-card');
+                matchCard.innerHTML = `
                     <h1>Morpion Ai Match ${++y}</h1>
                     <b>Player</b>
                     <p>${match.player1__username}</p>
@@ -157,16 +157,14 @@ renderUserProfile(userInfo, matchType = 'pong') {
                     <b>Played at</b>
                     <p>${formattedDate}</p>
                 `;
-            matchHistoryCards.appendChild(matchCard);
-        });
+                matchHistoryCards.appendChild(matchCard);
+            });
+        }
     }
-}
 
     async blockUser() {
-    const username = this.shadowRoot.querySelector('#username').textContent.trim();
-    try {
-        console.log(this.user.id, 'ID !!!!')
-        const response = await fetch(`/accounts/users/${this.user.id}/block-user/`, {
+        const username = this.shadowRoot.querySelector('#username').textContent.trim();
+        await fetch(`/accounts/users/${this.user.id}/block-user/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -174,23 +172,23 @@ renderUserProfile(userInfo, matchType = 'pong') {
                 'X-CSRFToken': getCookie('csrftoken')
             },
             body: JSON.stringify({ username })
-        });
-
-        if (response.ok) {
-            showToast(`${username} has been blocked.`, 'success');
-        } else {
-            showToast('Failed to block user', 'error');
-        }
-    } catch (error) {
-        console.error('Error blocking user:', error);
-        showToast('Error blocking user', 'error');
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message)
+                    showToast(data.message, 'success');
+                else
+                    showToast(data.error, 'error');
+            })
+            .catch(error => {
+                console.error('Error blocking user:', error);
+                showToast('Error blocking user', 'error');
+            })
     }
-}
 
     async unblockUser() {
-    const username = this.shadowRoot.querySelector('#username').textContent.trim();
-    try {
-        const response = await fetch(`/accounts/users/${this.user.id}/unblock-user/`, {
+        const username = this.shadowRoot.querySelector('#username').textContent.trim();
+        await fetch(`/accounts/users/${this.user.id}/unblock-user/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -198,21 +196,22 @@ renderUserProfile(userInfo, matchType = 'pong') {
                 'X-CSRFToken': getCookie('csrftoken')
             },
             body: JSON.stringify({ username })
-        });
-
-        if (response.ok) {
-            showToast(`${username} has been unblocked.`, 'success');
-        } else {
-            showToast('Failed to unblock user', 'error');
-        }
-    } catch (error) {
-        console.error('Error unblocking user:', error);
-        showToast('Error unblocking user', 'error');
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message)
+                    showToast(data.message, 'success');
+                else
+                    showToast(data.error, 'error');
+            })
+            .catch(error => {
+                console.error('Error unblocking user:', error);
+                showToast('Error unblocking user', 'error');
+            })
     }
-}
 
-disconnectedCallback() {
-}
+    disconnectedCallback() {
+    }
 }
 
 customElements.define('other-user-profile-view', OtherUserProfileCard);

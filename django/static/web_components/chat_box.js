@@ -257,54 +257,56 @@ export class UserChatView extends HTMLElement {
     }
 
     async blockUser(userId) {
-        const username = this._interlocutor.username; 
+        const username = this._interlocutor.username;
         userId = this._interlocutor.id;
-        try {
-            const response = await fetch(`/accounts/users/${userId}/block-user/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`,
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ username })
-            });
-
-            if (response.ok) {
-                showToast(`${username} has been blocked.`, 'success');
-                this.loadChatHistory();
-            } else {
-                showToast('Failed to block user', 'error');
-            }
-        } catch (error) {
-            console.error('Error blocking user:', error);
-            showToast('Error blocking user', 'error');
-        }
+        await fetch(`/accounts/users/${userId}/block-user/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('token')}`,
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ username })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showToast(data.message, 'success');
+                    this.loadChatHistory();
+                }
+                else
+                    showToast(data.error, 'error');
+            })
+            .catch(error => {
+                console.error('Error blocking user:', error);
+                showToast('Error blocking user', 'error');
+            })
     }
 
     async unblockUser(userId) {
-        const username = this._interlocutor.username; 
-        try {
-            const response = await fetch(`/accounts/users/${userId}/unblock-user/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`,
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ username })
-            });
-
-            if (response.ok) {
-                showToast(`${username} has been unblocked.`, 'success');
-                this.loadChatHistory();
-            } else {
-                showToast('Failed to unblock user', 'error');
-            }
-        } catch (error) {
-            console.error('Error unblocking user:', error);
-            showToast('Error unblocking user', 'error');
-        }
+        const username = this._interlocutor.username;
+        await fetch(`/accounts/users/${userId}/unblock-user/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('token')}`,
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ username })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showToast(data.message, 'success');
+                    this.loadChatHistory();
+                }
+                else
+                    showToast(data.error, 'error');
+            })
+            .catch(error => {
+                console.error('Error unblocking user:', error);
+                showToast('Error unblocking user', 'error');
+            })
     }
 
     sendMessage() {

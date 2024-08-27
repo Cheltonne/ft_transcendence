@@ -146,8 +146,10 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         try:
             current_user = request.user
             user_to_block = self.get_object()
-            current_user.block_user(user_to_block)
-            return Response({"message": f"{user_to_block.username} has been blocked."}, status=status.HTTP_200_OK)
+            if user_to_block not in current_user.blocked_users.all():
+                current_user.block_user(user_to_block)
+                return Response({"message": f"{user_to_block.username} has been blocked."}, status=status.HTTP_200_OK)
+            return Response({"error": "User is already blocked!"}, status=status.HTTP_400_BAD_REQUEST)
         except CustomUser.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -158,8 +160,10 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         try:
             current_user = request.user
             user_to_unblock = self.get_object()
-            current_user.unblock_user(user_to_unblock)
-            return Response({"message": f"{user_to_unblock.username} has been unblocked."}, status=200)
+            if user_to_unblock in current_user.blocked_users.all():
+                current_user.unblock_user(user_to_unblock)
+                return Response({"message": f"{user_to_unblock.username} has been unblocked."}, status=200)
+            return Response({"error": "User isn't blocked!"}, status=status.HTTP_400_BAD_REQUEST)
         except CustomUser.DoesNotExist:
             return Response({"error": "User not found."}, status=404)
         except Exception as e:
