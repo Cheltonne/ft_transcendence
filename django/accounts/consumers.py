@@ -126,6 +126,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             )
             await self.accept()
 
+
     async def disconnect(self, close_code):
         if self.user.is_authenticated:
             await self.channel_layer.group_discard(
@@ -133,12 +134,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 self.channel_name
             )
 
-    """async def receive(self, text_data):
-        await self.send(text_data=json.dumps({
-            'message': 'Notification'
-        }))"""
+
     async def receive(self, text_data):
-        # Handle different types of notifications
         data = json.loads(text_data)
         if data['type'] == 'notification':
             await self.send(text_data=json.dumps({
@@ -147,13 +144,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         elif data['type'] == 'match_request':
             await self.handle_match_request(data)
 
-    """async def handle_match_request(self, data):
-        await self.send(text_data=json.dumps({
-            'type': 'match_request',
-            'player1': data['player1'],
-            'match_id': data['match_id']
-        }))"""
-    
+   
     async def handle_match_request(self, data):
         await self.channel_layer.group_send(
             f'user_{self.user.id}',

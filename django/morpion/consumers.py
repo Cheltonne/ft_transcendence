@@ -13,6 +13,7 @@ User = get_user_model()
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.match_id = None  # Initialize match_id to None
         self.room_group_name = 'matchmaking'
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -23,11 +24,17 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
-        print(f"User {self.scope['user'].username} disconnected from matchmaking.")
+        if self.match_id:
+            await self.channel_layer.group_discard(
+                f'morpion_match_{self.match_id}',
+                self.channel_name
+            )
+        else:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
+            print(f"User {self.scope['user'].username} disconnected from matchmaking.")
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -35,6 +42,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             match = await self.find_match()
             if match:
                 match_data = await self.create_match(self.scope['user'], match)
+                self.match_id = match_data.id  # Set the match_id
                 await self.send_match_request(match_data, match)
             else:
                 await self.send(text_data=json.dumps({
@@ -48,17 +56,28 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         elif data['type'] == 'match_decline':
             await self.handle_match_decline(data)
 
+        elif data['type'] == 'make_move':
+            await self.handle_make_move(data)
+
     async def handle_match_accept(self, data):
         try:
             match_id = data.get('match_id')
             match = await sync_to_async(Match.objects.get)(id=match_id)
             match.player2 = self.scope['user']
             await sync_to_async(match.save)()
-            await self.channel_layer.send(
-                match.player1.channel_name,
+
+            self.match_id = match_id
+            self.room_group_name = f'morpion_match_{match_id}'
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+            await self.channel_layer.group_send(
+                self.room_group_name,
                 {
                     'type': 'match_accepted',
-                    'player2': self.scope['user'].username
+                    'player2': self.scope['user'].username,
+                    'match_id': self.match_id
                 }
             )
         except Match.DoesNotExist:
@@ -83,6 +102,29 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'message': 'Match not found.'
             }))
     
+
+    async def handle_make_move(self, data):
+        cell_index = data['cell']
+        player_class = data['player']
+
+        # Broadcast the move to both players in the match room
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'game_move',
+                'cell': cell_index,
+                'player': player_class,
+            }
+        )
+
+    async def game_move(self, event):
+         # Send the move to WebSocket clients
+        await self.send(text_data=json.dumps({
+            'action': 'make_move',
+            'cell': event['cell'],
+            'player': event['player'],
+        }))
+
 
     async def send_match_request(self, match_data, player2):
         print(f"Sending match request from {self.scope['user'].username} to {player2.username}.")
