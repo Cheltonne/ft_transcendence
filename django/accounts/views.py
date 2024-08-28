@@ -244,7 +244,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='user-info')
     def get_user_info(self, request, pk=None):
-        user = self.get_object()  # Retrieves the specific user by ID (pk)
+        user = self.get_object()  
         
         user_matches = \
         list(user.matches.all().order_by('id').values('alias', 'user_score',

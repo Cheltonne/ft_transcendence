@@ -15,6 +15,17 @@ let RequestFrame = false;
 let gameEnding = false;
 let playerId = null;
 let Ball = null;
+var ReDrawStatic = true;
+const MAX_ROUNDS = 3;
+let currentRound = 1;
+let emetteur = null;
+
+setCanvasSize();
+function setCanvasSize() {
+    canvas.width = 860;
+    canvas.height = 430; 
+}
+
 
 function OnlineGo() {
     socket = new WebSocket('wss://' + window.location.host + '/ws/pong/');
@@ -37,6 +48,24 @@ function OnlineGo() {
     };
 }
 
+function sendBallPosition(ball_pos, ball_velocity) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'move_ball',
+            'ball_pos': ball_pos,
+            'ball_velocity': ball_velocity
+        }));
+    }
+}
+
+function updateBallPosition(ball_pos, ball_velocity) {
+    if (Ball) {
+        Ball.pos = ball_pos;
+        Ball.velocity = ball_velocity;
+        draw();
+    }
+}
+
 function handleServerMessage(message) {
     console.log('Received message from server:', message);
     console.log('Current player ID:', playerId);
@@ -54,20 +83,27 @@ function handleServerMessage(message) {
                 Paddle1 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
                 Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('F15', 'F16'));
                 // Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+                Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+                emetteur = true;
             } else if (message.player_number === 3) {
                 Paddle1 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
                 Paddle2 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('F15', 'F16'));
+                Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+                emetteur = false;
             }
         }
     } else if (message.message === 'The game has started!') {
         console.log('The game is starting!');
-        if (Paddle1 && Paddle2) {
+        if (Paddle1 && Paddle2 && Ball) {
             GameLauncher();
         }
     } else if (message.command === 'move_paddle') {
         if (message.sender_uuid !== playerId) {
             updatePaddlePosition(message.paddle_pos);
         }
+    }
+    else if (message.command === 'move_ball') {
+        updateBallPosition(message.ball_pos, message.ball_velocity);
     }
 }
 
@@ -214,9 +250,18 @@ function drawStaticElements() {
 }
 
 function draw() {
+
+    if (ReDrawStatic)
+        drawStaticElements();
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
+
+    ctx.fillStyle = "#a2c11c";
+    ctx.beginPath();
+    ctx.arc(Ball.pos.x, Ball.pos.y, Ball.radius, 0, Math.PI * 2);
+    ctx.fill();
 }
 
 function GameLoop() {
@@ -229,6 +274,8 @@ function GameLoop() {
 
     Paddle1.update(dt);
     Paddle2.update(dt);
+    if (emetteur)
+        Ball.update(dt);
     
     draw();
 
@@ -342,7 +389,7 @@ class PongBall {
                 this.speed += 0.04;
         } else {
             this.pos = this.nextPos;
-            // ENVOIE SERVEUR
+            sendBallPosition(this.pos, this.velocity);
         }
     
             if (this.pos.x <= 0 && this.goal == false) {
@@ -387,9 +434,3 @@ function GameLauncher() {
             //allButtonOk = false;
         }
 }
-
-// BALL NE BOUGE QUE CHEZ PLAYER 1
-// BALL A BOUGER ENCORE UNE FOIS
-// BALL APPEL CONSTAMMENT BALL_MOVED
-// BALL MOVED VA ETRE BOUGER CHEZ L'AUTRE
-// FUNCTION UPDATE BALL POSITION QUI VA BOUGER LA BALL CHEZ LA PERSONNE QUI RECOIT AVEC LA BONNE COORDONNES

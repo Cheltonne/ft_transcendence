@@ -231,6 +231,14 @@ class PongConsumer(AsyncWebsocketConsumer):
 			await self.start_game()
 		elif command == 'move_paddle':
 			await self.move_paddle(data['paddle_pos'])
+		elif command == 'move_ball':
+			ball_pos = data.get('ball_pos')
+			ball_velocity = data.get('ball_velocity')
+			if ball_pos is not None and ball_velocity is not None:
+				await self.move_ball(ball_pos, ball_velocity)
+			else:
+				print("Error: Missing ball_pos or ball_velocity")
+
 
 	async def create_room(self, room_name):
 		if room_name in self.rooms:
@@ -258,13 +266,13 @@ class PongConsumer(AsyncWebsocketConsumer):
 			print(f'Game started in room {self.room_name}')
 
 	async def player_joined(self, event):
-	    player_uuid = event['player_uuid']
-	    player_number = event['player_number']
-	    await self.send(text_data=json.dumps({
-	        'message': f'Player {player_number} joined the room',
-	        'player_uuid': player_uuid,
-	        'player_number': player_number
-	    }))
+		player_uuid = event['player_uuid']
+		player_number = event['player_number']
+		await self.send(text_data=json.dumps({
+			'message': f'Player {player_number} joined the room',
+			'player_uuid': player_uuid,
+			'player_number': player_number
+		}))
 
 	async def game_started(self, event):
 		await self.send(text_data=json.dumps({
@@ -317,22 +325,41 @@ class PongConsumer(AsyncWebsocketConsumer):
 			}))
 
 	async def move_paddle(self, paddle_pos):
-	    if self.room_name:
-	        await self.channel_layer.group_send(
-	            self.room_name,
-	            {
-	                'type': 'paddle_moved',
-	                'paddle_pos': paddle_pos,
-	                'player_uuid': self.player_uuid  # Include player UUID to identify the source
-	            }
-	        )
+		if self.room_name:
+			await self.channel_layer.group_send(
+				self.room_name,
+				{
+					'type': 'paddle_moved',
+					'paddle_pos': paddle_pos,
+					'player_uuid': self.player_uuid  # Include player UUID to identify the source
+				}
+			)
 
 	async def paddle_moved(self, event):
-	    paddle_pos = event['paddle_pos']
-	    sender_uuid = event['player_uuid']
-	    await self.send(text_data=json.dumps({
-	        'command': 'move_paddle',
-	        'paddle_pos': paddle_pos,
-	        'sender_uuid': sender_uuid  # Include the sender's UUID
-	    }))
+		paddle_pos = event['paddle_pos']
+		sender_uuid = event['player_uuid']
+		await self.send(text_data=json.dumps({
+			'command': 'move_paddle',
+			'paddle_pos': paddle_pos,
+			'sender_uuid': sender_uuid  # Include the sender's UUID
+		}))
 
+	async def move_ball(self, ball_pos, ball_velocity):
+		if self.room_name:
+			await self.channel_layer.group_send(
+				self.room_name,
+				{
+					'type': 'ball_moved',
+					'ball_pos': ball_pos,
+					'ball_velocity': ball_velocity
+				}
+			)
+
+	async def ball_moved(self, event):
+		ball_pos = event['ball_pos']
+		ball_velocity = event['ball_velocity']
+		await self.send(text_data=json.dumps({
+			'command': 'move_ball',
+			'ball_pos': ball_pos,
+			'ball_velocity': ball_velocity
+		}))
