@@ -38,6 +38,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
+        print(f"Received data: {data}")
         if data['type'] == 'matchmaking':
             match = await self.find_match()
             if match:
@@ -50,8 +51,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'message': 'No players available. Starting game with AI.'
                 }))
         
-        elif data['type'] == 'match_accept':
-            await self.handle_match_accept(data)
+        elif data['type'] == 'match_accepted':
+            await self.handle_match_accepted(data)
 
         elif data['type'] == 'match_decline':
             await self.handle_match_decline(data)
@@ -59,7 +60,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         elif data['type'] == 'make_move':
             await self.handle_make_move(data)
 
-    async def handle_match_accept(self, data):
+    async def handle_match_accepted(self, data):
         try:
             match_id = data.get('match_id')
             match = await sync_to_async(Match.objects.get)(id=match_id)

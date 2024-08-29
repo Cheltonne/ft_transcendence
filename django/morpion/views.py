@@ -2,7 +2,6 @@ import json
 from morpion.models import Match, MatchAI
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.db.models import Count
@@ -12,7 +11,6 @@ from django.core.exceptions import ObjectDoesNotExist
 def render_game(request):
     return render(request, 'morpion.html')
 
-@csrf_exempt
 def save_score(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -36,13 +34,11 @@ def save_score(request):
     else:
         return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
 
-@csrf_exempt
 @login_required
 def create_match(request):
     new_match = Match.objects.create(player1=request.user)
     return JsonResponse({'match_id': new_match.id})
 
-@csrf_exempt
 def save_score_ai(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -66,13 +62,12 @@ def save_score_ai(request):
     else:
         return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
 
-@csrf_exempt
 @login_required
 def create_match_ai(request):
     new_match = MatchAI.objects.create(player1=request.user)
     return JsonResponse({'match_id': new_match.id})
 
-@csrf_exempt
+
 @login_required
 def start_matchmaking(request):
     user = request.user

@@ -139,18 +139,23 @@ export class MorpionComponent extends HTMLElement {
     
     startMatchmaking() {
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
+        
     
         socket.onopen = () => {
             console.log('WebSocket connection established');
             socket.send(JSON.stringify({ type: 'matchmaking' }));
         };
     
+        socket.send(JSON.stringify({ type: 'match_accepted', match_id: matchData.match_id }));
+        console.log('Sending match accepted message with match_id:', matchData.match_id);
+        
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            console.log('Received message:', data);
+            console.log('here', data);
             
-            if (data.type === 'match_accept') {
-                this.startMatchmakingGame(data.match_id, 'O'); // Assume player 2 is 'O'
+            if (data.type === 'match_accepted') {
+                this.handleMatchAccepted(data.match_id, 'O'); // Assume player 2 is 'O'
+                console.log('Match accepted. Player 2 is:', data.player2);
             } else if (data.type === 'error') {
                 console.log('No match found. Starting game with AI.');
                 this.isAI = true;
@@ -168,45 +173,12 @@ export class MorpionComponent extends HTMLElement {
         };
     }
 
-    startMatchmakingGame(matchId, playerRole) {
-        this.isMatchmakingGame = true;
-        this.matchId = matchId;
-        this.playerRole = playerRole; // 'X' or 'O'
-    
-        // Open WebSocket connection for this match
-        this.socket = new WebSocket('wss://' + window.location.host + `/ws/morpion/${matchId}/`);
-    
-        this.socket.onopen = () => {
-            console.log('WebSocket connection established for matchmaking game.');
-        };
-    
-        this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-    
-            if (data.action === 'make_move') {
-                const cellIndex = data.cell;
-                const playerClass = data.player;
-    
-                const cell = this.cellElements[cellIndex];
-                this.placeMark(cell, playerClass);
-                this.swapTurns();
-                this.setBoardHoverClass();
-            }
-        };
-    
-        this.socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            this.showAlert('danger', 'WebSocket error occurred. Please try again later.');
-        };
-    
-        this.socket.onclose = (event) => {
-            console.log('WebSocket connection closed with code:', event.code, "reason:", event.reason);
-        };
-    
-        // Start the game UI
-        this.startGame();
+    handleMatchAccepted(data) {
+        // Update the UI to show that the match has been accepted
+        this.showAlert(`Match accepted! Player 2 is: ${data.player2}`);
+        this.player2Name = data.player2;
+        startGame(data.match_id);
     }
-
 
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;

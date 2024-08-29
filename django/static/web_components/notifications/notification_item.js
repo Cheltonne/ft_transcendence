@@ -101,11 +101,11 @@ export class NotificationItem extends HTMLElement {
         this.updateUnread();
     }
 
-    acceptMatchRequest(matchId) {
+    acceptMatchRequest(match_id) {
         //Send an accept message to the server
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
         socket.onopen = () => {
-            socket.send(JSON.stringify({ type: 'match_accept', match_id: matchId }));
+            socket.send(JSON.stringify({ type: 'match_accepted', match_id: match_id }));
         };
         this.toggleNotificationRead(this.notification.id)
             .then(() => {
