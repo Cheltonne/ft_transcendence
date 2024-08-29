@@ -101,11 +101,11 @@ export class NotificationItem extends HTMLElement {
         this.updateUnread();
     }
 
-    acceptMatchRequest(match_id) {
+    acceptMatchRequest(matchId) {
         //Send an accept message to the server
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
         socket.onopen = () => {
-            socket.send(JSON.stringify({ type: 'match_accepted', match_id: match_id }));
+            socket.send(JSON.stringify({ type: 'match_accept', match_id: matchId }));
         };
         this.toggleNotificationRead(this.notification.id)
             .then(() => {
@@ -144,8 +144,6 @@ export class NotificationItem extends HTMLElement {
                 console.error('Failed to mark notification as read:', error);
             });
         this.updateUnread();
-        //this.markAsRead(matchId);
-        this.remove();
     }
 
     markAsRead(notificationId) {

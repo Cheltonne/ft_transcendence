@@ -13,28 +13,19 @@ User = get_user_model()
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.match_id = None  # Initialize match_id to None
+        self.player_uuid = self.scope['user'].username
+        self.match_id = None
         self.room_group_name = 'matchmaking'
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
         await self.accept()
-        print(f"User {self.scope['user'].username} connected to matchmaking.")
+        print(f"User {self.player_uuid} connected to matchmaking.")
 
 
     async def disconnect(self, close_code):
-        if self.match_id:
-            await self.channel_layer.group_discard(
-                f'morpion_match_{self.match_id}',
-                self.channel_name
-            )
-        else:
-            await self.channel_layer.group_discard(
-                self.room_group_name,
-                self.channel_name
-            )
-            print(f"User {self.scope['user'].username} disconnected from matchmaking.")
+        if self.match_id in self.room_group_name:
+            self.room_group_name[self.match_id].remove(self.player_uuid)
+            if not self.room_group_name[self.match_id]:
+                del self.room_group_name[self.match_id]
+        print(f"User {self.player_uuid} disconnected from matchmaking.")
 
     async def receive(self, text_data):
         data = json.loads(text_data)
