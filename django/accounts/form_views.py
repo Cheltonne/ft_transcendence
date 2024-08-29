@@ -4,7 +4,8 @@ from .forms import CustomUserCreationForm, \
 CustomAuthenticationForm, CustomUserChangeForm
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -12,6 +13,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate
 from .utils import resize_image
+from django.urls import reverse_lazy
 
 def logout_required(function):
     def wrap(request, *args, **kwargs):
@@ -115,6 +117,8 @@ def render_signin_form(request):
         else:
             form.add_error(None, 'Invalid username or password')
             return JsonResponse({'success': False, 'message': 'Invalid credentials'})
-        context = {"form": form}
-        return render(request, "registration/signin.html", context)
 
+class ChangePasswordView(PasswordChangeView):
+    form_class = PasswordChangeForm
+    success_url = reverse_lazy('home')
+    template_name = 'change_password.html'

@@ -1,5 +1,5 @@
 import { getCookie, showToast, getUserFromStorage } from "../utils.js";
-import { navigateTo } from "../views.js";
+import { navigateTo } from "../navigation.js";
 
 export class UserChatView extends HTMLElement {
     constructor() {

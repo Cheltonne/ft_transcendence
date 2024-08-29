@@ -1,5 +1,5 @@
-import { toggleMenu, userIsAuthenticated, initializeWebSocket, showToast } from './utils.js';
-import { navigateTo, showView } from './views.js';
+import { toggleMenu, userIsAuthenticated, initializeWebSocket, showToast, socket } from './utils.js';
+import { navigateTo, showView } from './navigation.js';
 import { LoggedInNavbar } from './web_components/logged_in_navbar.js';
 import { LoggedOutNavbar } from './web_components/logged_out_navbar.js';
 import { UserProfileCard } from './web_components/user_profile_card.js';

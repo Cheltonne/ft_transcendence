@@ -1,4 +1,4 @@
-import { navigateTo, showForm, handleFormSubmit } from '../views.js';
+import { navigateTo, showForm, handleFormSubmit } from '../navigation.js';
 import { showToast } from '../utils.js';
 
 export class UpdateForm extends HTMLElement {
@@ -27,6 +27,18 @@ export class UpdateForm extends HTMLElement {
                 this.formElement = this.shadowRoot.getElementById('update-form');
             }
             handleFormSubmit('update');
+            this.shadowRoot.getElementById('subBtn').addEventListener("click", () => {
+                const fields = this.formElement.querySelectorAll('input[required]');
+                let hasEmptyFields = false;
+
+                for (const field of fields) {
+                    if (!field.value) {
+                        hasEmptyFields = true;
+                        showToast(`${field.name} is required`);
+                        break;
+                    }
+                }
+            });
         }
         catch (error) {
             console.log(`Error logging in: ${error}`);

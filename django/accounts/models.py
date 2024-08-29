@@ -8,7 +8,7 @@ class CustomUser(AbstractUser):
 	losses = models.IntegerField(default=0)
 	friends = models.ManyToManyField('self', blank=True)
 	online_devices_count = models.IntegerField(default=0)
-	blocked_users = models.ManyToManyField('self', symmetrical=True, 
+	blocked_users = models.ManyToManyField('self', symmetrical=False, 
 									related_name='blockers')
 	def __str__(self):
 		return self.username

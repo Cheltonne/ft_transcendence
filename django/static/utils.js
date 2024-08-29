@@ -1,5 +1,5 @@
 import { getUserInfo, menu, hamMenu, bbc } from './scripts.js';
-import { navigateTo } from './views.js';
+import { navigateTo } from './navigation.js';
 export let socket = null;
 export let notificationSocket = null;
 export const USER_STORAGE_KEY = 'user';

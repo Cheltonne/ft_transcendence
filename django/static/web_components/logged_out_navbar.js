@@ -1,5 +1,5 @@
 import { getUserInfo } from '../scripts.js'
-import { navigateTo } from '../views.js'
+import { navigateTo } from '../navigation.js'
 
 export class LoggedOutNavbar extends HTMLElement {
   constructor() {

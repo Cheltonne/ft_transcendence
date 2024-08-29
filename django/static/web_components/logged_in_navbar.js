@@ -1,4 +1,4 @@
-import { navigateTo } from '../views.js';
+import { navigateTo } from '../navigation.js';
 import { getUserFromStorage, handleLogout, showToast } from '../utils.js';
 import { getUserInfo, user } from '../scripts.js';
 import { UserObserver } from '../observer.js';

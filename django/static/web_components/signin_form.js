@@ -1,8 +1,7 @@
-import { navigateTo, showForm, handleFormSubmit } from '../views.js';
-import { showToast, getCookie } from '../utils.js';
+import { navigateTo, showForm, handleFormSubmit } from '../navigation.js';
+import { showToast, getCookie, initializeWebSocket } from '../utils.js';
 import { getUserInfo } from '../scripts.js';
 import { ChooseUsernameForm } from './choose_username_form.js';
-import { initializeWebSocket } from '../utils.js';
 
 export class SigninForm extends HTMLElement {
     constructor() {
@@ -39,10 +38,27 @@ export class SigninForm extends HTMLElement {
                 });
             }
             handleFormSubmit('signin');
+            this.shadowRoot.getElementById('subBtn').addEventListener("click", () => {
+                const fields = this.formElement.querySelectorAll('input[required]');
+                let hasEmptyFields = false;
+
+                for (const field of fields) {
+                    if (!field.value) {
+                        hasEmptyFields = true;
+                        showToast(`${field.name} is required`);
+                        break;
+                    }
+                }
+            });
             this.shadowRoot.querySelector("#signupButton").addEventListener("click",
                  (event) => {
                 event.preventDefault();
                 navigateTo('signup', 2);
+            });
+            this.shadowRoot.querySelector("#forgotpwButton").addEventListener("click",
+                 (event) => {
+                event.preventDefault();
+                navigateTo('reset_password', 2);
             });
         }
         catch (error) {

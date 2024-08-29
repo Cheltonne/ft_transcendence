@@ -9,7 +9,7 @@ import { OtherUserProfileCard } from './web_components/other_users_profile.js';
 import { RequestFrame } from './game/pong.js';
 import { ChooseUsernameForm } from './web_components/choose_username_form.js';
 import { onoffGame } from './game/pong.js';
-const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat', 'other-user-profile'];
+const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat', 'other-user-profile', 'reset-password'];
 const nonAuthViews = ['signin', 'signup', 'choose-username'];
 
 async function historyNavigation(state) {	//handles navigation through browser buttons (back/next)
@@ -118,7 +118,7 @@ export function showForm(viewName) {
 			}
 		}
 		else
-		view.classList.remove('hidden');
+			view.classList.remove('hidden');
 	}
 	const sidebar = document.querySelector('.sidebar');
 	if (sidebar && sidebar.classList.contains('active'))
@@ -147,7 +147,7 @@ export async function handleFormSubmit(formType) {
 				});
 				const data = await response.json();
 
-				if (data.success) {
+				if (data.success === true) {
 					if (formType === 'update') {
 						showToast('Update successful!');
 						getUserInfo()

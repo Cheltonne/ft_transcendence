@@ -1,4 +1,4 @@
-import { navigateTo, showForm, handleFormSubmit } from '../views.js';
+import { navigateTo, showForm, handleFormSubmit } from '../navigation.js';
 import { showToast } from '../utils.js';
 
 export class SignupForm extends HTMLElement {

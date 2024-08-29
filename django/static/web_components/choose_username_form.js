@@ -1,4 +1,4 @@
-import { navigateTo } from "../views.js";
+import { navigateTo } from "../navigation.js";
 import { getCookie, showToast, initializeWebSocket } from "../utils.js";
 import { getUserInfo } from "../scripts.js";
 

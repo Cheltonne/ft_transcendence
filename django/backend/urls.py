@@ -30,8 +30,6 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("morpion/", include("morpion.urls")),
 	path("accounts/", include("django.contrib.auth.urls")),
-    path('o/', include(oauth2_urls)),
-    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('oauth/callback/', views.oauth_callback, name='oauth-callback'),
     path('oauth/url/', views.get_oauth_url, name='oauth-url'),
     path('oauth/status/', views.oauth_status, name='oauth-status'),
