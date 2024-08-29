@@ -13,6 +13,7 @@ urlpatterns = [
         path("get-user-info/", views.get_user_info, name='get_user_info'),
         path("render-signin-form/", form_views.render_signin_form, name='render-signin-form'),
         path("render-signup-form/", form_views.render_signup_form, name='render-signup-form'),
+        path("render-password-reset-form/", form_views.render_password_reset_form, name='render-password-reset-form'),
         path("render-update-form/", form_views.render_update_form, name='render-update-form'),
         path("check-authenticated/", views.check_authenticated, name='check-authenticated'),
         path('send-friend-request/', views.FriendRequestView.as_view(), name='send_friend_request'),

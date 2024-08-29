@@ -1,3 +1,4 @@
+import urllib.parse, random, string, requests, json, os
 from django.shortcuts import render, redirect
 from django.template.exceptions import TemplateDoesNotExist
 from django.conf import settings
@@ -6,12 +7,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-import urllib.parse
-import random
-import string
-import requests
-import json
-import os
+from django.core.mail import send_mail
 from accounts.models import CustomUser
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -168,3 +164,11 @@ def choose_username(request):
             return JsonResponse({'status': 'error', 'error': 'User already exists'})
 
     return JsonResponse({'status': 'error', 'error': 'Invalid request method'}, status=405)
+
+def email(request, subject, message, recipient): 
+    try:
+        email_from = settings.EMAIL_HOST_USER
+        send_mail( subject, message, email_from, recipient )  
+        return JsonResponse({"success": True})
+    except:
+        return JsonResponse({"success": False})

@@ -56,9 +56,9 @@ export class SigninForm extends HTMLElement {
                 navigateTo('signup', 2);
             });
             this.shadowRoot.querySelector("#forgotpwButton").addEventListener("click",
-                 (event) => {
+            (event) => {
                 event.preventDefault();
-                navigateTo('reset_password', 2);
+                navigateTo('reset-password', 2);
             });
         }
         catch (error) {

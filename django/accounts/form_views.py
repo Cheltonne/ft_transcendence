@@ -1,11 +1,10 @@
 from PIL import Image
 from io import BytesIO
-from .forms import CustomUserCreationForm, \
+from .forms import CustomUserCreationForm, ChangePasswordForm,\
 CustomAuthenticationForm, CustomUserChangeForm
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
-from django.contrib.auth.views import PasswordChangeView
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -18,7 +17,7 @@ from django.urls import reverse_lazy
 def logout_required(function):
     def wrap(request, *args, **kwargs):
         if request.user.is_authenticated:
-            return JsonResponse({ 'response: "You\'re already logged in!"' })
+            return JsonResponse({ 'response': "You\'re already logged in!" })
         else:
             return function(request, *args, **kwargs)
     return wrap
@@ -60,7 +59,7 @@ def render_signup_form(request):
         login(request, user)
         return JsonResponse({'success': True, 'message': 'Signup successful!'})
     else:
-      return JsonResponse({'success': False, 'message': 'Invalid request method'})
+        return JsonResponse({'errors': form.errors}, content_type='application/json')
 
 @login_required
 @ensure_csrf_cookie
@@ -93,7 +92,7 @@ def render_update_form(request):
             instance.save()
             return JsonResponse({'success': True, 'message': 'Update successful!'})
         else:
-            return JsonResponse({'success': False, 'errors': form.errors.as_json()})
+            return JsonResponse({'errors': form.errors}, content_type='application/json')
     else:
       return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
@@ -115,10 +114,28 @@ def render_signin_form(request):
                 login(request, user)
                 return JsonResponse({'success': True, 'message': 'Login successful!'})
         else:
-            form.add_error(None, 'Invalid username or password')
             return JsonResponse({'success': False, 'message': 'Invalid credentials'})
 
-class ChangePasswordView(PasswordChangeView):
-    form_class = PasswordChangeForm
-    success_url = reverse_lazy('home')
-    template_name = 'change_password.html'
+def render_password_reset_form(request):
+    if request.method == "GET":
+        form = ChangePasswordForm()
+        context = {"form": form}
+        template = render_to_string('registration/reset_password.html', context=context)
+        return JsonResponse({"form": template})
+    elif request.method == "POST":
+        old_password = request.POST['old_password']
+        new_password = request.POST['new_password']
+        confirm_password = request.POST['confirm_password']
+        form = PasswordChangeForm(request, data = {
+            'old_password': old_password,
+            'new_password': new_password,
+            'confirm_password': confirm_password
+        })
+        if form.is_valid():
+            user = request.user
+            user.set_password(new_password)
+            user.save()
+            return JsonResponse({'success': True, 'message': 'Password reset success!'})
+        else:
+            form.add_error(None, 'Invalid username or password')
+            return JsonResponse({'success': False, 'message': 'Invalid form inputs'})

@@ -8,9 +8,10 @@ import { ChatView } from './web_components/chat.js';
 import { OtherUserProfileCard } from './web_components/other_users_profile.js';
 import { RequestFrame } from './game/pong.js';
 import { ChooseUsernameForm } from './web_components/choose_username_form.js';
+import { ResetPasswordForm } from './web_components/reset_password.js';
 import { onoffGame } from './game/pong.js';
-const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat', 'other-user-profile', 'reset-password'];
-const nonAuthViews = ['signin', 'signup', 'choose-username'];
+const authRequiredViews = ['user-profile', 'update', 'friends', 'morpion', 'chat', 'other-user-profile'];
+const nonAuthViews = ['signin', 'signup', 'choose-username', 'reset-password'];
 
 async function historyNavigation(state) {	//handles navigation through browser buttons (back/next)
 	const isAuthenticated = await userIsAuthenticated();
@@ -148,29 +149,39 @@ export async function handleFormSubmit(formType) {
 				const data = await response.json();
 
 				if (data.success === true) {
-					if (formType === 'update') {
-						showToast('Update successful!');
-						getUserInfo()
-							.then(data => {
-								if (userIsAuthenticated()) {
-									user.setUserData(data);
-									navigateTo('user-profile', 1);
-								}
-								else
-									handleError('You\'re not authenticated anymore!');
-							});
-					} else { //after signup or signin do this
-						showToast(`${formType} success!`);
-						getUserInfo();
-						navigateTo('pong');
-						initializeWebSocket();
-						const customEvent = new CustomEvent('user-login');
-						window.dispatchEvent(customEvent);
+					switch (formType) {
+						case 'update': 
+						case 'reset_password':
+							showToast('Update successful!');
+							getUserInfo()
+								.then(data => {
+									if (userIsAuthenticated()) {
+										user.setUserData(data);
+										navigateTo('user-profile', 1);
+									}
+									else
+										handleError('You\'re not authenticated anymore!');
+								});
+								break;
+						case 'signin':
+						case 'signup':
+							showToast(`${formType} success!`);
+							getUserInfo();
+							navigateTo('pong');
+							initializeWebSocket();
+							const customEvent = new CustomEvent('user-login');
+							window.dispatchEvent(customEvent);
 					}
 				}
 				else {
-					if (data.message.includes('request method'))
-						showToast('Please check that all fields are correctly filled.', 'error');
+					if (data.errors){
+						const errors = data.errors;
+						if (errors.username)
+							showToast(errors.username, 'error');
+						if (errors.email)
+							showToast(errors.email, 'error');
+						console.log(data)
+					}
 					else
 						showToast(data.message, 'error');
 					return;
@@ -185,7 +196,6 @@ export async function handleFormSubmit(formType) {
 
 window.addEventListener('popstate', (event) => {
 	if (event.state) {
-		console.log('Just popped this out of the history stack: ', event.state);
 		historyNavigation(event.state);
 	}
 });

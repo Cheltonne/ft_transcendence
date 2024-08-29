@@ -21,8 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*@=k@^3t$sqi-0#j3@(iwkebhvirzju^4zz!*3au_=240_jcas'
+EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+POSTGRES_DB = os.environ.get('POSTGRES_DB')
+POSTGRES_HOST = os.environ.get('POSTGRES_HOST')
+POSTGRES_USER = os.environ.get('POSTGRES_USER')
+POSTGRES_PORT = os.environ.get('POSTGRES_PORT')
+POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -105,11 +109,11 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tsuioku_base',
-		'USER': 'RSO',
-		'PASSWORD': 'kauserie',
-		'HOST': 'postgres',
-		'PORT': '5432',
+        'NAME': POSTGRES_DB,
+		'USER': POSTGRES_USER,
+		'PASSWORD': POSTGRES_PASSWORD,
+		'HOST': POSTGRES_HOST,
+		'PORT': POSTGRES_PORT,
     }
 }
 
@@ -194,3 +198,10 @@ OAUTH2_PROVIDER = {
         'write': 'Write scope',
     },
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
