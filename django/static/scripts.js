@@ -135,3 +135,17 @@ document.addEventListener('DOMContentLoaded', function () {
 	//window.addEventListener('user-logout', toggleNotificationIcon);
 });
 
+// LIVE CHAT TOURNOI NOTIFICATIONS
+
+window.addEventListener('tourneyMatch', function(event) {
+    const { player1, player2 } = event.detail;
+    
+    console.log(`Tournament Match: ${player1} VS ${player2}`);
+
+    sendChat(`${player1} will play against ${player2}`);
+});
+
+// utilise ca 
+function sendChat(message) {
+    console.log("Sending to chat:", message);
+}

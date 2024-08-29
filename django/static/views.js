@@ -104,20 +104,28 @@ export function showView(viewName, userId = null) {
 
 
 export function showForm(viewName) {
-	const allViews = document.querySelectorAll('[data-view]');
+    const allViews = document.querySelectorAll('[data-view]');
 
-	if (document.querySelector(`${viewName}-form`) === null) {
-		const new_component = document.createElement(`${viewName}-form`);
-		new_component.classList.add(`${viewName}-form`);
-		document.querySelector(`#${viewName}-content`).appendChild(new_component);
-	}
-	for (const view of allViews) {
-		const currentView = view.dataset.view;
-		view.classList.toggle('hidden', currentView !== viewName);
-	}
-	const sidebar = document.querySelector('.sidebar');
-	if (sidebar && sidebar.classList.contains('active'))
-		toggleMenu();
+    if (document.querySelector(`${viewName}-form`) === null) {
+        const new_component = document.createElement(`${viewName}-form`);
+        new_component.classList.add(`${viewName}-form`);
+        document.querySelector(`#${viewName}-content`).appendChild(new_component);
+    }
+    for (const view of allViews) {
+        const currentView = view.dataset.view;
+        view.classList.toggle('hidden', currentView !== viewName);
+    }
+
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar && sidebar.classList.contains('active'))
+        toggleMenu();
+
+    // Turn the game on or off depending on the viewName
+    if (viewName !== 'pong') {
+        onoffGame('off');
+    } else if (viewName === 'pong') {
+        onoffGame('on');
+    }
 }
 
 export async function handleFormSubmit(formType) {

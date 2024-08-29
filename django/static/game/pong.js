@@ -43,6 +43,11 @@ function setCanvasSize() {
     canvas.height = 430; 
 }
 
+async function UpdateUserName(player2Name) {
+    await giveName();
+    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
+}
+
 LocalButton.addEventListener("click", function() {
     allButtonOk = true;
     console.log("local");
@@ -51,7 +56,7 @@ LocalButton.addEventListener("click", function() {
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
     player2Name = 'guest';
-    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
+    UpdateUserName(player2Name);
     clear();
     LaunchGame();
 });
@@ -65,7 +70,7 @@ AIButton.addEventListener("click", function() {
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
     hideTourneyButtons();
-    $("#aliasContainer").text(userInfo.username + " VS " + " AI");
+    UpdateUserName("AI");
     clear();
     LaunchGame();
 });
@@ -94,7 +99,6 @@ NextMatchButton.addEventListener("click", function() {
     TourneyButton.style.display = 'none';
     let array = findMatchWithNullWinner();
     $("#aliasContainer").text(array.player1 + " VS " + array.player2);
-    // NOTIF TOURNOI CHAT
     clear();
     tournamentTree.style.display = 'none';
     NextMatchButton.style.display = 'none';
@@ -151,6 +155,16 @@ let array = findMatchWithNullWinner(matches);
         NextMatchButton.style.display = 'inline-block';
     }   else {
         NextMatchButton.innerHTML = 'Next Match';
+    }
+    // LIVE CHAT TOURNOI NOTIFICATIONS
+    if (array !== null) {
+    const matchEvent = new CustomEvent('tourneyMatch', {
+        detail: {
+            player1: array.player1,
+            player2: array.player2
+        }
+    });
+    window.dispatchEvent(matchEvent);
     }
 }
 
@@ -286,6 +300,7 @@ function EnterScreen(){
     TourneyButton.style.display = 'none';
     ctx.save();
     myButton.style.display = "inline-block";
+    LiveButton.style.display = "inline-block";
     ctx.fillStyle = '#fff';
     ctx.font = '100px sans-serif';
     ctx.textAlign = 'center';
@@ -586,6 +601,13 @@ function draw() {
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
+    //if (AIplayer && AIplayer.prediction) {
+    //    ctx.beginPath();
+    //    ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
+    //    ctx.fillStyle = 'red';
+    //    ctx.fill();
+    //    }
+
 }
 
 //////////////////////////////////////////////////////////
@@ -714,6 +736,7 @@ function UpdateTourney() {
 
 function GameEndingScreen() {
     if (TourneyMode) {
+
         for (let i = 0; i < matches.length; i++) {
             if (matches[i].winner === null || matches[i].winner === undefined) {
                 matches[i].winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
