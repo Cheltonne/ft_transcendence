@@ -12,9 +12,12 @@ from accounts.utils import send_notification
 User = get_user_model()
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
+
+    match_id = {}
+    
     async def connect(self):
         self.player_uuid = self.scope['user'].username
-        self.match_id = None
+        self.room_name = None
         self.room_group_name = 'matchmaking'
         await self.accept()
         print(f"User {self.player_uuid} connected to matchmaking.")
@@ -30,11 +33,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         print(f"Received data: {data}")
+        type = data.get('type')
         if data['type'] == 'matchmaking':
             match = await self.find_match()
             if match:
                 match_data = await self.create_match(self.scope['user'], match)
-                self.match_id = match_data.id  # Set the match_id
+                self.match_id = match_data.id
+                print(f"Match ID before sent: {self.match_id}")
                 await self.send_match_request(match_data, match)
             else:
                 await self.send(text_data=json.dumps({
@@ -42,43 +47,119 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'message': 'No players available. Starting game with AI.'
                 }))
         
-        elif data['type'] == 'match_accepted':
+        if type == 'match_accept':
             await self.handle_match_accepted(data)
 
-        elif data['type'] == 'match_decline':
+        elif type == 'match_decline':
             await self.handle_match_decline(data)
+                                                                                                                                                                                                                          
+        elif type == 'join_room':
+            await self.handle_join_room(data)
 
-        elif data['type'] == 'make_move':
+        elif type == 'make_move':
             await self.handle_make_move(data)
 
     async def handle_match_accepted(self, data):
-        try:
-            match_id = data.get('match_id')
-            match = await sync_to_async(Match.objects.get)(id=match_id)
-            match.player2 = self.scope['user']
-            await sync_to_async(match.save)()
+        print('in handle_match_accepted')
+        match_id = data.get('match_id')
+        print(f"Match ID in handle match: {match_id}")
+        match = await sync_to_async(Match.objects.get)(id=match_id)
 
-            self.match_id = match_id
-            self.room_group_name = f'morpion_match_{match_id}'
-            await self.channel_layer.group_add(
-                self.room_group_name,
-                self.channel_name
-            )
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'match_accepted',
-                    'player2': self.scope['user'].username,
-                    'match_id': self.match_id
-                }
-            )
-        except Match.DoesNotExist:
+        # Create a room with the match_id as the room name
+        self.room_name = str(match_id)
+        self.room_group_name = self.room_name
+
+        # Add both players to the room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        await self.channel_layer.group_send(
+             self.room_group_name,
+            {
+                'type': 'room_created',
+                'message': f"Room {self.room_name} created for the match.",
+                'player1': match.player1.username,
+                'player2': match.player2.username,
+                'match_id': self.room_name
+             }
+        )
+
+        await self.send(text_data=json.dumps({
+            'type': 'room_created',
+            'message': 'Room created',
+            'room_id': match_id,
+            'player1': match.player1.username,
+            'player2': match.player2.username,
+
+        }))
+        print(f"Room {self.room_name} created for Match ID: {match_id}")
+    
+
+    async def handle_join_room(self, room_name):
+        # Check if the room exists in the matchmaking context
+        if room_name in self.channel_layer.groups:
+            # Retrieve the match associated with the room_name (which is the match_id)
+            match = await sync_to_async(Match.objects.get)(id=room_name)
+        
+            # Count the number of players already in the room
+            current_players = await self.get_room_player_count(room_name)
+
+            if current_players < 2:  # Assuming a max of 2 players in a room
+                # Add the current player to the room
+                await self.channel_layer.group_add(
+                    room_name,
+                    self.channel_name
+                )
+                self.room_name = room_name
+
+                player_number = current_players + 1  # Assign player number based on the order of joining
+
+                # Send a message back to the player confirming they've joined the room
+                await self.send(text_data=json.dumps({
+                    'type': 'room_joined',
+                    'message': 'Joined room',
+                    'room_name': room_name,
+                    'player_uuid': self.player_uuid,
+                    'player_number': player_number
+                }))
+
+                print(f'{self.player_uuid} joined room {room_name} as Player {player_number}')
+
+                # Broadcast to the group that a new player has joined
+                await self.channel_layer.group_send(
+                    room_name,
+                    {
+                        'type': 'player_joined',
+                        'player_uuid': self.player_uuid,
+                        'room_name': room_name,
+                        'player_number': player_number
+                    }
+                )
+            else:
+                # Room is full, send an error message to the player
+                await self.send(text_data=json.dumps({
+                    'message': 'Room is full'
+                }))
+        else:
+            # Room does not exist, send an error message to the player
             await self.send(text_data=json.dumps({
-                'type': 'error',
-                'message': 'Match not found.'
+            'message': 'Room does not exist'
             }))
 
+    @sync_to_async
+    def get_room_player_count(self, room_name):
+        match = Match.objects.get(id=room_name)
+        count = 0
+        if match.player1:
+            count += 1
+        if match.player2:
+            count += 1
+        return count
+      
     async def handle_match_decline(self, data):
+        print('in handle_match_decline')
         try:
             match_id = data.get('match_id')
             match = await sync_to_async(Match.objects.get)(id=match_id)
@@ -120,35 +201,50 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def send_match_request(self, match_data, player2):
         print(f"Sending match request from {self.scope['user'].username} to {player2.username}.")
+        print(f"Match ID: {match_data.id}") 
         await sync_to_async(send_notification)(
-            sender=self.scope['user'],
-            recipient=player2,
-            type='match_request',
-            message=f"{self.scope['user'].username} wants to play a game with you!",
-            match_id=match_data.id
+            sender = self.scope['user'],
+            recipient = player2,
+            type = 'match_request',
+            message = f"{self.scope['user'].username} wants to play a game with you!",
+            match_id = match_data.id
         )
+        
 
-    @sync_to_async
-    def find_match(self):
+    async def find_match(self):
         user = self.scope['user']
         print(f"Finding match for user: {user.username}")
-        online_users = User.objects.filter(online_devices_count__gt=0).exclude(id=user.id)
-        print(f"Potential matches: {online_users.count()}")
 
-        potential_matches = online_users.annotate(
-            game_count=Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
-                        Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
-        ).order_by('game_count')
+        # Use sync_to_async to handle ORM queries
+        online_users = await sync_to_async(
+            lambda: User.objects.filter(online_devices_count__gt=0).exclude(id=user.id)
+        )()
+        
+        count = await sync_to_async(online_users.count)()
+        print(f"Potential matches: {count}")
 
-        if potential_matches.exists():
-            print(f"Match found: {potential_matches.first().username}")
-            return potential_matches.first()
-        print("No match found")    
+        potential_matches = await sync_to_async(
+            lambda: online_users.annotate(
+                game_count=Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
+                            Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
+            ).order_by('game_count')
+        )()
+
+        if await sync_to_async(potential_matches.exists)():
+            print(f"Match found: {await sync_to_async(lambda: potential_matches.first().username)()}")
+            return await sync_to_async(potential_matches.first)()
+        else:
+            await self.send(text_data=json.dumps({
+                'type': 'no_match_found',
+                'message': 'No players available. Starting game with AI.'
+            })) 
+            print("No match found")    
         return None
+    
 
     @sync_to_async
     def create_match(self, player1, player2):
-        return Match.objects.create(player1=player1, player2=player2)
+        match = Match.objects.create(player1=player1, player2=player2)
         print(f"Match created with ID: {match.id}")
         return match
     

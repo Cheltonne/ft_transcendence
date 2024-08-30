@@ -148,15 +148,15 @@ export class MorpionComponent extends HTMLElement {
     startMatchmaking() {
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
         
-    
+        //data reach here!!
         socket.onopen = () => {
             console.log('WebSocket connection established');
             socket.send(JSON.stringify({ type: 'matchmaking' }));
         };
-        
+        //data do not reach here????
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            this.handleSeverMesssage(message);
+            this.handleSeverMesssage(data);
         }; 
     
         socket.onerror = (error) => {
@@ -169,10 +169,34 @@ export class MorpionComponent extends HTMLElement {
         };
     }
 
-    
+    handleSeverMesssage(data) {
+        console.log('Received server message:', message);
+        if (data.type === 'match_accept') {
+            console.log('Match found! Room ID:', data.room_id);
+            this.showAlert('success', 'Match found! Room ID: ' + data.room_id);
+            socket.send(JSON.stringify({ type: 'join_room', room_name: `morpion_${data.room_id}` }));
+        }else if (data.type === 'room_created') {
+            console.log('Room created successfully!');
+            this.showAlert('success', 'Room created successfully!');
+            this.joinRoom(message.room_id);
+        }else if (data.type === 'room_joined') {
+            console.log('Room joined successfully!');
+            this.showAlert('success', 'Room joined successfully!');
+            this.startGame();
+        }else if (data.type === 'no_match_found') {
+            console.log('Match not found. Please try again later.');
+            this.showAlert('danger', 'Match not found. Please try again later.');
+        } 
+    }
 
 
-
+    joinRoom(room_id) {
+        const roomName = `morpion_${room_id}`;
+        socket.send(JSON.stringify({ 
+            type: 'join_room',
+            room_name: roomName
+        }));
+    }
 
 
 

@@ -81,6 +81,11 @@ export class NotificationItem extends HTMLElement {
         this.notification = notification;
         this.shadowRoot.querySelector('.notification-body').textContent = notification.message;
         this.shadowRoot.querySelector('.sender-pfp-container').innerHTML = `<img src="${notification.sender_pfp.replace('http://localhost/', '')}" class="sender-pfp">`
+
+        if (notification.match_id) {
+            this.notification.match_id = notification.match_id;
+            console.log('in set data Match ID:', notification.match_id);
+        }
     }
 
     acceptFriendRequest(notificationId, senderId) {
@@ -107,6 +112,7 @@ export class NotificationItem extends HTMLElement {
         socket.onopen = () => {
             socket.send(JSON.stringify({ type: 'match_accept', match_id: matchId }));
         };
+    
         this.toggleNotificationRead(this.notification.id)
             .then(() => {
                 this.remove();
@@ -128,8 +134,9 @@ export class NotificationItem extends HTMLElement {
         // Send a decline message to the server
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
         socket.onopen = () => {
-            socket.send(JSON.stringify({ type: 'match_decline', match_id: matchId }));
+            socket.send(JSON.stringify({ type: 'match_decline', match_id: matchId}));
         };
+        
         this.toggleNotificationRead(this.notification.id)
             .then(() => {
                 this.remove();

@@ -146,6 +146,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
    
     async def handle_match_request(self, data):
+        print (f"Match request data in notification class: {data}")
         await self.channel_layer.group_send(
             f'user_{self.user.id}',
             {
@@ -157,6 +158,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                     'message': f"{data['player1']} wants to play with you."
                 }
             }
+            
         )
 
 
