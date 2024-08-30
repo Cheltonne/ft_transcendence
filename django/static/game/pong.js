@@ -32,6 +32,7 @@ const myButton = document.getElementById("myButton");
 const LiveButton = document.getElementById("LiveButton");
 let TourneyMode = false;
 const message = document.getElementById("message");
+import { getCookie } from "../utils.js";
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -950,37 +951,58 @@ const checkAuthenticated = async () => {
     return data.authenticated;
 };
 
-async function createMatch(user_score, alias_score) {
-    const isAuthenticated = await checkAuthenticated();
-    if (!isAuthenticated) {
-    console.error("User not authenticated. Cannot create match.");
-    return;
-  }
+export async function createMatch(user_score, alias_score) {
+    try {
+        const isAuthenticated = await checkAuthenticated();
+        if (!isAuthenticated) {
+            console.error("User not authenticated. Cannot create match.");
+            return;
+        }
 
-  const response = await fetch('game/create-match/', {
-    method: 'POST',
-  });
-  const data = await response.json();
-  if (data.match_id) {
-    console.log("Match created with ID:", data.match_id);
-    sendScoreToDjango(user_score, alias_score, data.match_id);
-  } else {
-    console.error("Error creating match");
-  }
+        const response = await fetch('game/create-match/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Match creation failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (data.match_id) {
+            console.log("Match created with ID:", data.match_id);
+            await sendScoreToDjango(user_score, alias_score, data.match_id);
+        } else {
+            console.error("Error creating match:", data);
+        }
+    } catch (error) {
+        console.error("Failed to create match:", error);
+    }
 }
 
-function sendScoreToDjango(score, score2, match_id) {
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "game/save-score/", true);
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      if (xhr.status === 200) {
-        console.log("Score saved successfully.");
-      } else {
-        console.error("Failed to save score:", xhr.status, xhr.statusText);
-      }
+export async function sendScoreToDjango(score, score2, match_id) {
+    try {
+        const response = await fetch("game/save-score/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            credentials: 'include',
+            body: JSON.stringify({ user_score: score, alias_score: score2, match_id: match_id }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to save score: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Score saved successfully:", data);
+    } catch (error) {
+        console.error("Error saving score:", error);
     }
-  };
-  xhr.send(JSON.stringify({ user_score: score, alias_score: score2, match_id: match_id }));
 }

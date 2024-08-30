@@ -5,7 +5,6 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
-@csrf_exempt
 def save_score(request):
 	if request.method == 'POST':
 		data = json.loads(request.body)
@@ -27,7 +26,6 @@ def save_score(request):
 	else:
 		return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
 
-@csrf_exempt
 @login_required
 def create_match(request):
 	new_match = Match.objects.create(player=request.user)
