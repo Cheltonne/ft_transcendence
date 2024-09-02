@@ -120,7 +120,8 @@ export async function initializeWebSocket() {
 			}
 
 			else if (data.player1 && data.type === 'match_request') {
-                showToast(`Match request: ${data.player1} wants to play with you!`);
+				console.log('Match request:', data);
+                //showToast(`Match request: ${data.player1} wants to play with you!`);
             }
 			
             if (document.querySelector('notification-list') === null) { //avoid showing the counter if the notif list is open

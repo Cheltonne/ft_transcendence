@@ -107,7 +107,17 @@ export class NotificationItem extends HTMLElement {
     }
 
     acceptMatchRequest(matchId) {
-        //Send an accept message to the server
+            //Send an accept message to the server
+            // Retrieve the match ID directly from the notification object
+        const matchId = this.notification.match_id;
+
+        if (!matchId) {
+            console.error('No match ID provided.');
+            return;
+        }
+
+        console.log("match ID in accept match request: ", matchId);
+        
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
         socket.onopen = () => {
             socket.send(JSON.stringify({ type: 'match_accept', match_id: matchId }));

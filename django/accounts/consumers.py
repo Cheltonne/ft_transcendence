@@ -155,7 +155,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                     'type': 'match_request',
                     'player1': data['player1'],
                     'match_id': data['match_id'],
-                    'message': f"{data['player1']} wants to play with you."
+                    'message': f"{data['player1']} wants to play with you in match {data['match_id']}."
                 }
             }
             
