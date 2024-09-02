@@ -18,7 +18,8 @@ let Ball = null;
 var ReDrawStatic = true;
 const MAX_ROUNDS = 3;
 let currentRound = 1;
-let emetteur = null;
+let emetteur = false;
+let drawFakeBall = false;
 
 setCanvasSize();
 function setCanvasSize() {
@@ -59,7 +60,7 @@ function sendBallPosition(ball_pos, ball_velocity) {
 }
 
 function updateBallPosition(ball_pos, ball_velocity) {
-    if (Ball) {
+    if (Ball && !emetteur) {
         Ball.pos = ball_pos;
         Ball.velocity = ball_velocity;
         draw();
@@ -68,7 +69,6 @@ function updateBallPosition(ball_pos, ball_velocity) {
 
 function handleServerMessage(message) {
     console.log('Received message from server:', message);
-    console.log('Current player ID:', playerId);
 
     if (message.message === 'Room created') {
         console.log('Room created successfully!');
@@ -76,6 +76,7 @@ function handleServerMessage(message) {
     } else if (message.message === 'Joined room') {
         playerId = message.player_uuid;
         console.log('Joined the room successfully!');
+        console.log('Current player ID:', playerId);
     } else if (typeof message.message === 'string' && message.message.startsWith('Player')) {
         console.log('Player message:', message.message);
         if (message.player_uuid === playerId) {
@@ -88,7 +89,7 @@ function handleServerMessage(message) {
             } else if (message.player_number === 3) {
                 Paddle1 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
                 Paddle2 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('F15', 'F16'));
-                Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+                Ball = new FakeBall(vec2(canvas.width / 2, canvas.height / 2));
                 emetteur = false;
             }
         }
@@ -96,6 +97,7 @@ function handleServerMessage(message) {
         console.log('The game is starting!');
         if (Paddle1 && Paddle2 && Ball) {
             GameLauncher();
+            roomNameInput.style.display = "none";
         }
     } else if (message.command === 'move_paddle') {
         if (message.sender_uuid !== playerId) {
@@ -104,6 +106,9 @@ function handleServerMessage(message) {
     }
     else if (message.command === 'move_ball') {
         updateBallPosition(message.ball_pos, message.ball_velocity);
+    }
+    else if (message.command === 'score') {
+        updateScore(message.score, message.paddle);
     }
 }
 
@@ -116,7 +121,11 @@ export function createRoom() {
     }));
 }
 
+
+
 export function joinRoom() {
+    //console.log("je passe par la");
+    drawStaticElements();
     const roomName = roomNameInput.value;
     socket.send(JSON.stringify({
         'command': 'join_room',
@@ -125,10 +134,40 @@ export function joinRoom() {
 }
 
 export function startGame() {
+    drawStaticElements();
     socket.send(JSON.stringify({
         'command': 'start_game'
     }));
+}
 
+function drawStaticElements() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#a2c11c";
+
+    //console.log(RequestFrame);
+    //console.log(currentRound);
+    if (!RequestFrame && currentRound == 1) {
+        ctx.fillRect(20, (canvas.height - 100) / 2, 10, 100);
+        ctx.fillRect(canvas.width - 20 - 10, (canvas.height - 100) / 2, 10, 100);
+        ctx.fillStyle = '#fff';
+        ctx.font = '36px sans-serif';
+        ctx.fillText(0, canvas.width - 130, 50);
+        ctx.fillText(0, 100, 50);
+        ctx.fillStyle = '#fff';
+        ctx.font = '20px sans-serif';
+        ctx.fillText("'↑': move up", canvas.width - 165, canvas.height - 30);
+        ctx.fillText("'↓': move down", canvas.width - 165, canvas.height - 10);
+        ctx.fillText("'w' : move up", 10, canvas.height - 30);
+        ctx.fillText("'s' : move down", 10, canvas.height - 10);
+    }
+    else {
+        console.log("je passe par la");
+        ctx.font = '36px sans-serif';
+        ctx.fillStyle = "#a2c11c";
+        ctx.fillText(Paddle2.score, canvas.width - 130, 50);
+        ctx.fillText(Paddle1.score, 100, 50);
+        ReDrawStatic == false;
+        }
 }
 
 CreateRoom.addEventListener("click", function() {
@@ -145,6 +184,7 @@ JoinRoom.addEventListener("click", function() {
     roomNameInput.style.display = "none";
     joinRoom();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawStaticElements();
 });
 
 start.addEventListener("click", function() {
@@ -222,33 +262,6 @@ function sendPaddlePosition(pos) {
     }
 }
 
-function drawStaticElements() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#a2c11c";
-
-    if (!RequestFrame && currentRound == 1) {
-        ctx.fillRect(20, (canvas.height - 100) / 2, 10, 100);
-        ctx.fillRect(canvas.width - 20 - 10, (canvas.height - 100) / 2, 10, 100);
-        ctx.fillStyle = '#fff';
-        ctx.font = '36px sans-serif';
-        ctx.fillText(0, canvas.width - 130, 50);
-        ctx.fillText(0, 100, 50);
-        ctx.fillStyle = '#fff';
-        ctx.font = '20px sans-serif';
-        ctx.fillText("'↑': move up", canvas.width - 165, canvas.height - 30);
-        ctx.fillText("'↓': move down", canvas.width - 165, canvas.height - 10);
-        ctx.fillText("'w' : move up", 10, canvas.height - 30);
-        ctx.fillText("'s' : move down", 10, canvas.height - 10);
-    }
-    else {
-        ctx.fillStyle = '#fff';
-        ctx.font = '36px sans-serif';
-        ctx.fillText(Paddle2.score, canvas.width - 130, 50);
-        ctx.fillText(Paddle1.score, 100, 50);
-        ReDrawStatic == false;
-        }
-}
-
 function draw() {
 
     if (ReDrawStatic)
@@ -262,6 +275,8 @@ function draw() {
     ctx.beginPath();
     ctx.arc(Ball.pos.x, Ball.pos.y, Ball.radius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillText(Paddle2.score, canvas.width - 130, 50);
+    ctx.fillText(Paddle1.score, 100, 50);
 }
 
 function GameLoop() {
@@ -274,7 +289,7 @@ function GameLoop() {
 
     Paddle1.update(dt);
     Paddle2.update(dt);
-    if (emetteur)
+    if (emetteur && Ball)
         Ball.update(dt);
     
     draw();
@@ -414,6 +429,25 @@ class PongBall {
         }
     }
 
+    class FakeBall {
+        constructor(pos) {
+            this.pos = pos;
+            this.prevpos = pos;
+            this.velocity = vec2(0, 0);
+            this.radius = 8;
+            this.speed = 0.5;
+            this.left = null;
+            this.LastHit = null;
+            this.trailLength = 10;
+            this.trailOpacity = 0.1;
+            this.trailPositions = [];
+            this.goal = false;
+            this.nextPos = false;
+            this.launch = true;
+            this.LastCollision = null;
+        }
+}
+
 function updatePaddlePosition(paddle_pos) {
     if (Paddle2) { 
         Paddle2.pos.y = paddle_pos.y;
@@ -430,6 +464,7 @@ function GameLauncher() {
         }
         if (!RequestFrame) {
             RequestFrame = true;
+
             requestAnimationFrame(GameLoop);
             //allButtonOk = false;
         }
