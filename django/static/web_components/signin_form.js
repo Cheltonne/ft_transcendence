@@ -55,11 +55,6 @@ export class SigninForm extends HTMLElement {
                 event.preventDefault();
                 navigateTo('signup', 2);
             });
-            this.shadowRoot.querySelector("#forgotpwButton").addEventListener("click",
-            (event) => {
-                event.preventDefault();
-                navigateTo('reset-password', 2);
-            });
         }
         catch (error) {
             console.log(`Error logging in: ${error}`);

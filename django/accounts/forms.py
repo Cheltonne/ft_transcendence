@@ -10,7 +10,6 @@ class CustomUserCreationForm(UserCreationForm):
 		model = CustomUser
 		fields = [
 			'username',
-			'email',
 			'password1',
 			'password2',
 			'profile_picture'
@@ -18,9 +17,6 @@ class CustomUserCreationForm(UserCreationForm):
 		help_texts = {
 				'username': _("Maximum length: 15"),
 				}
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		self.fields['email'].initial = ''
 
 class CustomUserChangeForm(UserChangeForm):
 	profile_picture = forms.ImageField(widget=forms.FileInput(attrs={'class': 'form-control-file'}))
@@ -29,17 +25,9 @@ class CustomUserChangeForm(UserChangeForm):
         required=True,
         widget=forms.TextInput(attrs={'class': 'form-control'})
 		)
-	email = forms.EmailField(
-		max_length = 254, 
-		)
 	class Meta:
 		model = CustomUser
-		fields = ("username", 'profile_picture', 'email')
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		user = kwargs.get('user', None)
-		if user:
-			self.fields['email'].initial = user.email
+		fields = ("username", 'profile_picture')
 
 
 class ChangePasswordForm(forms.Form):

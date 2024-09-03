@@ -29,6 +29,7 @@ POSTGRES_PORT = os.environ.get('POSTGRES_PORT')
 POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost']

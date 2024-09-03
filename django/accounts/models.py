@@ -4,7 +4,6 @@ from django.contrib.auth.models import AbstractUser
 class CustomUser(AbstractUser):
 	username = models.CharField(max_length=15, unique=True)
 	profile_picture = models.ImageField(upload_to='profile_pictures')
-	email = models.EmailField(max_length = 254, unique=True, default='poubelle42@gmail.com')
 	wins = models.IntegerField(default=0)
 	losses = models.IntegerField(default=0)
 	friends = models.ManyToManyField('self', blank=True)

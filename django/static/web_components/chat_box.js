@@ -95,6 +95,8 @@ export class UserChatView extends HTMLElement {
                 const data = JSON.parse(event.data);
                 if (data.sender === this._interlocutor.username)
                     this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id);
+                else if (data.sender === 2)
+                    this.displayTournamentNotice(data);
             };
         }
     }
@@ -213,6 +215,14 @@ export class UserChatView extends HTMLElement {
 
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    displayTournamentNotice(data)
+    {
+            const announcement = document.createElement('div');
+            announcement.innerText = `Tournament Match: ${data.player1} VS ${data.player2}`;
+            announcement.style.color = 'red';
+            this.shadowRoot.querySelector('.chat-header').appendChild(announcement);
     }
 
     openUserProfileModal(username, pfp, id) {

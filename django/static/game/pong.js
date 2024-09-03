@@ -139,16 +139,19 @@ function hideTourneyButtons() {
     nextButton.style.display = 'none';
 }
 
-function updateNextMatchButton() {
-let array = findMatchWithNullWinner(matches);
+async function updateNextMatchButton() {
+    let array = findMatchWithNullWinner(matches);
 
     if (array !== null) {
         document.getElementById("aliasContainer").textContent = `${array.player1} VS ${array.player2}`;
         NextMatchButton.innerHTML = `${array.player1} VS ${array.player2}`;
         NextMatchButton.style.display = 'inline-block';
-    }   else {
+    } else {
         NextMatchButton.innerHTML = 'Next Match';
     }
+    if (array !== null)
+        await fetch(`game/broadcast-tournament/${array.player1}/${array.player2}/`, {'method': 'GET'})
+
 }
 
 function drawTournamentTree() {
