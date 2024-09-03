@@ -63,7 +63,7 @@ function updateBallPosition(ball_pos, ball_velocity) {
     if (Ball && !emetteur) {
         Ball.pos = ball_pos;
         Ball.velocity = ball_velocity;
-        draw();
+        //draw();
     }
 }
 
@@ -124,7 +124,6 @@ export function createRoom() {
 
 
 export function joinRoom() {
-    //console.log("je passe par la");
     drawStaticElements();
     const roomName = roomNameInput.value;
     socket.send(JSON.stringify({
@@ -161,7 +160,6 @@ function drawStaticElements() {
         ctx.fillText("'s' : move down", 10, canvas.height - 10);
     }
     else {
-        console.log("je passe par la");
         ctx.font = '36px sans-serif';
         ctx.fillStyle = "#a2c11c";
         ctx.fillText(Paddle2.score, canvas.width - 130, 50);
@@ -313,6 +311,7 @@ class PongBall {
         this.nextPos = false;
         this.launch = true;
         this.LastCollision = null;
+        this.LastSignal = 0;
     }
 
     resetSpeed() {
@@ -451,7 +450,7 @@ class PongBall {
 function updatePaddlePosition(paddle_pos) {
     if (Paddle2) { 
         Paddle2.pos.y = paddle_pos.y;
-        draw();
+        //draw();
     }
 }
 
