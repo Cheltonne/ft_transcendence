@@ -48,7 +48,7 @@ def send_friend_request_notification(sender, recipient):
     )"""
 
 def send_notification(sender, recipient, type, message, match_id=None):
-    notification = Notification.objects.create(type=type, sender=sender, recipient=recipient, message=message)
+    notification = Notification.objects.create(type=type, sender=sender, recipient=recipient, message=message, match_id=match_id)
     
     sender_data = {
         'id': sender.id,
@@ -63,10 +63,13 @@ def send_notification(sender, recipient, type, message, match_id=None):
         'created_at': notification.created_at.isoformat(),
         'is_read': notification.is_read,
         'type': notification.type,
+        'match_id': match_id,
     }
     
-    if match_id is not None:
+    """if match_id is not None:
         notification_data['match_id'] = match_id
+        if notification_data.match_id is not None:
+            print(f"Match ID in send_notification: {notification_data.match_id"""
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         f'user_{recipient.id}',

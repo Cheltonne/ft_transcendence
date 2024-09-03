@@ -25,7 +25,7 @@ export class NotificationItem extends HTMLElement {
         styleLink.setAttribute('href', 'static/css/notification_item.css');
         this.shadowRoot.appendChild(styleLink);
         this.renderNotificationActions();
-        this.addEventListener('click', () => console.log(this.notification.id))
+        //this.addEventListener('click', () => console.log(this.notification.id))
     }
 
     disconnectedCallback() {
@@ -82,10 +82,9 @@ export class NotificationItem extends HTMLElement {
         this.shadowRoot.querySelector('.notification-body').textContent = notification.message;
         this.shadowRoot.querySelector('.sender-pfp-container').innerHTML = `<img src="${notification.sender_pfp.replace('http://localhost/', '')}" class="sender-pfp">`
 
-        if (notification.match_id) {
-            this.notification.match_id = notification.match_id;
-            console.log('in set data Match ID:', notification.match_id);
-        }
+        
+            console.log('in set data Match ID:', notification);
+        
     }
 
     acceptFriendRequest(notificationId, senderId) {
@@ -109,13 +108,6 @@ export class NotificationItem extends HTMLElement {
     acceptMatchRequest(matchId) {
             //Send an accept message to the server
             // Retrieve the match ID directly from the notification object
-        const matchId = this.notification.match_id;
-
-        if (!matchId) {
-            console.error('No match ID provided.');
-            return;
-        }
-
         console.log("match ID in accept match request: ", matchId);
         
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');

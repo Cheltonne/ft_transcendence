@@ -31,7 +31,7 @@ export function showToast(message, type = 'info') { //show toast notification on
 		toast.classList.add('toast-error');
 	}
 
-	const toastContainer = document.querySelector('.toast-container');
+	const toastContainer = document.querySelector('.toast-container');					
 	toastContainer.appendChild(toast);
 
 	toast.classList.add('show');

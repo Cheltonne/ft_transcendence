@@ -153,39 +153,41 @@ export class MorpionComponent extends HTMLElement {
             console.log('WebSocket connection established');
             socket.send(JSON.stringify({ type: 'matchmaking' }));
         };
-        //data do not reach here????
+
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
+            //console.log('Received server message:', data);
             this.handleSeverMesssage(data);
+            
         }; 
     
-        socket.onerror = (error) => {
+        socket.onerror = function (error) {
             console.error('WebSocket error:', error);
-            this.showAlert('danger', 'WebSocket error occurred. Please try again later.');
+        
         };
     
-        socket.onclose = (event) => {
+        socket.onclose = function(event) {
             console.log('WebSocket connection closed with code:', event.code, "reason:", event.reason);
         };
     }
 
     handleSeverMesssage(data) {
-        console.log('Received server message:', message);
+        //console.log('Received server message from server:', data);
         if (data.type === 'match_accept') {
             console.log('Match found! Room ID:', data.room_id);
             this.showAlert('success', 'Match found! Room ID: ' + data.room_id);
             socket.send(JSON.stringify({ type: 'join_room', room_name: `morpion_${data.room_id}` }));
-        }else if (data.type === 'room_created') {
+        }else if (data.type === 'Room created') {
             console.log('Room created successfully!');
             this.showAlert('success', 'Room created successfully!');
-            this.joinRoom(message.room_id);
+            this.joinRoom(data.room_id);
         }else if (data.type === 'room_joined') {
             console.log('Room joined successfully!');
             this.showAlert('success', 'Room joined successfully!');
             this.startGame();
         }else if (data.type === 'no_match_found') {
-            console.log('Match not found. Please try again later.');
-            this.showAlert('danger', 'Match not found. Please try again later.');
+            console.log('Match not found. Start a game with AI.');
+            this.showAlert('danger', 'Match not found. Start a game with AI.');
         } 
     }
 

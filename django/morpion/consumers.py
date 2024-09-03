@@ -49,7 +49,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 }))
         
         if type == 'match_accept':
-            await self.handle_match_accepted()
+            await self.handle_match_accepted(data)
 
         elif type == 'match_decline':
             await self.handle_match_decline(data)
@@ -59,17 +59,25 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
         elif type == 'make_move':
             await self.handle_make_move(data)
-
-    async def handle_match_accepted(self):
-        print('in handle_match_accepted')
-        #match_id = data.get('match_id')
-        #print(f"Match ID in handle match: {match_id}")
         
-        match = await sync_to_async(Match.objects.get)(id=self.match_id)
-        print(f"Handling match accepted for match ID: {self.match_id}")
+        elif type == 'create_room':
+            await self.handle_room_created(data)
+
+    async def handle_match_accepted(self, data):
+        print('in handle_match_accepted')
+        match_id = data.get('match_id')
+        print(f"Match ID in handle match: {match_id}")
+        
+        match = await sync_to_async(Match.objects.get)(id=match_id)
+
+        match_attributes = await sync_to_async(lambda: {field.name: getattr(match, field.name) for field in match._meta.fields})()
+        print(f"Match Attributes: {match_attributes}")
+
+        player1_id = str(match_attributes.get('player1'))
+        player2_id = str(match_attributes.get('player2'))
         
         # Create a room with the match_id as the room name
-        self.room_name = f"room_{self.match_id}"
+        self.room_name = f"room_{match_id}"
         self.room_group_name = self.room_name
 
         # Add both players to the room group
@@ -78,27 +86,36 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-        await self.channel_layer.group_send(
-             self.room_group_name,
-            {
-                'type': 'room_created',
-                'message': f"Room {self.room_name} created for the match.",
-                'player1': match.player1.username,
-                'player2': match.player2.username,
-                'match_id': self.match_id
-             }
-        )
+        print(f"Room {self.room_name} created for Match ID: {match_id}")
+        print(f"Players: {player1_id}, {player2_id}")
 
+        #CODE STOPS HERE!! DO NOT KNOW WHY?? SEND IS NOT WORKING
         await self.send(text_data=json.dumps({
-            'type': 'room_created',
-            'message': "Room {self.room_name} created.",
-            'match_id': self.match_id,
-            'player1': match.player1.username,
-            'player2': match.player2.username,
+            'type': 'create_room',
+            'message': 'create_room',
+            'room_name': self.room_name,
+            'match_id': match_id,
+            'player1': player1_id,
+            'player2': player2_id
 
         }))
-        print(f"Room {self.room_name} created for Match ID: {self.match_id}")
-    
+
+    async def handle_room_created(self, data):
+        print('in room_created')
+        room_name = data['room_name']
+        match_id = data['match_id']
+        player1 = data['player1']
+        player2 = data['player2']
+
+        await self.send(text_data=json.dumps({
+            'type': 'Room created',
+            'message': 'Room created',
+            'room_name': room_name,
+            'match_id': match_id,
+            'player1': player1,
+            'player2': player2
+        }))
+        
 
     async def handle_join_room(self, room_name):
         # Check if the room exists
@@ -212,8 +229,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             message = f"{self.scope['user'].username} wants to play a game with you in match {match_data.id}.",
             match_id = match_data.id
         )
-        
-
     async def find_match(self):
         user = self.scope['user']
         print(f"Finding match for user: {user.username}")
@@ -242,9 +257,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'message': 'No players available. Starting game with AI.'
             })) 
             print("No match found")    
-        return None
+        return None    
     
-
     @sync_to_async
     def create_match(self, player1, player2):
         match = Match.objects.create(player1=player1, player2=player2)
