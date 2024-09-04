@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from . import views
 from game.views import save_score
 from django.views.generic.base import TemplateView
+from oauth2_provider import urls as oauth2_urls
 
 urlpatterns = [
     path('', views.index),
@@ -29,7 +30,10 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("morpion/", include("morpion.urls")),
 	path("accounts/", include("django.contrib.auth.urls")),
-    path("render-template/<str:folder>/<str:template_name>/", views.render_template, name='render-template'),
+    path('oauth/callback/', views.oauth_callback, name='oauth-callback'),
+    path('oauth/url/', views.get_oauth_url, name='oauth-url'),
+    path('oauth/status/', views.oauth_status, name='oauth-status'),
+    path('oauth/choose-username/', views.choose_username, name='choose-username'),
     re_path(r'^(?!api/)(?!admin/)(?!static/)(?!.*\.(jpg|jpeg|png|gif|svg)$).*$', TemplateView.as_view(template_name='index.html'))
 ]
 

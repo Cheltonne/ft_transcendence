@@ -2,7 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async, async_to_sync
-from accounts.models import Notification
+from accounts.models import Notification, Message, CustomUser
 
 User = get_user_model()
 
@@ -133,3 +133,71 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     async def send_notification(self, event):
         await self.send(text_data=json.dumps(event["notification"]))
+
+class ChatConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user = self.scope["user"]
+        self.room_name = f"user_{self.user.id}"
+        self.room_group_name = f"chat_{self.room_name}"
+
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message = text_data_json["message"]
+        recipient_id = text_data_json["recipient_id"]
+        sender_id = text_data_json["sender_id"]
+
+        try:
+            recipient = await sync_to_async(CustomUser.objects.get)(id=recipient_id)
+            blocked_users = await sync_to_async(list)(recipient.blocked_users.all())
+
+            if self.user in blocked_users:
+                return
+            new_message = await sync_to_async(Message.objects.create)(
+                sender=self.user, 
+                recipient=recipient, 
+                content=message
+            )
+            sender_profile_picture = self.user.profile_picture.url if self.user.profile_picture else None
+            await self.channel_layer.group_send(
+                f"chat_user_{recipient.id}",
+                {
+                    "type": "chat_message",
+                    "message": message,
+                    "sender": self.user.username,
+                    "sender_id": sender_id,
+                    "timestamp": new_message.timestamp.isoformat(),
+                    "sender_profile_picture": sender_profile_picture, 
+                }
+            )
+
+        except CustomUser.DoesNotExist:
+            await self.send(text_data=json.dumps({
+                "error": "Recipient does not exist."
+            }))
+
+    async def chat_message(self, event):
+        message = event["message"]
+        sender = event["sender"]
+        sender_id = event["sender_id"]
+        timestamp = event["timestamp"]
+        sender_profile_picture = event.get("sender_profile_picture") 
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "sender": sender,
+            "sender_id": sender_id,
+            "timestamp": timestamp,
+            "sender_profile_picture": sender_profile_picture,
+        }))

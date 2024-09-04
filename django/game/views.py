@@ -4,6 +4,8 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from accounts.utils import send_notification
+from accounts.models import CustomUser
 
 @csrf_exempt
 def save_score(request):
@@ -13,7 +15,8 @@ def save_score(request):
 		user_score = data.get('user_score')
 		match_id = data.get('match_id')
 		if alias_value is None and user_score is None and match_id is None :
-			return JsonResponse({'error': 'Score value or match ID is missing.'}, status=400)
+			return JsonResponse({'error': 'Score value or match ID is missing.'},
+				status=400)
 		try:
 			match = Match.objects.get(pk=match_id)
 		except Match.DoesNotExist:
@@ -31,3 +34,15 @@ def save_score(request):
 def create_match(request):
 	new_match = Match.objects.create(player=request.user)
 	return JsonResponse({'match_id': new_match.id})
+
+def broadcast_tournament(request, p1, p2):
+	print("broadcast_tournament view called")
+	if request.method == 'GET':
+		active_users = CustomUser.objects.all()
+		admin = CustomUser.objects.get(id=2)
+		for user in active_users:
+			send_notification(admin, user, 'tournament_notice',
+					  f"Tournament broadcast: {p1} is about to face {p2} in the ultimate tournament of DEATH try head!!!!!")
+		print(f"received {p1} and {p2}")
+		return JsonResponse({'message': 'Try succ HEAD'}, status=201)
+	return JsonResponse({'message': 'Liar aHEAD'}, status=400)

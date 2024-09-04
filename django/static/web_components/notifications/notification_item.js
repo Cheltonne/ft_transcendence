@@ -25,7 +25,6 @@ export class NotificationItem extends HTMLElement {
         styleLink.setAttribute('href', 'static/css/notification_item.css');
         this.shadowRoot.appendChild(styleLink);
         this.renderNotificationActions();
-        this.addEventListener('click', () => console.log(this.notification.id))
     }
 
     disconnectedCallback() {
@@ -68,7 +67,13 @@ export class NotificationItem extends HTMLElement {
     set data(notification) {
         this.notification = notification;
         this.shadowRoot.querySelector('.notification-body').textContent = notification.message;
-        this.shadowRoot.querySelector('.sender-pfp-container').innerHTML = `<img src="${notification.sender_pfp.replace('http://localhost/', '')}" class="sender-pfp">`
+        let pfpUrl = notification.sender_pfp;
+        if (pfpUrl.includes('intra.42.fr'))
+            pfpUrl = pfpUrl.replace('media/https%3A/', 'https://');
+        const regex = /http:\/\/made-[^\/]+\/?/;
+        if (pfpUrl.match(regex))
+            pfpUrl = pfpUrl.replace(regex, '');
+        this.shadowRoot.querySelector('.sender-pfp-container').innerHTML = `<img src="${pfpUrl.replace('http://localhost/', '')}" class="sender-pfp">`
     }
 
     acceptFriendRequest(notificationId, senderId) {
@@ -81,12 +86,12 @@ export class NotificationItem extends HTMLElement {
                     }
                 });
                 document.dispatchEvent(customEvent);
+                this.updateUnread();
                 this.remove();
             })
             .catch(error => {
                 console.error('Failed to mark notification as read:', error);
             });
-        this.updateUnread();
     }
 
     markAsRead(notificationId) {
@@ -98,12 +103,12 @@ export class NotificationItem extends HTMLElement {
                     }
                 });
                 document.dispatchEvent(customEvent);
+                this.updateUnread();
                 this.remove();
             })
             .catch(error => {
                 console.error('Failed to mark notification as read:', error);
             });
-        this.updateUnread();
     }
 
     toggleNotificationRead(notificationId) {

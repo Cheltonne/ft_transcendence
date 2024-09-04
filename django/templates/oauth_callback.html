@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OAuth Callback</title>
+</head>
+<body>
+    <script>
+        (function() {
+            const error = "{{ error|escapejs }}";
+            const oauth_id = "{{ oauth_id|escapejs }}";
+            const email = "{{ email|escapejs }}";
+            const profile_picture = "{{ profile_picture|escapejs }}";
+            const would_be_username = "{{ would_be_username|escapejs }}";
+
+            if (error === 'Username taken') {
+                sessionStorage.setItem('oauth_message', JSON.stringify({
+                    type: 'username_taken',
+                    oauth_id: oauth_id,
+                    email: email,
+                    profile_picture: profile_picture,
+                    would_be_username: would_be_username
+                }));
+            } else {
+                sessionStorage.setItem('oauth_message', JSON.stringify({
+                    type: 'oauth_success'
+                }));
+                console.log('succ');
+            }
+            window.location.replace("https://" + sessionStorage.getItem("host").replace(
+                "oauth/callback/pong", ""));
+        })();
+    </script>
+</body>
+</html>

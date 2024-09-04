@@ -1,5 +1,5 @@
 import { getUserInfo, menu, hamMenu, bbc } from './scripts.js';
-import { navigateTo } from './views.js';
+import { navigateTo } from './navigation.js';
 export let socket = null;
 export let notificationSocket = null;
 export const USER_STORAGE_KEY = 'user';
@@ -20,7 +20,7 @@ export function getCookie(cname) { // to get CSRF cookie (necessary for forms)
 	return "";
 }
 
-export function showToast(message, type = 'info') { //show toast notification on top right, besides hamburger menu button
+export function showToast(message, type = 'info', ms_timer=3000) { //show toast notification on top right, besides hamburger menu button
 	const toast = document.createElement('div');
 	toast.classList.add('toast');
 	toast.textContent = message;
@@ -39,7 +39,7 @@ export function showToast(message, type = 'info') { //show toast notification on
 	setTimeout(() => {
 		toast.classList.remove('show');
 		toastContainer.removeChild(toast);
-	}, 3000);
+	}, ms_timer);
 }
 
 export function toggleMenu() {
@@ -70,11 +70,9 @@ export function handleLogout() {
 					console.log('closed socket after logout.');
 				}
 				removeUserFromStorage();
-				const friendsListElement = document.querySelector('friends-view');
-				if (friendsListElement) {
-					friendsListElement.remove();
-				}
 				bbc.postMessage('loggedOut');
+				const customEvent = new CustomEvent('user-logout');
+				window.dispatchEvent(customEvent);
 			} else {
 				showToast('Error during logout:', data.message || 'Unknown error')
 			}
@@ -117,6 +115,8 @@ export async function initializeWebSocket() {
 			if (data.sender && data.type === 'friend_request') {
 				showToast(`${data.sender} wants to add you as a friend.`);
 			}
+			else if (data.type === 'tournament_notice')
+				showToast(data.message, 8000);
             if (document.querySelector('notification-list') === null) { //avoid showing the counter if the notif list is open
 				fetch("accounts/notifications/unread-count/")
 					.then (response => response.json())

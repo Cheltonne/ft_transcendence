@@ -5,3 +5,4 @@ djangorestframework
 channels
 daphne
 channels_redis
+django-oauth-toolkit

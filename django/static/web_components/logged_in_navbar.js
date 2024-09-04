@@ -1,4 +1,4 @@
-import { navigateTo } from '../views.js';
+import { navigateTo } from '../navigation.js';
 import { getUserFromStorage, handleLogout, showToast } from '../utils.js';
 import { getUserInfo, user } from '../scripts.js';
 import { UserObserver } from '../observer.js';
@@ -16,6 +16,7 @@ export class LoggedInNavbar extends HTMLElement {
             <li class='profile-button-li'><a href="#" class="profileButton">My Profile</a></li>
             <li><a class="morpionButton">Morpion</a></li>
             <li><a class='friendsButton'>Friends</a></li>
+            <li><a class='chatButton'>Chat</a></li>
             <li><a class="button logoutButton" id="logoutButton" href="#">Logout</a></li>
           </ul>
         </div>
@@ -29,6 +30,7 @@ export class LoggedInNavbar extends HTMLElement {
         this.profile = this.shadowRoot.querySelector('.profileButton');
         this.friends = this.shadowRoot.querySelector('.friendsButton');
         this.morpion = this.shadowRoot.querySelector('.morpionButton')
+        this.chat = this.shadowRoot.querySelector('.chatButton')
         this.logout = this.shadowRoot.querySelector('.logoutButton');
         let user_observer;
         const styleLink = document.createElement('link');
@@ -69,8 +71,12 @@ export class LoggedInNavbar extends HTMLElement {
         this.morpion.addEventListener('click', (event) => {
             event.preventDefault();
             navigateTo('morpion', 1);
-            console.log('morpion');
         });
+
+        this.chat.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigateTo('chat', 1);
+        })
 
         this.logout.addEventListener('click', (event) => {
             handleLogout();
