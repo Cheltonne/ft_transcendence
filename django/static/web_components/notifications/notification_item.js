@@ -134,6 +134,7 @@ export class NotificationItem extends HTMLElement {
     
     declineMatchRequest(matchId) {
         // Send a decline message to the server
+        console.log("match ID in decline match request: ", matchId);
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
         socket.onopen = () => {
             socket.send(JSON.stringify({ type: 'match_decline', match_id: matchId}));
