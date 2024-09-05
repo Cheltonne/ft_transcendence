@@ -116,7 +116,7 @@ export async function initializeWebSocket() {
 				showToast(`${data.sender} wants to add you as a friend.`);
 			}
 			else if (data.type === 'tournament_notice')
-				showToast(data.message, 8000);
+				showToast(data.message, '', 8000);
             if (document.querySelector('notification-list') === null) { //avoid showing the counter if the notif list is open
 				fetch("accounts/notifications/unread-count/")
 					.then (response => response.json())
