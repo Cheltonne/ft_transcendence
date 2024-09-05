@@ -224,9 +224,8 @@ class PongConsumer(AsyncWebsocketConsumer):
     rooms = {}
 
     async def connect(self):
-        self.player_uuid = str(uuid.uuid4())
+        self.player_uuid = None
         self.room_name = None
-        self.player_name = None
         await self.accept()
         print(f'Client {self.player_uuid} connected')
 
@@ -257,8 +256,8 @@ class PongConsumer(AsyncWebsocketConsumer):
         if command == 'create_room':
             await self.create_room(data['room_name'])
         elif command == 'set_player_name':
-            self.player_name = data.get('player_name')
-            print(f'Player name set to: {self.player_name}')
+            self.player_uuid = data.get('player_name')
+            print(f'Player name set to: {self.player_uuid}')
         elif command == 'start_button':
             await self.start_button()
         elif command == 'join_room':
@@ -286,7 +285,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def create_room(self, room_name):
         if room_name in self.rooms:
             await self.send(text_data=json.dumps({
-                'message': 'Room already exists'
+                'message': 'Room created'
             }))
         else:
             self.rooms[room_name] = [self.player_uuid]
@@ -295,7 +294,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                 'message': 'Room created',
                 'room_name': room_name
             }))
-            print(f'Room {room_name} created by {self.player_uuid} / {self.player_name}')
+            print(f'Room {room_name} created by {self.player_uuid}')
 
     async def start_game(self):
         if self.room_name:
@@ -383,7 +382,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'command': 'move_paddle',
             'paddle_pos': paddle_pos,
-            'sender_uuid': sender_uuid  # Include the sender's UUID
+            'sender_uuid': sender_uuid
         }))
 
     async def move_ball(self, ball_pos, ball_velocity):

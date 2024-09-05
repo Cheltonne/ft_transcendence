@@ -41,6 +41,11 @@ let emetteur = false;
 import { getCookie } from "../utils.js";
 let playerId = null;
 let socket = null;
+let OnlinePath = false;
+const Millenium = "qeqfefeeqq"
+//////////// A CHANGER DE MANIERE CONSTANTE POUR CREER UNE NOUVELLE ROOM A CHAQUE FOIS///
+/////////// J'AI BESOIN DE FAIRE EN SORTE DE CHOPPER LE PSEUDO DES DES MECS QUAND LE MATCH EST CREE ///
+////////// IL VA FALLOIR QUE LE MEC REDIRIGE LE MATCH ///////////////
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -325,11 +330,14 @@ document.addEventListener("DOMContentLoaded", function() {
     myButton.addEventListener("click", function() {
         myButton.style.display = "none";
         LiveButton.style.display = "none";
+        OnlinePath = false;
         ModeChoice();
     });
     LiveButton.addEventListener("click", function() {
         LiveButton.style.display = "none";
         myButton.style.display = "none";
+        OnlinePath = true;
+        giveName();
         OnlineChoice();
     });
 });
@@ -674,8 +682,7 @@ function GameLoop() {
         return;
     }
 
-    if (emetteur && Ball)
-        Ball.update(dt);
+    Ball.update(dt);
     Paddle1.update(dt);
     if (AI) {
         AIplayer.update(dt, Ball, Paddle2, Paddle1);
@@ -688,7 +695,7 @@ function GameLoop() {
 
 function LaunchGame() {
     if (allButtonOk) {
-        if (!playerId)
+        if (!OnlinePath)
             Players();
         draw();
         if (!RequestFrame && gameEnding) {
@@ -698,7 +705,10 @@ function LaunchGame() {
         if (!RequestFrame) {
             start.style.display = "none";
             RequestFrame = true;
-            requestAnimationFrame(GameLoop);
+            if (OnlinePath)
+                requestAnimationFrame(GameLoopOnline);
+            else
+                requestAnimationFrame(GameLoop);
             allButtonOk = false;
         }
     }
@@ -821,6 +831,7 @@ function GameEndingScreen() {
         ctx.textBaseline = 'middle'; 
         giveName();
 
+        console.log("je passe par ici");
         let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
         ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
         ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
@@ -852,8 +863,10 @@ class AIPlayer {
 
         update(dt, ball, Paddle2, Paddle1) {
             this.timeSinceLastPrediction += dt;
+            //console.log(this.timeSinceLastPrediction);
 
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
+                console.log(this.timeSinceLastPrediction);
                 this.timeSinceLastPrediction = 0;
                 this.paddleSeen = Paddle2.pos;
                 this.BallSeen = Ball.pos;
@@ -1032,6 +1045,8 @@ function OnlineGo() {
 
     socket.onopen = function(event) {
         console.log('Connected to the WebSocket server.');
+        setPlayerName();
+        createRoom();
     };
 
     socket.onmessage = function(event) {
@@ -1041,10 +1056,12 @@ function OnlineGo() {
 
     socket.onerror = function(error) {
         console.error('WebSocket Error: ', error);
+        DisconnectEndingScreen();
     };
 
     socket.onclose = function(event) {
         console.log('WebSocket connection closed.');
+        DisconnectEndingScreen();
     };
 }
 
@@ -1072,7 +1089,7 @@ function handleServerMessage(message) {
     if (message.message === 'Room created') {
         joinRoom();
     } else if (message.message === 'Joined room') {
-        setPlayerName();
+        //setPlayerName();
         playerId = message.player_uuid;
         //$("#aliasContainer").text(message.match_info);
     } else if (typeof message.message === 'string' && message.message.startsWith('Player')) {
@@ -1123,9 +1140,9 @@ export function StartButtonRoom() {
     }));
 }
 
-
 export function setPlayerName() {
     const playerName = userInfo.username;
+    
     socket.send(JSON.stringify({
         'command': 'set_player_name',
         'player_name': playerName
@@ -1138,8 +1155,14 @@ function DisplayStartButton(){
 }
 
 export function createRoom() {
-    const roomName = roomNameInput.value;
-    $("#aliasContainer").text(" Waiting for another player...");
+    CreateRoom.style.display = "none";
+    JoinRoom.style.display = "none";
+    roomNameInput.style.display = "none";
+    //createRoom();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const roomName = Millenium; // ICI CHANGE ICI
+    // MET UN VRAI TRUC QUAND LE BOUTON ET LES DEUX JOUEURS POST CHAT START EXISTE
+    //$("#aliasContainer").text(" Waiting other player...");
     socket.send(JSON.stringify({
         'command': 'create_room',
         'room_name': roomName
@@ -1148,6 +1171,7 @@ export function createRoom() {
 
 export function startGame() {
     drawStaticElements();
+    $("#aliasContainer").text("");
     socket.send(JSON.stringify({
         'command': 'start_game'
     }));
@@ -1171,14 +1195,9 @@ export function OnlineChoice(){
     CreateRoom.style.display = 'inline-block';
     JoinRoom.style.display = 'inline-block';
     roomNameInput.style.display = 'inline-block';
-    //start.style.display = "inline-block";
     onlineUI.style.display = "block";
-    OnlineGo();
+    OnlineChatButton();
 }
-
-/// PONG PROTO ?? //
-
-// PAS BESOIN DE REDISPATCH NORMALEMENT //
 
 class OnlinePongPaddle {
     constructor(pos, keys) {
@@ -1216,7 +1235,7 @@ class OnlinePongPaddle {
     }
 }
 
-function OnlineGameLoop() {
+function GameLoopOnline() {
     const currentTime = performance.now();
     const dt = (currentTime - lastFrameTime) / 1000;
     lastFrameTime = currentTime;
@@ -1224,26 +1243,26 @@ function OnlineGameLoop() {
     if (!RequestFrame)
         return;
 
-    Paddle1.update(dt);
-    Paddle2.update(dt);
-    if (emetteur && Ball)
-        Ball.update(dt);
-    
-    draw();
-
     if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
         console.log("Game Ending condition met");
         gameEnding = true;
         RequestFrame = false;
-        //if (!title)
-        //    GameEndingScreen();
-        //title = false;
-        GameEndingScreen();
-        forceDisconnect();
+        if (!title)
+            GameEndingScreen();
+        title = false;
         return;
     }
 
-    requestAnimationFrame(GameLoop);
+    if (emetteur && Ball)
+        Ball.update(dt);
+    Paddle1.update(dt);
+    if (AI) {
+        AIplayer.update(dt, Ball, Paddle2, Paddle1);
+    }
+    Paddle2.update(dt);
+    draw();
+
+    requestAnimationFrame(GameLoopOnline);
 }
 
     class FakeBall {
@@ -1273,7 +1292,6 @@ function updatePaddlePosition(paddle_pos) {
 }
 
 function updateScore(score1, score2) {
-    // Logic to update the score on the client side, e.g., updating the score display
     Paddle1.score = score1;
     Paddle2.score = score2;
     console.log('Updated score1: ', score1);
@@ -1301,7 +1319,7 @@ function OnlineGameEndingScreen() {
 export function joinRoom() {
     drawStaticElements();
     //UpdateUserName();
-    const roomName = roomNameInput.value;
+    const roomName = Millenium;
     socket.send(JSON.stringify({
         'command': 'join_room',
         'room_name': roomName
@@ -1316,16 +1334,8 @@ CreateRoom.addEventListener("click", function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
-JoinRoom.addEventListener("click", function() {
-    CreateRoom.style.display = "none";
-    JoinRoom.style.display = "none";
-    roomNameInput.style.display = "none";
-    joinRoom();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawStaticElements();
-});
-
 start.addEventListener("click", function() {
+    $("#aliasContainer").text("");
     startGame();
 });
 
@@ -1353,8 +1363,33 @@ export function sendScoreUpdate(score1, score2) {
 function forceDisconnect() {
     if (socket && socket.readyState === WebSocket.OPEN) {
         console.log('Forcefully disconnecting...');
-        socket.close(); // Close the WebSocket connection
+        socket.close();
     }
+}
+
+function DisconnectEndingScreen() {
+        if (!gameEnding && RequestFrame)
+        {
+            gameEnding = true;
+            RequestFrame = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.fillStyle = '#fff';
+            ctx.font = '36px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle'; 
+            giveName();
+    
+
+            let winner = userInfo.username;
+            ctx.fillText(`connection error!`, canvas.width / 2, canvas.height / 2 - 110);
+            ctx.fillText(`${winner} wins! `, canvas.width / 2, canvas.height / 2 - 75);
+            ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
+            createMatch(Paddle1.score, 0);
+    
+            ctx.restore();
+            MenuChoice();
+        }
 }
 
 /* function generateRandomString() {
@@ -1367,3 +1402,7 @@ function forceDisconnect() {
     }
     return result;
 }*/
+
+export function OnlineChatButton() {
+    OnlineGo();
+}
