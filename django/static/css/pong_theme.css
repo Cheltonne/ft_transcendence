@@ -426,3 +426,32 @@ form a {
   font-size: 12px; 
   display: none;
 }
+
+.onlineChoiceUI {
+  display: none;
+  text-align: center;
+  margin-top: 20px;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#roomName {
+  margin-bottom: 15px;
+  width: 80%;
+  padding: 10px;
+  font-size: 16px;
+}
+
+#CreateRoom, #joinRoom, #start {
+  padding: 5px 10px;
+  margin: 2px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 30%;
+}
+
+#start {
+  display: none; /* Hide the start button initially */
+}

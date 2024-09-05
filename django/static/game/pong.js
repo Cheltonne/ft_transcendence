@@ -1,8 +1,7 @@
-import { OnlineChoice } from './online.js';
 export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
-const ctx = canvas.getContext("2d");
+export const ctx = canvas.getContext("2d");
 const MAX_ROUNDS = 3;
 let currentRound = 1;
 var ReDrawStatic = true;
@@ -32,7 +31,16 @@ const myButton = document.getElementById("myButton");
 const LiveButton = document.getElementById("LiveButton");
 let TourneyMode = false;
 const message = document.getElementById("message");
+const onlineUI = document.getElementById("onlineChoiceUI");
+const CreateRoom = document.getElementById("CreateRoom");
+const JoinRoom = document.getElementById("joinRoom");
+const roomNameInput = document.getElementById('roomName');
+let roomName = null;
+const start = document.getElementById('start');
+let emetteur = false;
 import { getCookie } from "../utils.js";
+let playerId = null;
+let socket = null;
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -157,16 +165,6 @@ let array = findMatchWithNullWinner(matches);
     }   else {
         NextMatchButton.innerHTML = 'Next Match';
     }
-    // LIVE CHAT TOURNOI NOTIFICATIONS
-    if (array !== null) {
-    const matchEvent = new CustomEvent('tourneyMatch', {
-        detail: {
-            player1: array.player1,
-            player2: array.player2
-        }
-    });
-    window.dispatchEvent(matchEvent);
-    }
 }
 
 function drawTournamentTree() {
@@ -280,6 +278,11 @@ function clear(){
     document.getElementById('onlineChoiceUI').style.display = 'hidden';
     EndTourneyButton.style.display = 'none';
     NextMatchButton.style.display = 'none';
+    CreateRoom.style.display = "none";
+    JoinRoom.style.display = "none";
+    roomNameInput.style.display = "none";
+    forceDisconnect();
+    //online
     keysPressed = {};
 }
 
@@ -294,11 +297,17 @@ function clearTourney() {
 EnterScreen();
 
 function EnterScreen(){
+    clear();
     title = false;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
+    CreateRoom.style.display = "none";
+    JoinRoom.style.display = "none";
+    roomNameInput.style.display = "none";
+    roomNameInput.value = "";
+    start.style.display = "none";
     ctx.save();
     myButton.style.display = "inline-block";
     LiveButton.style.display = "inline-block";
@@ -333,7 +342,7 @@ function ModeChoice(){
     drawStaticElements();
 }
 
-function MenuChoice(){
+export function MenuChoice(){
     MenuButton.style.display = 'inline-block';
 }
 
@@ -343,7 +352,7 @@ MenuButton.addEventListener("click", function() {
     MenuButton.style.display = "none";
     $("#aliasContainer").text("");
     clearTourney();
-    ModeChoice();
+    EnterScreen();
 });
 
 ///////////////////////////////////////////////
@@ -483,12 +492,14 @@ class PongBall {
                 this.speed += 0.04;
         } else {
             this.pos = this.nextPos;
-            // ENVOIE SERVEUR
+            if (emetteur)
+                sendBallPosition(this.pos, this.velocity);
         }
-    
             if (this.pos.x <= 0 && this.goal == false) {
                 this.goal = true;
                 Paddle2.score++;
+                if (emetteur)
+                    sendScoreUpdate(Paddle1.score, Paddle2.score);
                 this.left = true;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -497,6 +508,8 @@ class PongBall {
             } else if (this.pos.x > canvas.width && this.goal == false) {
                 this.goal = true;
                 Paddle1.score++;
+                if (emetteur)
+                    sendScoreUpdate(Paddle1.score, Paddle2.score);
                 this.left = false;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -661,7 +674,8 @@ function GameLoop() {
         return;
     }
 
-    Ball.update(dt);
+    if (emetteur && Ball)
+        Ball.update(dt);
     Paddle1.update(dt);
     if (AI) {
         AIplayer.update(dt, Ball, Paddle2, Paddle1);
@@ -674,13 +688,15 @@ function GameLoop() {
 
 function LaunchGame() {
     if (allButtonOk) {
-        Players();
+        if (!playerId)
+            Players();
         draw();
         if (!RequestFrame && gameEnding) {
             gameEnding = false;
             clear();
         }
         if (!RequestFrame) {
+            start.style.display = "none";
             RequestFrame = true;
             requestAnimationFrame(GameLoop);
             allButtonOk = false;
@@ -944,7 +960,7 @@ const giveName = async () => {
       }
 };
 
-const checkAuthenticated = async () => {
+export const checkAuthenticated = async () => {
     const response = await fetch('/accounts/check-authenticated/');
     const data = await response.json();
     console.log(data);
@@ -1006,3 +1022,348 @@ export async function sendScoreToDjango(score, score2, match_id) {
         console.error("Error saving score:", error);
     }
 }
+
+
+
+//////////////////////ONLINE////////////////////////
+
+function OnlineGo() {
+    socket = new WebSocket('wss://' + window.location.host + '/ws/pong/');
+
+    socket.onopen = function(event) {
+        console.log('Connected to the WebSocket server.');
+    };
+
+    socket.onmessage = function(event) {
+        const message = JSON.parse(event.data);
+        handleServerMessage(message);
+    };
+
+    socket.onerror = function(error) {
+        console.error('WebSocket Error: ', error);
+    };
+
+    socket.onclose = function(event) {
+        console.log('WebSocket connection closed.');
+    };
+}
+
+function sendBallPosition(ball_pos, ball_velocity) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'move_ball',
+            'ball_pos': ball_pos,
+            'ball_velocity': ball_velocity
+        }));
+    }
+}
+
+function updateBallPosition(ball_pos, ball_velocity) {
+    if (Ball && !emetteur) {
+        Ball.pos = ball_pos;
+        Ball.velocity = ball_velocity;
+        //draw();
+    }
+}
+
+function handleServerMessage(message) {
+    console.log('Received message from server:', message);
+
+    if (message.message === 'Room created') {
+        joinRoom();
+    } else if (message.message === 'Joined room') {
+        setPlayerName();
+        playerId = message.player_uuid;
+        //$("#aliasContainer").text(message.match_info);
+    } else if (typeof message.message === 'string' && message.message.startsWith('Player')) {
+        console.log('Player message:', message.message);
+        if (message.player_uuid === playerId) {
+            if (message.player_number === 2) {
+                Paddle1 = new OnlinePongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
+                Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('F15', 'F16'));
+                // Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+                Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+                emetteur = true;
+            } else if (message.player_number === 3) {
+                Paddle1 = new OnlinePongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+                Paddle2 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('F15', 'F16'));
+                Ball = new FakeBall(vec2(canvas.width / 2, canvas.height / 2));
+                emetteur = false;
+                StartButtonRoom();
+                
+            }
+        }
+    } else if (message.message === 'The game has started!') {
+        console.log('The game is starting!');
+        if (Paddle1 && Paddle2 && Ball) {
+            allButtonOk = true;
+            LaunchGame();
+            roomNameInput.style.display = "none";
+        }
+    } else if (message.command === 'move_paddle') {
+        if (message.sender_uuid !== playerId) {
+            updatePaddlePosition(message.paddle_pos);
+        }
+    }
+    else if (message.command === 'move_ball') {
+        updateBallPosition(message.ball_pos, message.ball_velocity);
+    }
+    else if (message.command === 'update_score') {
+        updateScore(message.score1, message.score2);
+    }
+    else if (message.message === 'start_button') {
+        console.log('Received start_button message from server.');
+        DisplayStartButton();
+    }
+}
+
+export function StartButtonRoom() {
+    socket.send(JSON.stringify({
+        'command': 'start_button',
+    }));
+}
+
+
+export function setPlayerName() {
+    const playerName = userInfo.username;
+    socket.send(JSON.stringify({
+        'command': 'set_player_name',
+        'player_name': playerName
+    }));
+    console.log(`Player name set to: ${playerName}`); // Print confirmation message
+}
+
+function DisplayStartButton(){
+    start.style.display = "inline-block";
+}
+
+export function createRoom() {
+    const roomName = roomNameInput.value;
+    $("#aliasContainer").text(" Waiting for another player...");
+    socket.send(JSON.stringify({
+        'command': 'create_room',
+        'room_name': roomName
+    }));
+}
+
+export function startGame() {
+    drawStaticElements();
+    socket.send(JSON.stringify({
+        'command': 'start_game'
+    }));
+}
+
+JoinRoom.addEventListener("click", function() {
+    CreateRoom.style.display = "none";
+    JoinRoom.style.display = "none";
+    roomNameInput.style.display = "none";
+    joinRoom();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawStaticElements();
+});
+
+start.addEventListener("click", function() {
+    startGame();
+});
+
+export function OnlineChoice(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    CreateRoom.style.display = 'inline-block';
+    JoinRoom.style.display = 'inline-block';
+    roomNameInput.style.display = 'inline-block';
+    //start.style.display = "inline-block";
+    onlineUI.style.display = "block";
+    OnlineGo();
+}
+
+/// PONG PROTO ?? //
+
+// PAS BESOIN DE REDISPATCH NORMALEMENT //
+
+class OnlinePongPaddle {
+    constructor(pos, keys) {
+        this.pos = pos;
+        this.velocity = 400;
+        this.width = 10;
+        this.height = 100;
+        this.keys = keys;
+        this.score = 0;
+    }
+
+    update(dt) {
+        let moved = false;
+
+        if (keysPressed[this.keys.up] && this.pos.y > 0) {
+            ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
+            this.pos.y -= this.velocity * dt;
+            if (this.pos.y < 0) {
+                this.pos.y = 0;
+            }
+            moved = true;
+        }
+        if (keysPressed[this.keys.down] && this.pos.y + this.height < 430) {
+            ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
+            this.pos.y += this.velocity * dt;
+            if (this.pos.y + this.height > 430) {
+                this.pos.y = 430 - this.height;
+            }
+            moved = true;
+        }
+
+        if (moved) {
+            sendPaddlePosition(this.pos); 
+        }
+    }
+}
+
+function OnlineGameLoop() {
+    const currentTime = performance.now();
+    const dt = (currentTime - lastFrameTime) / 1000;
+    lastFrameTime = currentTime;
+
+    if (!RequestFrame)
+        return;
+
+    Paddle1.update(dt);
+    Paddle2.update(dt);
+    if (emetteur && Ball)
+        Ball.update(dt);
+    
+    draw();
+
+    if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
+        console.log("Game Ending condition met");
+        gameEnding = true;
+        RequestFrame = false;
+        //if (!title)
+        //    GameEndingScreen();
+        //title = false;
+        GameEndingScreen();
+        forceDisconnect();
+        return;
+    }
+
+    requestAnimationFrame(GameLoop);
+}
+
+    class FakeBall {
+        constructor(pos) {
+            this.pos = pos;
+            this.prevpos = pos;
+            this.velocity = vec2(0, 0);
+            this.radius = 8;
+            this.speed = 0.5;
+            this.left = null;
+            this.LastHit = null;
+            this.trailLength = 10;
+            this.trailOpacity = 0.1;
+            this.trailPositions = [];
+            this.goal = false;
+            this.nextPos = false;
+            this.launch = true;
+            this.LastCollision = null;
+        }
+}
+
+function updatePaddlePosition(paddle_pos) {
+    if (Paddle2) { 
+        Paddle2.pos.y = paddle_pos.y;
+        //draw();
+    }
+}
+
+function updateScore(score1, score2) {
+    // Logic to update the score on the client side, e.g., updating the score display
+    Paddle1.score = score1;
+    Paddle2.score = score2;
+    console.log('Updated score1: ', score1);
+    console.log('Updated score2: ', score2);
+}
+
+function OnlineGameEndingScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.fillStyle = '#fff';
+    ctx.font = '36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle'; 
+    giveName();
+
+    let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
+    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
+    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
+    //createMatch(Paddle1.score, Paddle2.score);
+
+    ctx.restore();
+    MenuChoice();
+}
+
+export function joinRoom() {
+    drawStaticElements();
+    //UpdateUserName();
+    const roomName = roomNameInput.value;
+    socket.send(JSON.stringify({
+        'command': 'join_room',
+        'room_name': roomName
+    }));
+}
+
+CreateRoom.addEventListener("click", function() {
+    CreateRoom.style.display = "none";
+    JoinRoom.style.display = "none";
+    roomNameInput.style.display = "none";
+    createRoom();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
+
+JoinRoom.addEventListener("click", function() {
+    CreateRoom.style.display = "none";
+    JoinRoom.style.display = "none";
+    roomNameInput.style.display = "none";
+    joinRoom();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawStaticElements();
+});
+
+start.addEventListener("click", function() {
+    startGame();
+});
+
+export function sendPaddlePosition(pos) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'move_paddle',
+            'paddle_pos': pos
+        }));
+    }
+}
+
+
+export function sendScoreUpdate(score1, score2) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'update_score',
+            'score1': score1,
+            'score2': score2,
+            'player_uuid': playerId
+        }));
+    }
+}
+
+function forceDisconnect() {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        console.log('Forcefully disconnecting...');
+        socket.close(); // Close the WebSocket connection
+    }
+}
+
+/* function generateRandomString() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    const charactersLength = characters.length;
+    for (let i = 0; i < 12; i++) {
+        const randomIndex = Math.floor(Math.random() * charactersLength);
+        result += characters.charAt(randomIndex);
+    }
+    return result;
+}*/
