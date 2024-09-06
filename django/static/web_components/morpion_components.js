@@ -1,5 +1,5 @@
 import { getUserInfo, user } from '../scripts.js'
-import { getCookie, morpionSocket } from "../utils.js";
+import { getCookie, morpionSocket} from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
     constructor() {

@@ -235,7 +235,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'game_move',
                 'cell': cell_index,
-                'player': player_class,
+                'player': player_class
             }
         )
         print(f"Move sent to room {self.match_room_name}")
@@ -246,11 +246,10 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'make_move',
             'message': "move made",
-            'cell': cell_index,
-            'player': player_class
-            ,
+            'cell_index': cell_index,
+            'player_class': player_class
         }))
-        print(f"Move sent to frontend: {event['cell']} for player {event['player']}")
+        print(f"Move sent to frontend: {cell_index} for player {event['player']}")
 
 
         ##########################################################################
