@@ -2,7 +2,7 @@ export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
 export const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 3;
+const MAX_ROUNDS = 100;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -31,10 +31,6 @@ const myButton = document.getElementById("myButton");
 const LiveButton = document.getElementById("LiveButton");
 let TourneyMode = false;
 const message = document.getElementById("message");
-const onlineUI = document.getElementById("onlineChoiceUI");
-const CreateRoom = document.getElementById("CreateRoom");
-const JoinRoom = document.getElementById("joinRoom");
-const roomNameInput = document.getElementById('roomName');
 let roomName = null;
 const start = document.getElementById('start');
 let emetteur = false;
@@ -42,7 +38,7 @@ import { getCookie } from "../utils.js";
 let playerId = null;
 let socket = null;
 let OnlinePath = false;
-const Millenium = "qeqfefeeqq"
+const Millenium = "greatfoot";
 //////////// A CHANGER DE MANIERE CONSTANTE POUR CREER UNE NOUVELLE ROOM A CHAQUE FOIS///
 /////////// J'AI BESOIN DE FAIRE EN SORTE DE CHOPPER LE PSEUDO DES DES MECS QUAND LE MATCH EST CREE ///
 ////////// IL VA FALLOIR QUE LE MEC REDIRIGE LE MATCH ///////////////
@@ -283,9 +279,6 @@ function clear(){
     document.getElementById('onlineChoiceUI').style.display = 'hidden';
     EndTourneyButton.style.display = 'none';
     NextMatchButton.style.display = 'none';
-    CreateRoom.style.display = "none";
-    JoinRoom.style.display = "none";
-    roomNameInput.style.display = "none";
     forceDisconnect();
     //online
     keysPressed = {};
@@ -308,10 +301,6 @@ function EnterScreen(){
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
-    CreateRoom.style.display = "none";
-    JoinRoom.style.display = "none";
-    roomNameInput.style.display = "none";
-    roomNameInput.value = "";
     start.style.display = "none";
     ctx.save();
     myButton.style.display = "inline-block";
@@ -429,12 +418,12 @@ class PongBall {
     resetBall() {
         if (this.left)
             {
-            this.velocity = vec2(1, 1);
+            //this.velocity = vec2(1, 1);
             this.pos = vec2(Paddle1.pos.x, Paddle1.pos.y + 50);
             }
         else
             {
-            this.velocity = vec2(-1, -1);
+            //this.velocity = vec2(-1, -1);
             this.pos = vec2(Paddle2.pos.x, Paddle2.pos.y + 50);
             }
         this.resetSpeed();
@@ -467,7 +456,7 @@ class PongBall {
     launchBall() {
             this.resetSpeed();
             let direction = this.left ? 1 : -1;
-            const randomNumber = Math.random() * Math.PI / 4;
+            const randomNumber = (Math.random() - 0.5) * Math.PI / 6;
             this.velocity.x = direction * this.speed * Math.cos(randomNumber);
             this.velocity.y = this.speed * Math.sin(randomNumber);
             this.launch = false;
@@ -637,18 +626,18 @@ function draw() {
 /////////////////////////////////////////////////////////
 
 export function onoffGame(Button){
-    if (Button === 'off')
+    if (Button === 'off' && !OnlinePath)
     {
         RequestFrame = false;
         clear();
         clearTourney();
         $("#aliasContainer").text('');
-        RequestFrame = false;
+        //RequestFrame = false;
         AI = false;
         title = true;
         EnterScreen();
     }
-    if (Button === 'on')
+    if (Button === 'on' && !OnlinePath)
     {
         clearTourney();
         clear();
@@ -706,7 +695,10 @@ function LaunchGame() {
             start.style.display = "none";
             RequestFrame = true;
             if (OnlinePath)
+            {
+                console.log("on passe ici");
                 requestAnimationFrame(GameLoopOnline);
+            }
             else
                 requestAnimationFrame(GameLoop);
             allButtonOk = false;
@@ -1115,7 +1107,6 @@ function handleServerMessage(message) {
         if (Paddle1 && Paddle2 && Ball) {
             allButtonOk = true;
             LaunchGame();
-            roomNameInput.style.display = "none";
         }
     } else if (message.command === 'move_paddle') {
         if (message.sender_uuid !== playerId) {
@@ -1155,9 +1146,6 @@ function DisplayStartButton(){
 }
 
 export function createRoom() {
-    CreateRoom.style.display = "none";
-    JoinRoom.style.display = "none";
-    roomNameInput.style.display = "none";
     //createRoom();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const roomName = Millenium; // ICI CHANGE ICI
@@ -1177,14 +1165,6 @@ export function startGame() {
     }));
 }
 
-JoinRoom.addEventListener("click", function() {
-    CreateRoom.style.display = "none";
-    JoinRoom.style.display = "none";
-    roomNameInput.style.display = "none";
-    joinRoom();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawStaticElements();
-});
 
 start.addEventListener("click", function() {
     startGame();
@@ -1192,10 +1172,7 @@ start.addEventListener("click", function() {
 
 export function OnlineChoice(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    CreateRoom.style.display = 'inline-block';
-    JoinRoom.style.display = 'inline-block';
-    roomNameInput.style.display = 'inline-block';
-    onlineUI.style.display = "block";
+    //onlineUI.style.display = "block";
     OnlineChatButton();
 }
 
@@ -1253,13 +1230,10 @@ function GameLoopOnline() {
         return;
     }
 
+    Paddle1.update(dt);
+    Paddle2.update(dt);
     if (emetteur && Ball)
         Ball.update(dt);
-    Paddle1.update(dt);
-    if (AI) {
-        AIplayer.update(dt, Ball, Paddle2, Paddle1);
-    }
-    Paddle2.update(dt);
     draw();
 
     requestAnimationFrame(GameLoopOnline);
@@ -1325,14 +1299,6 @@ export function joinRoom() {
         'room_name': roomName
     }));
 }
-
-CreateRoom.addEventListener("click", function() {
-    CreateRoom.style.display = "none";
-    JoinRoom.style.display = "none";
-    roomNameInput.style.display = "none";
-    createRoom();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
 
 start.addEventListener("click", function() {
     $("#aliasContainer").text("");
