@@ -49,6 +49,7 @@ def get_user_info(request):
         user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values('player1__username', 'player2__username', 'player1_score', 'player2_score', 'winner__username'))
         user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values('player1__username', 'player1_score', 'ai_score', 'winner__username'))
         user_info = {
+                'id': user.id,
                 'username': user.username,
                 'profile_picture': user.profile_picture.url,
                 'user_matches': user_matches,

@@ -1,4 +1,4 @@
-import { getCookie } from "../../utils.js";
+import { getCookie, getUserFromStorage } from "../../utils.js";
 import { addFriend } from "../../user_utils.js";
 
 export class NotificationItem extends HTMLElement {
@@ -83,7 +83,7 @@ export class NotificationItem extends HTMLElement {
         this.shadowRoot.querySelector('.sender-pfp-container').innerHTML = `<img src="${notification.sender_pfp.replace('http://localhost/', '')}" class="sender-pfp">`
 
         
-            console.log('in set data Match ID:', notification);
+            //console.log('in set data Match ID:', notification);
         
     }
 
@@ -108,11 +108,15 @@ export class NotificationItem extends HTMLElement {
     acceptMatchRequest(matchId) {
             //Send an accept message to the server
             // Retrieve the match ID directly from the notification object
-        console.log("match ID in accept match request: ", matchId);
+        //console.log("match ID in accept match request: ", matchId);
         
         const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/');
         socket.onopen = () => {
-            socket.send(JSON.stringify({ type: 'match_accept', match_id: matchId }));
+            socket.send(JSON.stringify({
+                type: 'match_accept', 
+                match_id: matchId, 
+                username: getUserFromStorage().username 
+            }));
         };
     
         this.toggleNotificationRead(this.notification.id)

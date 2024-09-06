@@ -7,6 +7,7 @@ from django.db.models import Count
 from .models import Match, MatchAI
 from channels.layers import get_channel_layer
 from accounts.utils import send_notification
+from accounts.models import CustomUser
 
 
 User = get_user_model()
@@ -17,12 +18,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         self.player_uuid = self.scope['user'].username
         self.room_name = None
         self.room_group_name = 'matchmaking'
+       # print(f"This is the channel name: {self.channel_name}")
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
         await self.accept()
-        print(f"User {self.player_uuid} connected to matchmaking.")
+        #print(f"User {self.player_uuid} connected to matchmaking.")
 
 
     async def disconnect(self, close_code):
@@ -37,7 +39,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 self.room_name,
                 self.channel_name
         )
-        print(f"User {self.player_uuid} disconnected from matchmaking.") 
+        #print(f"User {self.player_uuid} disconnected from matchmaking.") 
 
         ##########################################################################
         #                                                                        #
@@ -47,7 +49,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        print(f"Received data: {data}")
+        #print(f"Received data: {data}")
         type = data.get('type')
         
         if data['type'] == 'matchmaking':
@@ -55,7 +57,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             if match:
                 match_data = await self.create_match(self.scope['user'], match)
                 self.match_id = match_data.id
-                print(f"Match ID before sent: {self.match_id}")
+                #print(f"Match ID before sent: {self.match_id}")
                 await self.send_match_request(match_data, match)
             else:
                 await self.send(text_data=json.dumps({
@@ -72,6 +74,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         elif type == 'make_move':
             await self.handle_make_move(data)
         
+        elif type == 'p2_join_room':
+            await self.p2_join_room(data)
 
         ##########################################################################
         #                                                                        #
@@ -80,50 +84,94 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         ##########################################################################  
 
     async def handle_match_accepted(self, data):
-        print('in handle_match_accepted')
+        #print('in handle_match_accepted')
         match_id = data.get('match_id')
-        print(f"Match ID in handle match: {match_id}")
-        
+        username = data.get('username')
+        #print(f"Match ID in handle match: {match_id}")
         match = await sync_to_async(Match.objects.get)(id=match_id)
-
         match_attributes = await sync_to_async(lambda: {field.name: getattr(match, field.name) for field in match._meta.fields})()
-
         player1_id = str(match_attributes.get('player1'))
         player2_id = str(match_attributes.get('player2'))
-        
-        # Create a room with the match_id as the room name
-        self.room_name = f"room_{match_id}"
-        self.room_group_name = self.room_name
+        self.match_room_name = f"room_{match_id}"
 
-        # Add both players to the room group
         await self.channel_layer.group_add(
-            self.room_group_name,
+            self.match_room_name,
             self.channel_name
         )
-        print(f"Room {self.room_name} created for Match ID: {match_id}")
-        print(f"Players: {player1_id}, {player2_id}")
+        if username == player2_id:
+            await self.channel_layer.group_send(
+                'matchmaking',
+                {
+                    'type': 'invite_player_to_room',
+                    'message': {
+                        'room_name': self.match_room_name,
+                        'match_id': match_id,
+                        'player1': player1_id,
+                        'player2': player2_id,
+                    }
+                }
+            )
+        """print(f"Room {self.room_name} created for Match ID: {match_id}")
+        print(f"Players: {player1_id}, {player2_id}")"""
         
         message_to_send = {
             'type': 'match_accepted',
             'message': 'match_accepted',
-            'room_name': self.room_name,
+            'room_name': self.match_room_name,
             'match_id': match_id,
             'player1': player1_id,
             'player2': player2_id
         }
-        print(f"Message to send: {message_to_send}")
-
+#        print(f"Message to send: {message_to_send}")
         await self.channel_layer.group_send(
-                self.room_group_name,
+                self.match_room_name,
                 {
                     'type': 'match_accepted',
                     "message": message_to_send,
                 }
             )
 
+    async def invite_player_to_room(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'match_accepted',
+            'message': event['message']
+        }))
+        self.match_room_name = event['message']['room_name']
+        if self.player_uuid == event['message']['player2'] or\
+            self.player_uuid == event['message']['player1']:
+            await self.channel_layer.group_add(
+                self.match_room_name,
+                self.channel_name
+            )
+            print(f"Player {self.scope['user'].username} joined room {self.match_room_name}")
+
+    async def p2_join_room(self, data):
+        self.match_room_name = data.get('room_name')
+        await self.channel_layer.group_add(
+            self.match_room_name,
+            self.channel_name
+        )
+        
+        await self.channel_layer.group_send(
+            self.match_room_name,
+            {
+                'type': 'Les_toilettes_secretes_de_42',
+                "message": f"{self.scope['user'].username} joined room {self.match_room_name}",
+            }
+        )
+
+    async def Les_toilettes_secretes_de_42(self, event): #testing handler method w/ funny name, meant to see if only p1 and p2 are in the match room
+        print(f"{self.scope['user'].username} is in room {self.match_room_name}")
+        await self.send(text_data=json.dumps({
+                'type': 'player_joined',
+                'message': event['message']
+            })) 
+
     async def match_accepted(self, event):
+        """     
         print('Room created event received in consumers before send to front end')
-        #CODE STOPS HERE!! DO NOT KNOW WHY?? SEND IS NOT WORKING
+        print("Received match_accepted event:", event)
+        """
         try:
             await self.send(text_data=json.dumps({
                 'type': 'match_accepted',
@@ -216,7 +264,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         print(f"Finding match for user: {user.username}")
 
         online_users = await sync_to_async(
-            lambda: User.objects.filter(online_devices_count__gt=0).exclude(id=user.id)
+            lambda: CustomUser.objects.filter(online_devices_count__gt=0).exclude(id=user.id)
         )()
         
         count = await sync_to_async(online_users.count)()

@@ -1,5 +1,5 @@
 import { getUserInfo, user } from '../scripts.js'
-import { getCookie } from "../utils.js";
+import { getCookie, morpionSocket } from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
     constructor() {
@@ -136,61 +136,10 @@ export class MorpionComponent extends HTMLElement {
         const data = await response.json();
         return data.authenticated;
     }
-    
-
-
-
-
-
-   
-   
    
     startMatchmaking() {
-        const socket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
-        
-        //data reach here!!
-        socket.onopen = () => {
-            console.log('WebSocket connection established');
-            socket.send(JSON.stringify({ type: 'matchmaking' }));
-        };
-
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('Received server message:', data);
-            this.handleSeverMesssage(data);
-            
-        }; 
-    
-        socket.onerror = function (error) {
-            console.error('WebSocket error:', error);
-        
-        };
-    
-        socket.onclose = function(event) {
-            console.log('WebSocket connection closed with code:', event.code, "reason:", event.reason);
-        };
+        morpionSocket.send(JSON.stringify({ type: 'matchmaking' }));
     } 
-
-    handleSeverMesssage(data) {
-        console.log('Received server message from server:', data);
-        
-        if (data.type === 'match_accepted') {
-            console.log(data.message);
-            console.log("Match ID:", data.match_id);
-            console.log("Players:", data.player1, "vs", data.player2);
-            console.log("Room Name:", data.room_name);
-            console.log('Room created successfully!');
-            this.showAlert('success', 'Room created successfully!');
-        } else if (data.type === 'match_declined') {
-            console.log('Match declined by other player.');
-            this.showAlert('danger', 'Match declined by other player.Please try again.');
-        }else if (data.type === 'no_match_found') {
-            console.log('Match not found. Start a game with AI.');
-            this.showAlert('danger', 'Match not found. Start a game with AI.');
-        }
-    }
-
-
 
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
