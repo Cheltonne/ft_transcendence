@@ -38,7 +38,7 @@ import { getCookie } from "../utils.js";
 let playerId = null;
 let socket = null;
 let OnlinePath = false;
-const Millenium = "greatfoot";
+const Millenium = "fdp1";
 //////////// A CHANGER DE MANIERE CONSTANTE POUR CREER UNE NOUVELLE ROOM A CHAQUE FOIS///
 /////////// J'AI BESOIN DE FAIRE EN SORTE DE CHOPPER LE PSEUDO DES DES MECS QUAND LE MATCH EST CREE ///
 ////////// IL VA FALLOIR QUE LE MEC REDIRIGE LE MATCH ///////////////
@@ -457,6 +457,7 @@ class PongBall {
             this.resetSpeed();
             let direction = this.left ? 1 : -1;
             const randomNumber = (Math.random() - 0.5) * Math.PI / 6;
+            //const randomNumber = direction;
             this.velocity.x = direction * this.speed * Math.cos(randomNumber);
             this.velocity.y = this.speed * Math.sin(randomNumber);
             this.launch = false;
@@ -1029,8 +1030,9 @@ export async function sendScoreToDjango(score, score2, match_id) {
 }
 
 
-
+////////////////////////////////////////////////////
 //////////////////////ONLINE////////////////////////
+////////////////////////////////////////////////////
 
 function OnlineGo() {
     socket = new WebSocket('wss://' + window.location.host + '/ws/pong/');
@@ -1071,7 +1073,6 @@ function updateBallPosition(ball_pos, ball_velocity) {
     if (Ball && !emetteur) {
         Ball.pos = ball_pos;
         Ball.velocity = ball_velocity;
-        //draw();
     }
 }
 
@@ -1138,7 +1139,7 @@ export function setPlayerName() {
         'command': 'set_player_name',
         'player_name': playerName
     }));
-    console.log(`Player name set to: ${playerName}`); // Print confirmation message
+    console.log(`Player name set to: ${playerName}`);
 }
 
 function DisplayStartButton(){
@@ -1146,7 +1147,6 @@ function DisplayStartButton(){
 }
 
 export function createRoom() {
-    //createRoom();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const roomName = Millenium; // ICI CHANGE ICI
     // MET UN VRAI TRUC QUAND LE BOUTON ET LES DEUX JOUEURS POST CHAT START EXISTE
@@ -1172,7 +1172,6 @@ start.addEventListener("click", function() {
 
 export function OnlineChoice(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    //onlineUI.style.display = "block";
     OnlineChatButton();
 }
 
@@ -1261,7 +1260,6 @@ function GameLoopOnline() {
 function updatePaddlePosition(paddle_pos) {
     if (Paddle2) { 
         Paddle2.pos.y = paddle_pos.y;
-        //draw();
     }
 }
 
@@ -1270,24 +1268,6 @@ function updateScore(score1, score2) {
     Paddle2.score = score2;
     console.log('Updated score1: ', score1);
     console.log('Updated score2: ', score2);
-}
-
-function OnlineGameEndingScreen() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.fillStyle = '#fff';
-    ctx.font = '36px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle'; 
-    giveName();
-
-    let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
-    ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
-    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
-    //createMatch(Paddle1.score, Paddle2.score);
-
-    ctx.restore();
-    MenuChoice();
 }
 
 export function joinRoom() {
@@ -1357,17 +1337,6 @@ function DisconnectEndingScreen() {
             MenuChoice();
         }
 }
-
-/* function generateRandomString() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    const charactersLength = characters.length;
-    for (let i = 0; i < 12; i++) {
-        const randomIndex = Math.floor(Math.random() * charactersLength);
-        result += characters.charAt(randomIndex);
-    }
-    return result;
-}*/
 
 export function OnlineChatButton() {
     OnlineGo();
