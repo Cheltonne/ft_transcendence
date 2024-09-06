@@ -62,7 +62,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             else:
                 await self.send(text_data=json.dumps({
                     'type': 'no_match_found',
-                    'message': 'COUCOU. No players available. Starting game with AI.'
+                    'message': 'No players available. Starting game with AI.'
                 }))
         
         if type == 'match_accept':
@@ -131,6 +131,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 }
             )
 
+    
     async def invite_player_to_room(self, event):
         await self.send(text_data=json.dumps({
             'type': 'match_accepted',
@@ -145,6 +146,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             )
             print(f"Player {self.scope['user'].username} joined room {self.match_room_name}")
 
+   
     async def p2_join_room(self, data):
         self.match_room_name = data.get('room_name')
         await self.channel_layer.group_add(
@@ -200,7 +202,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'match_declined',
-                'message': 'The match was declined. Searching for another match...'
+                'message': 'The match was declined.'
             }
         )
         print("Match declined message sent to the group")
@@ -219,26 +221,36 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         ##########################################################################  
 
     async def handle_make_move(self, data):
+        print(f"received data in handle_make_move: {data}")
+        if 'cell' not in data:
+            print("error: 'cell' key is missing in data")
+            return
+        
         cell_index = data['cell']
-        player_class = data['player']
+        player_class = data['playerClass']
 
-        # Broadcast the move to both players in the match room
+        print(f"Move made by player {player_class} at cell {cell_index}")
         await self.channel_layer.group_send(
-            self.room_group_name,
+            self.match_room_name,
             {
                 'type': 'game_move',
                 'cell': cell_index,
                 'player': player_class,
             }
         )
+        print(f"Move sent to room {self.match_room_name}")
 
     async def game_move(self, event):
-         # Send the move to WebSocket clients
+        cell_index = event['cell']
+        player_class = event['player']
         await self.send(text_data=json.dumps({
-            'action': 'make_move',
-            'cell': event['cell'],
-            'player': event['player'],
+            'type': 'make_move',
+            'message': "move made",
+            'cell': cell_index,
+            'player': player_class
+            ,
         }))
+        print(f"Move sent to frontend: {event['cell']} for player {event['player']}")
 
 
         ##########################################################################
@@ -280,12 +292,12 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         if await sync_to_async(potential_matches.exists)():
             print(f"Match found: {await sync_to_async(lambda: potential_matches.first().username)()}")
             return await sync_to_async(potential_matches.first)()
-        else:
+        """else:
             await self.send(text_data=json.dumps({
                 'type': 'no_match_found',
                 'message': 'SALUT. No players available. Starting game with AI.'
             })) 
-            print("No match found")    
+            print("No match found")"""    
         return None
     
         

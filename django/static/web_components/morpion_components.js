@@ -146,6 +146,13 @@ export class MorpionComponent extends HTMLElement {
         this.scorePlayer2.textContent = this.player2Name + ': ' + this.scoreO;
     }
 
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                             GAME LOGIC                               // 
+        //                                                                      //
+        //////////////////////////////////////////////////////////////////////////  
+
+
     // fonction pour commencer une partie et verifier si la serie est terminée
     startGame() {
         if (this.seriesOver) {
@@ -172,8 +179,21 @@ export class MorpionComponent extends HTMLElement {
         if (this.seriesOver) return;
         const cell = e.target;
         const currentClass = this.circleTurn ? this.CIRCLE_CLASS : this.X_CLASS;
+        const cellIndex = Array.from(this.cellElements).indexOf(cell);
+
         if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
             this.placeMark(cell, currentClass);
+            
+            if (morpionSocket && morpionSocket.readyState === WebSocket.OPEN) {
+                morpionSocket.send(JSON.stringify({
+                    type: 'make_move',
+                    cell: cellIndex, // Index of the clicked cell
+                    playerClass: currentClass // 'x' or 'circle'
+                }));
+            } else {
+                console.error('WebSocket is not connected or matchmaking is not active.');
+            }
+
             if (this.checkWin(currentClass)) {
                 this.endGame(false);
             } else if (this.isDraw()) {
@@ -203,7 +223,13 @@ export class MorpionComponent extends HTMLElement {
         if (this.gamesPlayed >= this.maxGames) {
             this.checkSeriesWinner();
             this.seriesOver = true;
+
+            if (morpionSocket && morpionSocket.readyState === WebSocket.OPEN) {
+                morpionSocket.close();
+                console.log('WebSocket connection closed');
+            }
         }
+        
     }
     
     // fonction pour mettre à jour le score
@@ -274,6 +300,33 @@ export class MorpionComponent extends HTMLElement {
             }
         }
     }
+
+
+    makeMove(cellIndex, playerClass) {
+        const cell = this.cellElements[cellIndex];
+        
+        if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
+            this.placeMark(cell, playerClass);
+    
+            if (this.checkWin(playerClass)) {
+                this.endGame(false);
+            } else if (this.isDraw()) {
+                this.endGame(true);
+            } else {
+                this.swapTurns();
+                this.setBoardHoverClass();
+            }
+        } else {
+            console.log('Cell is already occupied, cannot make move');
+        }
+    }
+
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                        DATABASE MANAGMENT                            // 
+        //                                                                      //
+        //////////////////////////////////////////////////////////////////////////  
+
 
     // fonctions pour créer un match normal ou AI
     async createMatch(user_score, alias_score) {
@@ -355,6 +408,12 @@ export class MorpionComponent extends HTMLElement {
         });
     }
 
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                              UTILS                                   // 
+        //                                                                      //
+        ////////////////////////////////////////////////////////////////////////// 
+
     // fonction pour réinitialiser la série
     resetSeries() {
         this.gamesPlayed = 0;
@@ -386,6 +445,13 @@ export class MorpionComponent extends HTMLElement {
             }
         }, duration);
     }
+
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                           AI GAME LOGIC                              // 
+        //                                                                      //
+        //////////////////////////////////////////////////////////////////////////  
+
 
     // fonction pour faire jouer l'ordinateur
     makeAIMove() {

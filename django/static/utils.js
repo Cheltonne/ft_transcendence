@@ -177,25 +177,31 @@ export async function initializeWebSocket() {
 	}
 }
 
-function handleSeverMesssage(data) {
-	console.log('Received server message from server:', data);
+export function handleSeverMesssage(data) {
 	data = data.message;
+	console.log('Received server message:', data);
 	
-	if (data.type === 'match_accepted') {
+	/*if (data.type === 'match_accepted') {
 		console.log(data.message);
 		console.log("Match ID:", data.match_id);
 		console.log("Players:", data.player1, "vs", data.player2);
 		console.log("Room Name:", data.room_name);
 		console.log('Room created successfully!');
 		console.log('success', 'Room created successfully!');
+	
 	} else if (data.type === 'match_declined') {
 		console.log('Match declined by other player.');
-		this.showAlert('danger', 'Match declined by other player.Please try again.');
+		showToast('Match declined by other player.Please try again.');
+	
 	}else if (data.type === 'no_match_found') {
-		console.log('Match not found. Start a game with AI.');
-		this.showAlert('danger', 'Match not found. Start a game with AI.');
-	}
-	else {
+		console.log('Match not found. Start a game with AI please.');
+		showToast('Match not found. Start a game with AI please.');
+	
+	}else if (data.type === "make_move") {
+		console.log('Move made by other player:');
+		makeMove(data.cell, data.player);
+	
+	}else {*/
 		console.log('Invitation object is HERE ===> ', data);
 		if (data.player2 === getUserFromStorage().username){
 			morpionSocket.send(JSON.stringify({ 
@@ -203,9 +209,15 @@ function handleSeverMesssage(data) {
 				room_name: data.room_name,
 			}));
 			console.log('sent room trucmuche');
+		}else if (data === 'move made') {
+			console.log('Move made by other player:');
+			//STOPS HERE
+			const cellIndex = message.cell;
+			const playerClass = data.player;
+			console.log('cellIndex:', cellIndex, 'playerClass:', playerClass);
+			makeMove(cellIndex, playerClass);
 		}
-	}
-}
+	}	
 
 export function getUserFromStorage() {
 	const userData = sessionStorage.getItem(USER_STORAGE_KEY);
