@@ -2,7 +2,7 @@ import { getUserInfo, menu, hamMenu, bbc } from './scripts.js';
 import { navigateTo } from './views.js';
 export let socket = null;
 export let notificationSocket = null;
-export let morpionSocket = null;
+//export let morpionSocket = null;
 export const USER_STORAGE_KEY = 'user';
 
 export function getCookie(cname) { // to get CSRF cookie (necessary for forms)
@@ -95,7 +95,6 @@ export async function initializeWebSocket() {
 	if (authToken && socket === null) {
 		socket = new WebSocket('wss://' + window.location.host + '/ws/accounts/');
 		notificationSocket = new WebSocket('wss://' + window.location.host + '/ws/notifications/');
-        morpionSocket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
 
 		socket.onopen = function (event) {
 			console.log('WebSocket is open now.');
@@ -156,66 +155,10 @@ export async function initializeWebSocket() {
 			console.log('Notification WebSocket is closed. Code:', e.code, 'Reason:', e.reason);
 			notificationSocket = null;
 		};
-
-        morpionSocket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('Received server message:', data);
-            handleSeverMesssage(data);
-            
-        }; 
-    
-        morpionSocket.onerror = function (error) {
-            console.error('WebmorpionSocket error:', error);
-        
-        };
-    
-        morpionSocket.onclose = function(event) {
-            console.log('WebmorpionSocket connection closed with code:', event.code, "reason:", event.reason);
-        };
 	} else {
 		console.log('User is not authenticated.'); // Handle case where authToken is not available
 	}
-}
-
-export function handleSeverMesssage(data) {
-	//data = data.message;
-	console.log('Received server message:', data);
-	
-	/*if (data.type === 'match_accepted') {
-		console.log(data.message);
-		console.log("Match ID:", data.match_id);
-		console.log("Players:", data.player1, "vs", data.player2);
-		console.log("Room Name:", data.room_name);
-		console.log('Room created successfully!');
-		console.log('success', 'Room created successfully!');
-	
-	} else if (data.type === 'match_declined') {
-		console.log('Match declined by other player.');
-		showToast('Match declined by other player.Please try again.');
-	
-	}else if (data.type === 'no_match_found') {
-		console.log('Match not found. Start a game with AI please.');
-		showToast('Match not found. Start a game with AI please.');
-	
-	}else if (data.type === "make_move") {
-		console.log('Move made by other player:');
-		makeMove(data.cell, data.player);
-	
-	}else {*/
-		console.log('Invitation object is HERE ===> ', data.message);
-		if (data.player2 === getUserFromStorage().username){
-			morpionSocket.send(JSON.stringify({ 
-				type: 'p2_join_room' , 
-				room_name: data.room_name,
-			}));
-			console.log('sent room trucmuche');
-		}else if (data.message === 'move made') {
-			const cell_index = data.cell_index;
-			const player_class = data.player_class;
-			console.log('cellIndex:', data.cell_index, 'playerClass:', data.player_class);
-			makeMove(cell_index, player_class);
-		}
-	}	
+}		
 
 export function getUserFromStorage() {
 	const userData = sessionStorage.getItem(USER_STORAGE_KEY);
