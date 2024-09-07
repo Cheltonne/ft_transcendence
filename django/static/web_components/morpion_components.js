@@ -138,7 +138,7 @@ export class MorpionComponent extends HTMLElement {
     }
    
     startMatchmaking() {
-        const morpionSocket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
+        morpionSocket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
         
         morpionSocket.onopen = () => {
             console.log('WebSocket connection established');
