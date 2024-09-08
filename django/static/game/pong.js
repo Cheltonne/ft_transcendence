@@ -38,7 +38,7 @@ import { getCookie } from "../utils.js";
 let playerId = null;
 let socket = null;
 let OnlinePath = false;
-const Millenium = "fdp1";
+let Millenium = "f1dp11";
 //////////// A CHANGER DE MANIERE CONSTANTE POUR CREER UNE NOUVELLE ROOM A CHAQUE FOIS///
 /////////// J'AI BESOIN DE FAIRE EN SORTE DE CHOPPER LE PSEUDO DES DES MECS QUAND LE MATCH EST CREE ///
 ////////// IL VA FALLOIR QUE LE MEC REDIRIGE LE MATCH ///////////////
@@ -154,6 +154,11 @@ function hideTourneyButtons() {
     TourneyButton.style.display = 'none';
     nameTourney.style.display = 'none';
     nextButton.style.display = 'none';
+}
+
+function ClearFirstButton(){
+    myButton.style.display = 'none';
+    LiveButton.style.display = 'none';
 }
 
 function updateNextMatchButton() {
@@ -1036,6 +1041,7 @@ export async function sendScoreToDjango(score, score2, match_id) {
 
 function OnlineGo() {
     socket = new WebSocket('wss://' + window.location.host + '/ws/pong/');
+    ClearFirstButton();
 
     socket.onopen = function(event) {
         console.log('Connected to the WebSocket server.');
@@ -1149,6 +1155,8 @@ function DisplayStartButton(){
 export function createRoom() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const roomName = Millenium; // ICI CHANGE ICI
+    myButton.style.display = 'none';
+    LiveButton.style.display = 'none';
     // MET UN VRAI TRUC QUAND LE BOUTON ET LES DEUX JOUEURS POST CHAT START EXISTE
     //$("#aliasContainer").text(" Waiting other player...");
     socket.send(JSON.stringify({
@@ -1169,6 +1177,18 @@ export function startGame() {
 start.addEventListener("click", function() {
     startGame();
 });
+
+export function OnlineInvite(Player1, Player2, RoomName){
+    const name1 = Player1;
+    const name2 = Player2;
+    console.log(name1);
+    console.log(name2);
+    console.log(RoomName);
+    Millenium = RoomName;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    OnlineChatButton();
+}
 
 export function OnlineChoice(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);

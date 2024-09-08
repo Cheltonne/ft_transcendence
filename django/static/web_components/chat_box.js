@@ -1,5 +1,6 @@
-import { getCookie, showToast, getUserFromStorage } from "../utils.js";
+import { getCookie, showToast, getUserFromStorage, generateRandomString } from "../utils.js";
 import { navigateTo } from "../views.js";
+import { OnlineInvite } from "../game/pong.js";
 
 export class UserChatView extends HTMLElement {
     constructor() {
@@ -32,6 +33,7 @@ export class UserChatView extends HTMLElement {
                         <button class="dropbtn">⋮</button>
                         <div id="dropdownMenu" class="dropdown-content" style="color: black; cursor: pointer;">
                             <a id="goToProfile">Go to User Profile</a>
+                            <a id="Online">Online</a>
                             <a id="unblockUser">Unblock User</a>
                         </div>
                     </div>
@@ -124,9 +126,16 @@ export class UserChatView extends HTMLElement {
 
         const goToProfileButton = this.shadowRoot.querySelector('#goToProfile');
         const unblockUserButton = this.shadowRoot.querySelector('#unblockUser');
+        const OnlineButton = this.shadowRoot.querySelector('#Online');
 
         goToProfileButton.addEventListener('click', () => {
             navigateTo('other-user-profile', 3, this._interlocutor.id);
+        });
+
+        OnlineButton.addEventListener('click', () => {
+            const result = generateRandomString();
+            navigateTo("pong", 1);
+            OnlineInvite(this._interlocutor.username, this.currentUser.username, result);
         });
 
         unblockUserButton.addEventListener('click', () => {
@@ -314,3 +323,4 @@ export class UserChatView extends HTMLElement {
 }
 
 customElements.define('user-chat-view', UserChatView);
+
