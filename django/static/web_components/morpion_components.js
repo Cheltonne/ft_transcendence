@@ -137,33 +137,40 @@ export class MorpionComponent extends HTMLElement {
         return data.authenticated;
     }
    
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                             MATCHMACKING                             // 
+        //                                                                      //
+        //////////////////////////////////////////////////////////////////////////  
+
+
     startMatchmaking() {
-        morpionSocket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
+        this.morpionSocket = new WebSocket('wss://' + window.location.host + '/ws/morpion/')
         
-        morpionSocket.onopen = () => {
-            console.log('WebSocket connection established');
-            morpionSocket.send(JSON.stringify({ type: 'matchmaking' }));
+        this.morpionSocket.onopen = () => {
+            console.log('WebSocket connection operational');
+            this.morpionSocket.send(JSON.stringify({ type: 'matchmaking' }));
         };
 
-        morpionSocket.onmessage = (event) => {
+        this.morpionSocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log('Received server message:', data);
             this.handleSeverMesssage(data);
             
         }; 
     
-        morpionSocket.onerror = function (error) {
+        this.morpionSocket.onerror = function (error) {
             console.error('WebSocket error:', error);
         
         };
     
-        morpionSocket.onclose = function(event) {
+        this.morpionSocket.onclose = function(event) {
             console.log('WebSocket connection closed with code:', event.code, "reason:", event.reason);
         };
     } 
 
     handleSeverMesssage(data) {
-        //data = data.message;
+        data = data.message;
 	    console.log('Received server message:', data);
 	
 	    /*if (data.type === 'match_accepted') {
@@ -187,20 +194,22 @@ export class MorpionComponent extends HTMLElement {
 		    makeMove(data.cell, data.player);
 	
 	    }else {*/
-		    console.log('Invitation object is HERE ===> ', data.message);
+		    console.log('Invitation object is HERE ===> ', data);
 		    if (data.player2 === getUserFromStorage().username){
-			    morpionSocket.send(JSON.stringify({ 
+			    this.morpionSocket.send(JSON.stringify({ 
 				type: 'p2_join_room' , 
 				room_name: data.room_name,
 			}));
 			console.log('sent room trucmuche');
-		    }else if (data.message === 'move made') {
+		    }else if (data === 'move made') {
 			    const cell_index = data.cell_index;
 			    const player_class = data.player_class;
 			    console.log('cellIndex:', data.cell_index, 'playerClass:', data.player_class);
-			    makeMove(cell_index, player_class);
+			    this.makeMove(cell_index, player_class);
+
 		    }
 	    }
+
         
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
