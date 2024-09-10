@@ -139,7 +139,22 @@ export class MorpionComponent extends HTMLElement {
    
     startMatchmaking() {
         morpionSocket.send(JSON.stringify({ type: 'matchmaking' }));
-    } 
+
+        morpionSocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            this.handleMatchmakingMessage(data);
+        }
+    }
+
+    handleMatchmakingMessage(data) {
+        console.log('Matchmaking message:', data);
+        if (data.message === 'move made') {
+            const playerClass = data.player_class;
+            const cellIndex = data.cell_index;
+            console.log('cellIndex:', data.cell_index, 'playerClass:', data.player_class);
+            this.makeMove(cellIndex, playerClass);
+        }
+    }
 
     updatePlayerNames() {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
@@ -316,9 +331,8 @@ export class MorpionComponent extends HTMLElement {
                 this.swapTurns();
                 this.setBoardHoverClass();
             }
-        } else {
-            console.log('Cell is already occupied, cannot make move');
         }
+        morpionSocket.send(JSON.stringify({ type: 'move_made' }));     
     }
 
         //////////////////////////////////////////////////////////////////////////

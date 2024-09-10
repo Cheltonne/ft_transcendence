@@ -178,30 +178,7 @@ export async function initializeWebSocket() {
 }
 
 export function handleSeverMesssage(data) {
-	//data = data.message;
 	console.log('Received server message:', data);
-	
-	/*if (data.type === 'match_accepted') {
-		console.log(data.message);
-		console.log("Match ID:", data.match_id);
-		console.log("Players:", data.player1, "vs", data.player2);
-		console.log("Room Name:", data.room_name);
-		console.log('Room created successfully!');
-		console.log('success', 'Room created successfully!');
-	
-	} else if (data.type === 'match_declined') {
-		console.log('Match declined by other player.');
-		showToast('Match declined by other player.Please try again.');
-	
-	}else if (data.type === 'no_match_found') {
-		console.log('Match not found. Start a game with AI please.');
-		showToast('Match not found. Start a game with AI please.');
-	
-	}else if (data.type === "make_move") {
-		console.log('Move made by other player:');
-		makeMove(data.cell, data.player);
-	
-	}else {*/
 		console.log('Invitation object is HERE ===> ', data.message);
 		if (data.player2 === getUserFromStorage().username){
 			morpionSocket.send(JSON.stringify({ 
@@ -209,12 +186,12 @@ export function handleSeverMesssage(data) {
 				room_name: data.room_name,
 			}));
 			console.log('sent room trucmuche');
-		}else if (data.message === 'move made') {
+		}/*else if (data.message === 'move made') {
 			const cell_index = data.cell_index;
 			const player_class = data.player_class;
 			console.log('cellIndex:', data.cell_index, 'playerClass:', data.player_class);
 			makeMove(cell_index, player_class);
-		}
+		}*/
 	}	
 
 export function getUserFromStorage() {
