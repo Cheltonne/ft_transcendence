@@ -133,9 +133,14 @@ export class UserChatView extends HTMLElement {
         });
 
         OnlineButton.addEventListener('click', () => {
-            const result = generateRandomString();
-            navigateTo("pong", 1);
-            OnlineInvite(this._interlocutor.username, this.currentUser.username, result);
+            const roomCode = generateRandomString(); // Generate the room code
+            const messageInput = this.shadowRoot.querySelector('#messageInput');
+            messageInput.value = `Pong Invite: ${roomCode}`; // Set the Pong invite message in the input
+        
+            navigateTo('pong', 1);
+            OnlineInvite(this._interlocutor.username, this.currentUser.username, roomCode);
+        
+            this.sendMessage(); 
         });
 
         unblockUserButton.addEventListener('click', () => {
@@ -183,29 +188,54 @@ export class UserChatView extends HTMLElement {
         const username = isCurrentUser ? this.currentUser.username : sender;
         messageElement.classList.add('message', isCurrentUser ? 'sent' : 'received');
         const id = isCurrentUser ? this.currentUser.id : this._interlocutor.id;
+    
 
-        messageElement.innerHTML = `
-            <div class="message-bubble">
-                <img src="${pfp}" 
-                alt="profile picture" class="profile-picture">
-                <strong class="sender-name">${username}</strong>
-                <p class="message-text">${message}</p>
-                <span class="timestamp">${new Date(timestamp).toLocaleString()}</span>
-            </div>
-        `;
-
+        if (message.startsWith("Pong Invite: ")) {
+            const roomCode = message.split("Pong Invite: ")[1];
+    
+            messageElement.innerHTML = `
+                <div class="message-bubble invite">
+                    <img src="${pfp}" 
+                    alt="profile picture" class="profile-picture">
+                    <strong class="sender-name">${username}</strong>
+                    <p class="message-text">Click here to join Pong game room</p>
+                    <span class="timestamp">${new Date(timestamp).toLocaleString()}</span>
+                </div>
+            `;
+    
+            const inviteBubble = messageElement.querySelector('.message-bubble.invite');
+            inviteBubble.style.cursor = 'pointer';
+            inviteBubble.addEventListener('click', () => {
+                    
+                    inviteBubble.style.cursor = 'default';
+                    inviteBubble.querySelector('.message-text').innerText = 'Pong invite clicked';
+                    navigateTo('pong', 1);
+                    OnlineInvite(this._interlocutor.username, this.currentUser.username, roomCode);
+            });
+        } else {
+            messageElement.innerHTML = `
+                <div class="message-bubble">
+                    <img src="${pfp}" 
+                    alt="profile picture" class="profile-picture">
+                    <strong class="sender-name">${username}</strong>
+                    <p class="message-text">${message}</p>
+                    <span class="timestamp">${new Date(timestamp).toLocaleString()}</span>
+                </div>
+            `;
+        }
+    
         const profilePicture = messageElement.querySelector('.profile-picture');
         profilePicture.addEventListener('click', () => {
             this.openUserProfileModal(username, pfp, id);
-            console.log(id)
-        })
-
+        });
+    
         const usernameElement = messageElement.querySelector('.sender-name');
         usernameElement.addEventListener('click', () => this.openUserProfileModal(username, pfp, id));
-
+    
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+    
 
     openUserProfileModal(username, pfp, id) {
         const modalBackdrop = this.shadowRoot.querySelector('#userProfileModal');

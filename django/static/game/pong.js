@@ -2,7 +2,7 @@ export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
 export const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 100;
+const MAX_ROUNDS = 4;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -38,7 +38,7 @@ import { getCookie } from "../utils.js";
 let playerId = null;
 let socket = null;
 let OnlinePath = false;
-let Millenium = "f1dp11";
+let Millenium = "ffukcereefwfdwwq";
 //////////// A CHANGER DE MANIERE CONSTANTE POUR CREER UNE NOUVELLE ROOM A CHAQUE FOIS///
 /////////// J'AI BESOIN DE FAIRE EN SORTE DE CHOPPER LE PSEUDO DES DES MECS QUAND LE MATCH EST CREE ///
 ////////// IL VA FALLOIR QUE LE MEC REDIRIGE LE MATCH ///////////////
@@ -309,7 +309,7 @@ function EnterScreen(){
     start.style.display = "none";
     ctx.save();
     myButton.style.display = "inline-block";
-    LiveButton.style.display = "inline-block";
+    LiveButton.style.display = "none";
     ctx.fillStyle = '#fff';
     ctx.font = '100px sans-serif';
     ctx.textAlign = 'center';
@@ -830,10 +830,22 @@ function GameEndingScreen() {
         giveName();
 
         console.log("je passe par ici");
+        if (!emetteur && OnlinePath)
+        {
+            let rep = userInfo.username;
+            userInfo.username = player2Name;
+            player2Name = rep;
+        }
         let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
         ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
         ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
-        createMatch(Paddle1.score, Paddle2.score);
+        if (!emetteur && OnlinePath)
+            createMatch(Paddle2.score, Paddle1.score);
+        else
+            createMatch(Paddle1.score, Paddle2.score);
+
+        if (emetteur)
+            DestroyRoom();
 
         ctx.restore();
         MenuChoice();
@@ -1133,10 +1145,13 @@ function handleServerMessage(message) {
 }
 
 export function StartButtonRoom() {
+    $("#aliasContainer").text(player2Name  + " VS " + userInfo.username);
     socket.send(JSON.stringify({
         'command': 'start_button',
     }));
 }
+
+
 
 export function setPlayerName() {
     const playerName = userInfo.username;
@@ -1167,7 +1182,7 @@ export function createRoom() {
 
 export function startGame() {
     drawStaticElements();
-    $("#aliasContainer").text("");
+    //$("#aliasContainer").text("");
     socket.send(JSON.stringify({
         'command': 'start_game'
     }));
@@ -1179,15 +1194,19 @@ start.addEventListener("click", function() {
 });
 
 export function OnlineInvite(Player1, Player2, RoomName){
-    const name1 = Player1;
-    const name2 = Player2;
-    console.log(name1);
-    console.log(name2);
+    //clear();
+    MenuButton.click();
+    player2Name = Player1;
+    userInfo.username = Player2;
+    console.log(player2Name);
+    console.log(userInfo.username);
     console.log(RoomName);
     Millenium = RoomName;
+    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    OnlineChatButton();
+    //OnlineChatButton();
+    LiveButton.click();
 }
 
 export function OnlineChoice(){
@@ -1301,7 +1320,7 @@ export function joinRoom() {
 }
 
 start.addEventListener("click", function() {
-    $("#aliasContainer").text("");
+    //$("#aliasContainer").text("");
     startGame();
 });
 
@@ -1314,6 +1333,14 @@ export function sendPaddlePosition(pos) {
     }
 }
 
+export function DestroyRoom() {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'destroy_room',
+            'room_name': Millenium
+        }));
+    }
+}
 
 export function sendScoreUpdate(score1, score2) {
     if (socket && socket.readyState === WebSocket.OPEN) {

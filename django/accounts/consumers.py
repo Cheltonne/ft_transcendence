@@ -149,27 +149,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        if self.room_name and self.room_name in self.rooms:
-            self.rooms[self.room_name].remove(self.player_uuid)
-            
-            # Notify other players in the room that a player has disconnected
-            if self.rooms[self.room_name]:
-                await self.channel_layer.group_send(
-                    self.room_name,
-                    {
-                        'type': 'player_left',
-                        'player_uuid': self.player_uuid
-                    }
-                )
-            else:
-                del self.rooms[self.room_name]
-
-            await self.channel_layer.group_discard(
-                self.room_name,
-                self.channel_name
-            )
-
-        print(f'Client {self.player_uuid} disconnected')
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -264,6 +247,8 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.join_room(data['room_name'])
         elif command == 'start_game':
             await self.start_game()
+        elif command == 'destroy_room':
+            await self.destroy_room(data['room_name'])
         elif command == 'move_paddle':
             await self.move_paddle(data['paddle_pos'])
         elif command == 'move_ball':
@@ -426,4 +411,33 @@ class PongConsumer(AsyncWebsocketConsumer):
             'score1': score1,
             'score2': score2,
             'player_uuid': player_uuid
+        }))
+
+    async def destroy_room(self, room_name):
+        if room_name in self.rooms:
+            for player_uuid in self.rooms[room_name]:
+                await self.channel_layer.group_send(
+                    room_name,
+                    {
+                        'type': 'room_destroyed',
+                        'message': f'Room {room_name} has been destroyed.'
+                    }
+                )
+
+            del self.rooms[room_name]
+            print(f'Room {room_name} has been destroyed and all players removed.')
+
+            await self.channel_layer.group_discard(
+                room_name,
+                self.channel_name
+            )
+        else:
+            await self.send(text_data=json.dumps({
+                'message': 'Room does not exist or has already been destroyed.'
+            }))
+
+    async def room_destroyed(self, event):
+        await self.send(text_data=json.dumps({
+            'command': 'room_destroyed',
+            'message': event['message']
         }))
