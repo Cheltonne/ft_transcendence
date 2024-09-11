@@ -15,6 +15,7 @@ urlpatterns = [
         path("render-signup-form/", views.render_signup_form, name='render-signup-form'),
         path("render-update-form/", views.render_update_form, name='render-update-form'),
         path("check-authenticated/", views.check_authenticated, name='check-authenticated'),
+        path("is_clicked/", views.is_clicked, name='is_clicked'),
         path('send-friend-request/', views.FriendRequestView.as_view(), name='send_friend_request'),
         path('notifications/<int:id>/mark_as_read/', views.mark_as_read, name='mark_as_read'),
         path('', include(router.urls)),

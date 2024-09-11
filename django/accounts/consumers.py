@@ -213,20 +213,12 @@ class PongConsumer(AsyncWebsocketConsumer):
         print(f'Client {self.player_uuid} connected')
 
     async def disconnect(self, close_code):
-        if self.room_name and self.room_name in self.rooms:
-            self.rooms[self.room_name].remove(self.player_uuid)
-            
-            if not self.rooms[self.room_name]:
-                del self.rooms[self.room_name]
-                print(f'Room {self.room_name} deleted because it is now empty')
-            
-            else:
-                await self.channel_layer.group_send(
-                    self.room_name,
-                    {
-                        'type': 'player_left',
-                        'player_uuid': self.player_uuid,
-                        'message': f'Player {self.player_uuid} has left the room.'
+        await self.channel_layer.group_send(
+            self.room_name,
+            {
+                'type': 'player_left',
+                'player_uuid': self.player_uuid,
+                'message': f'Player {self.player_uuid} has left the room.'
                     }
                 )
 

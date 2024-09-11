@@ -2,7 +2,7 @@ export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
 export const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 4;
+const MAX_ROUNDS = 2;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -39,9 +39,6 @@ let playerId = null;
 let socket = null;
 let OnlinePath = false;
 let Millenium = "ffukcereefwfdwwq";
-//////////// A CHANGER DE MANIERE CONSTANTE POUR CREER UNE NOUVELLE ROOM A CHAQUE FOIS///
-/////////// J'AI BESOIN DE FAIRE EN SORTE DE CHOPPER LE PSEUDO DES DES MECS QUAND LE MATCH EST CREE ///
-////////// IL VA FALLOIR QUE LE MEC REDIRIGE LE MATCH ///////////////
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -284,7 +281,7 @@ function clear(){
     document.getElementById('onlineChoiceUI').style.display = 'hidden';
     EndTourneyButton.style.display = 'none';
     NextMatchButton.style.display = 'none';
-    forceDisconnect();
+    //forceDisconnect();
     //online
     keysPressed = {};
 }
@@ -346,6 +343,7 @@ function ModeChoice(){
 
 export function MenuChoice(){
     MenuButton.style.display = 'inline-block';
+    start.style.display = 'none';
 }
 
 MenuButton.style.display = "none";
@@ -657,6 +655,31 @@ export function onoffGame(Button){
         MenuButton.style.display = "none";
         EnterScreen();
     }
+    console.log(Button);
+    console.log(OnlinePath);
+    console.log("connard");
+    
+    if (Button === 'off' && OnlinePath && RequestFrame )
+    {
+        if (!emetteur && OnlinePath)
+            createMatch(Paddle2.score, Paddle1.score);
+        else
+            createMatch(Paddle1.score, Paddle2.score);
+        RequestFrame = false;
+        forceDisconnect();
+        clear();
+    }
+
+    if (Button === 'off' && OnlinePath && !RequestFrame)
+        {
+            console.log("mais euh");
+            RequestFrame = false;
+            //clear();
+            gameEnding = true;
+            //DestroyRoom();
+            DestroyRoom(Millenium);
+            //forceDisconnect();
+        }
 }
     
 function GameLoop() {
@@ -844,9 +867,7 @@ function GameEndingScreen() {
         else
             createMatch(Paddle1.score, Paddle2.score);
 
-        if (emetteur)
-            DestroyRoom();
-
+        OnlinePath = false;
         ctx.restore();
         MenuChoice();
     }
@@ -1041,9 +1062,11 @@ export async function sendScoreToDjango(score, score2, match_id) {
 
         const data = await response.json();
         console.log("Score saved successfully:", data);
+        DestroyRoom(Millenium);
     } catch (error) {
         console.error("Error saving score:", error);
     }
+    //DestroyRoom();
 }
 
 
@@ -1172,7 +1195,6 @@ export function createRoom() {
     const roomName = Millenium; // ICI CHANGE ICI
     myButton.style.display = 'none';
     LiveButton.style.display = 'none';
-    // MET UN VRAI TRUC QUAND LE BOUTON ET LES DEUX JOUEURS POST CHAT START EXISTE
     //$("#aliasContainer").text(" Waiting other player...");
     socket.send(JSON.stringify({
         'command': 'create_room',
@@ -1333,11 +1355,11 @@ export function sendPaddlePosition(pos) {
     }
 }
 
-export function DestroyRoom() {
+export function DestroyRoom(room_name) {
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
             'command': 'destroy_room',
-            'room_name': Millenium
+            'room_name': room_name
         }));
     }
 }
@@ -1354,6 +1376,7 @@ export function sendScoreUpdate(score1, score2) {
 }
 
 function forceDisconnect() {
+    OnlinePath = false;
     if (socket && socket.readyState === WebSocket.OPEN) {
         console.log('Forcefully disconnecting...');
         socket.close();
@@ -1371,7 +1394,7 @@ function DisconnectEndingScreen() {
             ctx.font = '36px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle'; 
-            giveName();
+            //giveName();
     
 
             let winner = userInfo.username;
@@ -1382,7 +1405,27 @@ function DisconnectEndingScreen() {
     
             ctx.restore();
             MenuChoice();
+            DestroyRoom(Millenium);
         }
+        else if (OnlinePath) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.fillStyle = '#fff';
+                ctx.font = '36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle'; 
+                giveName();
+        
+    
+            //    let winner = userInfo.username;
+                ctx.fillText(`connection error!`, canvas.width / 2, canvas.height / 2 - 110);
+                //ctx.fillText(`${winner} wins! `, canvas.width / 2, canvas.height / 2 - 75);
+            //    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
+                ctx.restore();
+                MenuChoice();
+                console.log("je passe par la pourtant");
+                DestroyRoom(Millenium);
+            }
 }
 
 export function OnlineChatButton() {

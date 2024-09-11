@@ -375,3 +375,38 @@ class MessageViewSet(viewsets.ModelViewSet):
             (Q(sender=recipient, recipient=user) & ~Q(sender__in=blocked_users))
         ).order_by('timestamp')
     
+import json
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Message
+
+def is_clicked(request):
+    try:
+        # Load data from the request body
+        data = json.loads(request.body)
+
+        # Assuming 'id' is sent in the request data
+        message_id = data.get('clicked_id')
+
+        if not message_id:
+            return JsonResponse({'success': False, 'message': 'Message ID not provided.'}, status=400)
+
+        # Retrieve the message object
+        let = get_object_or_404(Message, id=message_id)
+
+        # Update the 'is_clicked' field
+        let.is_read = True
+        let.save()
+
+        print(f"Message {message_id} clicked and updated.")
+        return JsonResponse({'success': True, 'message': 'Update successful!'})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data.'}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+
+
