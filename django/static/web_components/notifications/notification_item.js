@@ -1,5 +1,6 @@
 import { getCookie, getUserFromStorage } from "../../utils.js";
 import { addFriend } from "../../user_utils.js";
+import { navigateTo } from "../../views.js";
 
 export class NotificationItem extends HTMLElement {
     constructor() {
@@ -105,7 +106,7 @@ export class NotificationItem extends HTMLElement {
         this.updateUnread();
     }
 
-    acceptMatchRequest(matchId) {
+    async acceptMatchRequest(matchId) {
             //Send an accept message to the server
             // Retrieve the match ID directly from the notification object
         //console.log("match ID in accept match request: ", matchId);
@@ -133,7 +134,9 @@ export class NotificationItem extends HTMLElement {
                 console.error('Failed to mark notification as read:', error);
             });
         this.updateUnread();
+        navigateTo('morpion', 1);
     }
+
 
     
     declineMatchRequest(matchId) {

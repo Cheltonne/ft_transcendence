@@ -1,5 +1,5 @@
 import { getUserInfo, user } from '../scripts.js'
-import { getCookie, morpionSocket} from "../utils.js";
+import { getCookie, handleSeverMesssage, morpionSocket, getUserFromStorage } from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
     constructor() {
@@ -89,7 +89,7 @@ export class MorpionComponent extends HTMLElement {
         this.winningMessageTextElement = this.shadowRoot.querySelector('[data-winning-message-text]');
         this.scorePlayer1 = this.shadowRoot.getElementById('scorePlayer1');
         this.scorePlayer2 = this.shadowRoot.getElementById('scorePlayer2');
-        this.maxGames = 3;
+        this.maxGames = 1;
         this.gamesPlayed = 0;
         this.scoreX = 0;
         this.scoreO = 0;
@@ -136,23 +136,35 @@ export class MorpionComponent extends HTMLElement {
         const data = await response.json();
         return data.authenticated;
     }
-   
-    startMatchmaking() {
-        morpionSocket.send(JSON.stringify({ type: 'matchmaking' }));
 
+    acceptmatch(){
+        const username = getUserFromStorage().username;
+        console.log(`${username} accepted the match`);
         morpionSocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            this.handleMatchmakingMessage(data);
+            console.log('Game message:', data);
+            this.handleGameMessage(data);
+        }
+    }
+        
+        
+    startMatchmaking() {
+        morpionSocket.send(JSON.stringify({ type: 'matchmaking' }));
+        morpionSocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('Game message:', data);
+            this.handleGameMessage(data);
         }
     }
 
-    handleMatchmakingMessage(data) {
-        console.log('Matchmaking message:', data);
-        if (data.message === 'move made') {
-            const playerClass = data.player_class;
+    handleGameMessage(data) {
+        console.log('(Game message:', data);
+        if (data.type === 'make_move') {
+            const playerClass = data.player_class === 'x' ? this.X_CLASS : this.CIRCLE_CLASS;
             const cellIndex = data.cell_index;
             console.log('cellIndex:', data.cell_index, 'playerClass:', data.player_class);
-            this.makeMove(cellIndex, playerClass);
+            this.makeMove(cellIndex, playerClass, data.player2);
+            console.log("This is player2: ", data);
         }
     }
 
@@ -203,7 +215,8 @@ export class MorpionComponent extends HTMLElement {
                 morpionSocket.send(JSON.stringify({
                     type: 'make_move',
                     cell: cellIndex, // Index of the clicked cell
-                    playerClass: currentClass // 'x' or 'circle'
+                    playerClass: currentClass, // 'x' or 'circle''
+                    player2: getUserFromStorage().username
                 }));
             } else {
                 console.error('WebSocket is not connected or matchmaking is not active.');
@@ -217,7 +230,7 @@ export class MorpionComponent extends HTMLElement {
                 this.swapTurns();
                 this.setBoardHoverClass();  
                 if (this.isAI && this.circleTurn) {
-                    setTimeout(() => this.makeAIMove(), 300);
+                    setTimeout(() => this.makeAIMove(), 200);
                 }
             }
         }
@@ -225,7 +238,7 @@ export class MorpionComponent extends HTMLElement {
 
     // fonction pour gérer la fin de la partie: soit un gagnant, soit un match nul ensuite 
     // on met à jour le score et on vérifie si la série est terminée
-    endGame(draw) {
+    endGame(draw, player2) {
         if (draw) {
             this.winningMessageTextElement.innerText = 'Draw!';
         } else {
@@ -236,7 +249,137 @@ export class MorpionComponent extends HTMLElement {
         this.winningMessageElement.classList.add('show');
         this.gamesPlayed++;
         if (this.gamesPlayed >= this.maxGames) {
-            this.checkSeriesWinner();
+            console. log('This is player2 in endGame: ', player2);
+            this.checkSeriesWinner(player2);
+            this.seriesOver = true;
+
+            if (morpionSocket && morpionSocket.readyState === WebSocket.OPEN) {
+                morpionSocket.close();
+                console.log('WebSocket connection closed');
+            }
+        }
+        
+    }
+    
+    // fonction pour mettre à jour le score
+    updateScore(winner) {
+        if (winner === "X") {
+            this.scoreX++;
+            this.scorePlayer1.textContent = `${this.player1Name}: ${this.scoreX}`;
+        } else {
+            this.scoreO++;
+            this.scorePlayer2.textContent = `${this.player2Name}: ${this.scoreO}`;
+        }
+    }
+
+    // fonction pour vérifier si le match est nul
+    isDraw(player2) {
+        console.log('This is player2 in isDraw:', player2);
+        return [...this.cellElements].every(cell => {
+            return cell.classList.contains(this.X_CLASS) || cell.classList.contains(this.CIRCLE_CLASS);
+        });
+    }
+
+    // fonction pour placer le symbole dans la case
+    placeMark(cell, currentClass) {
+         if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
+            cell.classList.add(currentClass);
+         }
+    }
+
+    // fonction pour changer de joueur
+    swapTurns() {
+        this.circleTurn = !this.circleTurn;
+    }
+
+    // fonction pour changer la classe de la case en fonction du joueur
+    setBoardHoverClass() {
+        this.board.classList.remove(this.X_CLASS);
+        this.board.classList.remove(this.CIRCLE_CLASS);
+        if (this.circleTurn) {
+            this.board.classList.add(this.CIRCLE_CLASS);
+        } else {
+            this.board.classList.add(this.X_CLASS);
+        }
+    }
+
+    // fonction pour vérifier si un joueur a gagné
+    checkWin(currentClass) {
+        return this.WINNING_COMBINATIONS.some(combination => {
+            return combination.every(index => {
+                return this.cellElements[index].classList.contains(currentClass);
+            });
+        });
+    }
+
+    checkSeriesWinner(player2) {
+        if (this.gamesPlayed >= this.maxGames) {
+            let message;
+            if (this.scoreX > this.scoreO) {
+                message = `Series Winner: ${this.player1Name}`;
+            } else if (this.scoreO > this.scoreX) {
+                message = `Series Winner: ${this.player2Name}`;
+            } else {
+                message = "Series ends in a draw.";
+            }
+            console.log(message);
+            if (this.isAI) {
+                this.createMatch_ai(this.scoreX, this.scoreO);
+            }else{
+                this.createMatch(this.scoreX, this.scoreO, player2);
+                console.log("This is player2 in checkSeriesWinner: ", player2);
+            }
+        }
+    }
+    handleClick(e) {
+        if (this.seriesOver) return;
+        const cell = e.target;
+        const currentClass = this.circleTurn ? this.CIRCLE_CLASS : this.X_CLASS;
+        const cellIndex = Array.from(this.cellElements).indexOf(cell);
+
+        if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
+            this.placeMark(cell, currentClass);
+            
+            if (morpionSocket && morpionSocket.readyState === WebSocket.OPEN) {
+                morpionSocket.send(JSON.stringify({
+                    type: 'make_move',
+                    cell: cellIndex, // Index of the clicked cell
+                    playerClass: currentClass, // 'x' or 'circle''
+                    player2: getUserFromStorage().username
+                }));
+            } else {
+                console.error('WebSocket is not connected or matchmaking is not active.');
+            }
+
+            if (this.checkWin(currentClass)) {
+                this.endGame(false);
+            } else if (this.isDraw()) {
+                this.endGame(true);
+            } else {
+                this.swapTurns();
+                this.setBoardHoverClass();  
+                if (this.isAI && this.circleTurn) {
+                    setTimeout(() => this.makeAIMove(), 200);
+                }
+            }
+        }
+    }
+
+    // fonction pour gérer la fin de la partie: soit un gagnant, soit un match nul ensuite 
+    // on met à jour le score et on vérifie si la série est terminée
+    endGame(draw, player2) {
+        if (draw) {
+            this.winningMessageTextElement.innerText = 'Draw!';
+        } else {
+            let winner = this.circleTurn ? "O" : "X";
+            this.winningMessageTextElement.innerText = `${winner} Wins!`;
+            this.updateScore(winner);
+        }
+        this.winningMessageElement.classList.add('show');
+        this.gamesPlayed++;
+        if (this.gamesPlayed >= this.maxGames) {
+            console. log('This is player2 in endGame: ', player2);
+            this.checkSeriesWinner(player2);
             this.seriesOver = true;
 
             if (morpionSocket && morpionSocket.readyState === WebSocket.OPEN) {
@@ -297,7 +440,7 @@ export class MorpionComponent extends HTMLElement {
         });
     }
 
-    checkSeriesWinner() {
+    checkSeriesWinner(player2) {
         if (this.gamesPlayed >= this.maxGames) {
             let message;
             if (this.scoreX > this.scoreO) {
@@ -311,28 +454,30 @@ export class MorpionComponent extends HTMLElement {
             if (this.isAI) {
                 this.createMatch_ai(this.scoreX, this.scoreO);
             }else{
-                this.createMatch(this.scoreX, this.scoreO);
+                this.createMatch(this.scoreX, this.scoreO, player2);
+                console.log("This is player2 in checkSeriesWinner: ", player2);
             }
         }
     }
 
-
-    makeMove(cellIndex, playerClass) {
+    makeMove(cellIndex, playerClass, player2) {
         const cell = this.cellElements[cellIndex];
+        console.log('This is player2 in make makeMove:', player2);
         
         if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
             this.placeMark(cell, playerClass);
     
             if (this.checkWin(playerClass)) {
+                console.log('this is player2 hola:', player2);
                 this.endGame(false);
-            } else if (this.isDraw()) {
-                this.endGame(true);
+            } else if (this.isDraw(player2)) {
+                console.log('this is player2 salut:', player2);
+                this.endGame(true,player2);
             } else {
                 this.swapTurns();
                 this.setBoardHoverClass();
             }
-        }
-        morpionSocket.send(JSON.stringify({ type: 'move_made' }));     
+        }    
     }
 
         //////////////////////////////////////////////////////////////////////////
@@ -343,7 +488,7 @@ export class MorpionComponent extends HTMLElement {
 
 
     // fonctions pour créer un match normal ou AI
-    async createMatch(user_score, alias_score) {
+    async createMatch(user_score, alias_score, player2) {
         const isAuthenticated = await this.checkAuthenticated();
         if (!isAuthenticated) {
             console.error("User not authenticated. Cannot create match.");
@@ -351,9 +496,11 @@ export class MorpionComponent extends HTMLElement {
             return;
         }
         const csrftoken = getCookie('csrftoken');
+        console.log("Creating match with player2:", player2);
         const response = await fetch('/morpion/create-match/', {
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+            body: {'user2': player2 },
         });
         const data = await response.json();
         if (data.match_id) {

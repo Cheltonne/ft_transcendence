@@ -36,7 +36,9 @@ def save_score(request):
 
 @login_required
 def create_match(request):
-    new_match = Match.objects.create(player1=request.user)
+    data = json.loads(request.body)
+    player2 = Match.objects.get(player2=data.get("player2"))
+    new_match = Match.objects.create(player1=request.user, player2=player2)
     return JsonResponse({'match_id': new_match.id})
 
 def save_score_ai(request):
@@ -68,7 +70,7 @@ def create_match_ai(request):
     return JsonResponse({'match_id': new_match.id})
 
 
-@login_required
+"""@login_required
 def start_matchmaking(request):
     user = request.user
     online_users = CustomUser.objects.filter(is_online=True).exclude(id=user.id)
@@ -80,11 +82,12 @@ def start_matchmaking(request):
 
     if potential_matches.exists():
         player2 = potential_matches.first()
-        match = Match.objects.create(player1=user, player2=player2)
-        # Notify player2 for a match
-        # This should ideally be done via WebSocket notifications handled in the consumer
-        return JsonResponse({"status": "Match found", "player2": player2.username})
+        new_match = Match.objects.create(player1=user, player2=player2) 
+        return JsonResponse({
+            "status": "Match found", 
+            "player2": player2.username,
+            "match_id": new_match.id})
+
     else:
-        # No players available, propose game against AI
         match_ai = MatchAI.objects.create(player1=user)
-        return JsonResponse({"status": "No players available, start game with AI"})
+        return JsonResponse({"status": "No players available, start game with AI"})"""

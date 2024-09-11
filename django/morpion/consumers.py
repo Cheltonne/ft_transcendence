@@ -24,7 +24,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         await self.accept()
-        #print(f"User {self.player_uuid} connected to matchmaking.")
+        print(f"User {self.player_uuid} connected to matchmaking.")
 
 
     async def disconnect(self, close_code):
@@ -144,7 +144,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 self.match_room_name,
                 self.channel_name
             )
-            print(f"Player {self.scope['user'].username} joined room {self.match_room_name}")
+            print(f"PlayUserInfo()er {self.scope['user'].username} joined room {self.match_room_name}")
 
    
     async def p2_join_room(self, data):
@@ -222,20 +222,27 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def handle_make_move(self, data):
         print(f"received data in handle_make_move: {data}")
-        if 'cell' not in data:
-            print("error: 'cell' key is missing in data")
+        if 'cell' not in data or 'playerClass' not in data:
+            print("error: missing data required to make move")
             return
         
         cell_index = data['cell']
         player_class = data['playerClass']
+        player2 = data['player2']
 
+        
+        if not self.scope['user'].username:
+            player2 = data.get('player2')
+        print(f"Player 2: {player2}")
+    
         print(f"Move made by player {player_class} at cell {cell_index}")
         await self.channel_layer.group_send(
             self.match_room_name,
             {
                 'type': 'game_move',
                 'cell': cell_index,
-                'player': player_class
+                'player': player_class,
+                'player2': player2
             }
         )
         print(f"Move sent to room {self.match_room_name}")
@@ -243,11 +250,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def game_move(self, event):
         cell_index = event['cell']
         player_class = event['player']
+        player2 = event['player2']
         await self.send(text_data=json.dumps({
             'type': 'make_move',
             'message': "move made",
             'cell_index': cell_index,
-            'player_class': player_class
+            'player_class': player_class,
+            'player2':  player2
         }))
         print(f"Move sent to frontend: {cell_index} for player {event['player']}")
 

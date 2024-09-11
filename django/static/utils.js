@@ -161,7 +161,6 @@ export async function initializeWebSocket() {
             const data = JSON.parse(event.data);
             console.log('Received server message:', data);
             handleSeverMesssage(data);
-            
         }; 
     
         morpionSocket.onerror = function (error) {
@@ -180,13 +179,16 @@ export async function initializeWebSocket() {
 export function handleSeverMesssage(data) {
 	console.log('Received server message:', data);
 		console.log('Invitation object is HERE ===> ', data.message);
-		if (data.player2 === getUserFromStorage().username){
+		if (data.message.player2 === getUserFromStorage().username){
 			morpionSocket.send(JSON.stringify({ 
-				type: 'p2_join_room' , 
-				room_name: data.room_name,
+				type: 'p2_join_room' ,
+				player2: getUserFromStorage().username,
+				room_name: data.message.room_name,
 			}));
-			console.log('sent room trucmuche');
-		}/*else if (data.message === 'move made') {
+			document.querySelector('morpion-view').acceptmatch();
+		}
+		console.log('sent room trucmuche');
+		/*else if (data.message === 'move made') {
 			const cell_index = data.cell_index;
 			const player_class = data.player_class;
 			console.log('cellIndex:', data.cell_index, 'playerClass:', data.player_class);
