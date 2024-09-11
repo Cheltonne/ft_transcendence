@@ -35,10 +35,11 @@ def save_score(request):
         return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
 
 @login_required
-def create_match(request):
+def create_match(request): #rajout de player1...avois s'il faut le retirer (ouais ne fonctionne pas)
     data = json.loads(request.body)
     player2 = Match.objects.get(player2=data.get("player2"))
-    new_match = Match.objects.create(player1=request.user, player2=player2)
+    #player1 = Match.objects.get(player1=data.get("player1"))
+    new_match = Match.objects.create(player1=request.user, player2=player2) #, player1=player1)
     return JsonResponse({'match_id': new_match.id})
 
 def save_score_ai(request):

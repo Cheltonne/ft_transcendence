@@ -163,7 +163,7 @@ export class MorpionComponent extends HTMLElement {
             const playerClass = data.player_class === 'x' ? this.X_CLASS : this.CIRCLE_CLASS;
             const cellIndex = data.cell_index;
             console.log('cellIndex:', data.cell_index, 'playerClass:', data.player_class);
-            this.makeMove(cellIndex, playerClass, data.player2);
+            this.makeMove(cellIndex, playerClass, data.player2, data.player1);
             console.log("This is player2: ", data);
         }
     }
@@ -217,6 +217,7 @@ export class MorpionComponent extends HTMLElement {
                     cell: cellIndex, // Index of the clicked cell
                     playerClass: currentClass, // 'x' or 'circle''
                     player2: getUserFromStorage().username
+
                 }));
             } else {
                 console.error('WebSocket is not connected or matchmaking is not active.');
@@ -367,7 +368,9 @@ export class MorpionComponent extends HTMLElement {
 
     // fonction pour gérer la fin de la partie: soit un gagnant, soit un match nul ensuite 
     // on met à jour le score et on vérifie si la série est terminée
-    endGame(draw, player2) {
+    endGame(draw, player2, player1) {
+        console.log('This is player2 in endGame:', player2);
+        console.log('This is player1 in endGame:', player1);
         if (draw) {
             this.winningMessageTextElement.innerText = 'Draw!';
         } else {
@@ -379,7 +382,7 @@ export class MorpionComponent extends HTMLElement {
         this.gamesPlayed++;
         if (this.gamesPlayed >= this.maxGames) {
             console. log('This is player2 in endGame: ', player2);
-            this.checkSeriesWinner(player2);
+            this.checkSeriesWinner(player2, player1);
             this.seriesOver = true;
 
             if (morpionSocket && morpionSocket.readyState === WebSocket.OPEN) {
@@ -440,7 +443,7 @@ export class MorpionComponent extends HTMLElement {
         });
     }
 
-    checkSeriesWinner(player2) {
+    checkSeriesWinner(player2, player1) {
         if (this.gamesPlayed >= this.maxGames) {
             let message;
             if (this.scoreX > this.scoreO) {
@@ -454,25 +457,26 @@ export class MorpionComponent extends HTMLElement {
             if (this.isAI) {
                 this.createMatch_ai(this.scoreX, this.scoreO);
             }else{
-                this.createMatch(this.scoreX, this.scoreO, player2);
+                this.createMatch(this.scoreX, this.scoreO, player2, player1);
                 console.log("This is player2 in checkSeriesWinner: ", player2);
             }
         }
     }
 
-    makeMove(cellIndex, playerClass, player2) {
+    makeMove(cellIndex, playerClass, player2, player1) {
         const cell = this.cellElements[cellIndex];
         console.log('This is player2 in make makeMove:', player2);
+        console.log('This is player1 in make makeMove:', player1);
         
         if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
             this.placeMark(cell, playerClass);
     
             if (this.checkWin(playerClass)) {
-                console.log('this is player2 hola:', player2);
-                this.endGame(false);
+                console.log('this is player2 hola:', player2, player1);
+                this.endGame(false, player2, player1);
             } else if (this.isDraw(player2)) {
-                console.log('this is player2 salut:', player2);
-                this.endGame(true,player2);
+                console.log('this is player2 salut:', player2, player1);
+                this.endGame(true, player2, player1);
             } else {
                 this.swapTurns();
                 this.setBoardHoverClass();
@@ -488,7 +492,7 @@ export class MorpionComponent extends HTMLElement {
 
 
     // fonctions pour créer un match normal ou AI
-    async createMatch(user_score, alias_score, player2) {
+    async createMatch(user_score, alias_score, player2, player1) {
         const isAuthenticated = await this.checkAuthenticated();
         if (!isAuthenticated) {
             console.error("User not authenticated. Cannot create match.");
@@ -497,10 +501,12 @@ export class MorpionComponent extends HTMLElement {
         }
         const csrftoken = getCookie('csrftoken');
         console.log("Creating match with player2:", player2);
+        console.log("Creating match with player1:", player1);
         const response = await fetch('/morpion/create-match/', {
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
             body: {'user2': player2 },
+            body: {'user1': player1 }
         });
         const data = await response.json();
         if (data.match_id) {

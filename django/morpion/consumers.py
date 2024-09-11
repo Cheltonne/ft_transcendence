@@ -228,6 +228,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         
         cell_index = data['cell']
         player_class = data['playerClass']
+        player1 = self.scope['user'].username
         player2 = data['player2']
 
         
@@ -242,6 +243,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'type': 'game_move',
                 'cell': cell_index,
                 'player': player_class,
+                'player1': player1,
                 'player2': player2
             }
         )
@@ -251,11 +253,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         cell_index = event['cell']
         player_class = event['player']
         player2 = event['player2']
+        player1 = event['player1']
         await self.send(text_data=json.dumps({
             'type': 'make_move',
             'message': "move made",
             'cell_index': cell_index,
             'player_class': player_class,
+            player1: player1,
             'player2':  player2
         }))
         print(f"Move sent to frontend: {cell_index} for player {event['player']}")
