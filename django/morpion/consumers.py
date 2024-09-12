@@ -14,9 +14,13 @@ User = get_user_model()
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
     
+    
+
     async def connect(self):
         self.player_uuid = self.scope['user'].username
         self.room_name = None
+        self.player1 = None
+        self.player2 = None
         self.room_group_name = 'matchmaking'
        # print(f"This is the channel name: {self.channel_name}")
         await self.channel_layer.group_add(
@@ -92,7 +96,11 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         match_attributes = await sync_to_async(lambda: {field.name: getattr(match, field.name) for field in match._meta.fields})()
         player1_id = str(match_attributes.get('player1'))
         player2_id = str(match_attributes.get('player2'))
+        self.player1 = str(match_attributes.get('player1'))
+        self.player2 = str(match_attributes.get('player2'))
         self.match_room_name = f"room_{match_id}"
+        print("value of self.player1 in handle match  accepted: ", self.player1)
+        print("value of self.player2 in handle match  accepted: ", self.player2)
 
         await self.channel_layer.group_add(
             self.match_room_name,
@@ -228,14 +236,16 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         
         cell_index = data['cell']
         player_class = data['playerClass']
-        player1 = self.scope['user'].username
+        player1 = data['player1']
         player2 = data['player2']
+        print(f"Player 1 in handle_make move: {player1}")
+        print(f"Player 2 in handle_make move: {player2}")
+        print (" OK ON EST BON OU PAS ?")
 
-        
-        if not self.scope['user'].username:
-            player2 = data.get('player2')
-        print(f"Player 2: {player2}")
-    
+        #if not self.scope['user'].username:
+            #player2 = data.get('player2')
+        #print(f"Player 2: {player2}")
+
         print(f"Move made by player {player_class} at cell {cell_index}")
         await self.channel_layer.group_send(
             self.match_room_name,
@@ -247,6 +257,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'player2': player2
             }
         )
+        print(" in consumers player1: ", self.player1, "player2: ", self.player2)
         print(f"Move sent to room {self.match_room_name}")
 
     async def game_move(self, event):
@@ -259,7 +270,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'message': "move made",
             'cell_index': cell_index,
             'player_class': player_class,
-            player1: player1,
+            'player1': player1,
             'player2':  player2
         }))
         print(f"Move sent to frontend: {cell_index} for player {event['player']}")

@@ -177,7 +177,7 @@ export async function initializeWebSocket() {
 }
 
 export function handleSeverMesssage(data) {
-	console.log('Received server message:', data);
+	console.log('message in HandleSErver:', data);
 		console.log('Invitation object is HERE ===> ', data.message);
 		if (data.message.player2 === getUserFromStorage().username){
 			morpionSocket.send(JSON.stringify({ 
@@ -185,7 +185,7 @@ export function handleSeverMesssage(data) {
 				player2: getUserFromStorage().username,
 				room_name: data.message.room_name,
 			}));
-			document.querySelector('morpion-view').acceptmatch();
+			document.querySelector('morpion-view').acceptmatch(data);
 		}
 		console.log('sent room trucmuche');
 		/*else if (data.message === 'move made') {
