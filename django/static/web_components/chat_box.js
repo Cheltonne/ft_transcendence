@@ -89,7 +89,7 @@ export class UserChatView extends HTMLElement {
 		if (this.socket) {
 			this.socket.onmessage = (event) => {
 				const data = JSON.parse(event.data);
-				this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id);
+				this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id, data.id);
 			};
 		}
 	}

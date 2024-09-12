@@ -171,6 +171,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 recipient=recipient, 
                 content=message
             )
+            id = new_message.id
             sender_profile_picture = self.user.profile_picture.url if self.user.profile_picture else None
             await self.channel_layer.group_send(
                 f"chat_user_{recipient.id}",
@@ -179,6 +180,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "message": message,
                     "sender": self.user.username,
                     "sender_id": sender_id,
+                    "id": id,
                     "timestamp": new_message.timestamp.isoformat(),
                     "sender_profile_picture": sender_profile_picture, 
                 }
@@ -193,12 +195,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = event["message"]
         sender = event["sender"]
         sender_id = event["sender_id"]
+        id = event["id"]
         timestamp = event["timestamp"]
         sender_profile_picture = event.get("sender_profile_picture") 
         await self.send(text_data=json.dumps({
             "message": message,
             "sender": sender,
             "sender_id": sender_id,
+            "id": id,
             "timestamp": timestamp,
             "sender_profile_picture": sender_profile_picture,
         }))
