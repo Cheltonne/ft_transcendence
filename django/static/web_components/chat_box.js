@@ -167,8 +167,6 @@ export class UserChatView extends HTMLElement {
 						'<div class="message no-messages">No messages yet. Start the conversation!</div>';
 				} else {
 					messages.forEach(msg => {
-						console.log(msg)
-						console.log("check valeur" + msg.is_clicked)
 						if	(msg.is_read === false)
 							this.displayMessage(msg.content, msg.sender, msg.timestamp, msg.sender_id, msg.id);
 					});

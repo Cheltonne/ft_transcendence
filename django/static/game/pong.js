@@ -655,10 +655,6 @@ export function onoffGame(Button){
         MenuButton.style.display = "none";
         EnterScreen();
     }
-    console.log(Button);
-    console.log(OnlinePath);
-    console.log("connard");
-    
     if (Button === 'off' && OnlinePath && RequestFrame )
     {
         if (!emetteur && OnlinePath)
