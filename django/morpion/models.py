@@ -34,7 +34,10 @@ class MatchAI(models.Model):
                 self.winner = self.player1
             else:
                 self.winner = None  # It's a draw or AI won
+            post_save.disconnect(update_match_ai_winner, sender=MatchAI)
             self.save()
+            post_save.connect(update_match_ai_winner, sender=MatchAI)
+            
 
 @receiver(post_save, sender=Match)
 def update_match_winner(sender, instance, **kwargs):

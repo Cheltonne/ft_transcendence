@@ -183,10 +183,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
          
 
     async def match_accepted(self, event):
-        """     
-        print('Room created event received in consumers before send to front end')
-        print("Received match_accepted event:", event)
-        """
         try:
             await self.send(text_data=json.dumps({
                 'type': 'match_accepted',

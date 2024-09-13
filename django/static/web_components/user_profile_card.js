@@ -128,12 +128,12 @@ export class UserProfileCard extends HTMLElement {
                     <h1>Morpion Ai Match ${++y}</h1>
                     <b>Player</b>
                     <p>${match.player1__username}</p>
-                    <b>AI</b>
-                    <p>CPU</p>
+                    <b>Player</b>
+                    <p>AI</p>
                     <b>Winner</b>
                     <p>${match.winner__username ? match.winner__username : 'AI'}</p>
                     <b>Score</b>
-                    <p>${match.player1__username}: ${match.player1_score} - CPU: ${match.ai_score}</p>
+                    <p>${match.player1__username}: ${match.player1_score} - AI: ${match.ai_score}</p>
                 `;
                 matchHistoryCards.appendChild(matchCard);
             });

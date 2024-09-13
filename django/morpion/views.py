@@ -52,7 +52,6 @@ def create_match(request):
             except User.DoesNotExist:
                 return JsonResponse({'error': 'Player 2 does not exist.'}, status=404)
 
-            # Create a new Match instance
             new_match = Match.objects.create(player1=request.user, player2=player2)
 
             return JsonResponse({'match_id': new_match.id}, status=201)
@@ -61,12 +60,6 @@ def create_match(request):
             return JsonResponse({'error': 'Invalid JSON.'}, status=400)
 
     return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
-    
-"""def create_match(request): 
-    data = json.loads(request.body)
-    player2 = Match.objects.get(player2=data.get("player2"))
-    new_match = Match.objects.create(player1=request.user, player2=player2)
-    return JsonResponse({'match_id': new_match.id})"""
 
 def save_score_ai(request):
     if request.method == 'POST':
