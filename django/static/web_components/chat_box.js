@@ -218,7 +218,6 @@ export class UserChatView extends HTMLElement {
 					'X-CSRFToken': getCookie('csrftoken')
 				},
 			});
-			console.log("messageElement is " + messageElement.isClicked);
 			inviteBubble.style.cursor = 'default';
 			inviteBubble.querySelector('.message-text').innerText = 'Pong invite clicked';
 			navigateTo('pong', 1);

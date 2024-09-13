@@ -217,16 +217,32 @@ class PongConsumer(AsyncWebsocketConsumer):
         print(f'Client {self.player_uuid} connected')
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_send(
-            self.room_name,
-            {
-                'type': 'player_left',
-                'player_uuid': self.player_uuid,
-                'message': f'Player {self.player_uuid} has left the room.'
-                    }
-                )
+        # Broadcast to others that the player has left the room
+        if self.room_name:
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    'type': 'player_left',
+                    'player_uuid': self.player_uuid,
+                    'message': f'Player {self.player_uuid} has left the room.'
+                }
+            )
+
+            
+            if self.player_uuid in self.rooms.get(self.room_name, []):
+                self.rooms[self.room_name].remove(self.player_uuid)
+
+            
+            if len(self.rooms.get(self.room_name, [])) == 1:
+                await self.destroy_room(self.room_name)
 
         print(f'Client {self.player_uuid} disconnected')
+
+        
+        await self.channel_layer.group_discard(
+            self.room_name,
+            self.channel_name
+        )
 
     async def receive(self, text_data):
         data = json.loads(text_data)

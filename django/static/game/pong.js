@@ -2,7 +2,7 @@ export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
 export const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 2;
+const MAX_ROUNDS = 20;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -254,7 +254,6 @@ nextButton.addEventListener("click", function() {
     }
     else {
         let savedName = alias;
-        console.log(`Saved name: ${savedName}`);
         participantNames.push(alias);
 
         nameTourney.value = "";
@@ -668,7 +667,6 @@ export function onoffGame(Button){
 
     if (Button === 'off' && OnlinePath && !RequestFrame)
         {
-            console.log("mais euh");
             RequestFrame = false;
             //clear();
             gameEnding = true;
@@ -721,7 +719,6 @@ function LaunchGame() {
             RequestFrame = true;
             if (OnlinePath)
             {
-                console.log("on passe ici");
                 requestAnimationFrame(GameLoopOnline);
             }
             else
@@ -821,7 +818,6 @@ function GameEndingScreen() {
                     UpdateTourney();
                     if (matches[i].winner)
                     {
-                        console.log("nouveau truc");
                         EndTourneyButton.style.display = 'inline-block';
                         ctx.save();
                         ctx.fillStyle = '#fff';
@@ -848,7 +844,6 @@ function GameEndingScreen() {
         ctx.textBaseline = 'middle'; 
         giveName();
 
-        console.log("je passe par ici");
         if (!emetteur && OnlinePath)
         {
             let rep = userInfo.username;
@@ -1086,12 +1081,23 @@ function OnlineGo() {
     };
 
     socket.onerror = function(error) {
+        DestroyRoom(Millenium);
         console.error('WebSocket Error: ', error);
+        RequestFrame = false;
+        //clear();
+        gameEnding = true;
+        //DestroyRoom();
         DisconnectEndingScreen();
     };
 
     socket.onclose = function(event) {
+        DestroyRoom(Millenium);
         console.log('WebSocket connection closed.');
+        RequestFrame = false;
+        //clear();
+        gameEnding = true;
+        //DestroyRoom();
+        DestroyRoom(Millenium);
         DisconnectEndingScreen();
     };
 }
@@ -1141,7 +1147,6 @@ function handleServerMessage(message) {
             }
         }
     } else if (message.message === 'The game has started!') {
-        console.log('The game is starting!');
         if (Paddle1 && Paddle2 && Ball) {
             allButtonOk = true;
             LaunchGame();
@@ -1158,7 +1163,6 @@ function handleServerMessage(message) {
         updateScore(message.score1, message.score2);
     }
     else if (message.message === 'start_button') {
-        console.log('Received start_button message from server.');
         DisplayStartButton();
     }
 }
@@ -1179,7 +1183,6 @@ export function setPlayerName() {
         'command': 'set_player_name',
         'player_name': playerName
     }));
-    console.log(`Player name set to: ${playerName}`);
 }
 
 function DisplayStartButton(){
@@ -1323,8 +1326,6 @@ function updatePaddlePosition(paddle_pos) {
 function updateScore(score1, score2) {
     Paddle1.score = score1;
     Paddle2.score = score2;
-    console.log('Updated score1: ', score1);
-    console.log('Updated score2: ', score2);
 }
 
 export function joinRoom() {
@@ -1351,14 +1352,16 @@ export function sendPaddlePosition(pos) {
     }
 }
 
-export function DestroyRoom(room_name) {
+
+
+/* export function DestroyRoom(room_name) {
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
             'command': 'destroy_room',
             'room_name': room_name
         }));
     }
-}
+} */
 
 export function sendScoreUpdate(score1, score2) {
     if (socket && socket.readyState === WebSocket.OPEN) {
@@ -1419,11 +1422,19 @@ function DisconnectEndingScreen() {
             //    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
                 ctx.restore();
                 MenuChoice();
-                console.log("je passe par la pourtant");
                 DestroyRoom(Millenium);
             }
 }
 
 export function OnlineChatButton() {
     OnlineGo();
+}
+
+export async function DestroyRoom(room_name) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+        'command': 'destroy_room',
+        'room_name': room_name
+    }));
+    }
 }

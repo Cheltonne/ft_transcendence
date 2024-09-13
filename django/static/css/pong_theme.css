@@ -444,14 +444,6 @@ form a {
   font-size: 16px;
 }
 
-#CreateRoom, #joinRoom, #start {
-  padding: 5px 10px;
-  margin: 2px;
-  font-size: 16px;
-  cursor: pointer;
-  width: 30%;
-}
-
 #start {
-  display: none; /* Hide the start button initially */
+  display: none;
 }
