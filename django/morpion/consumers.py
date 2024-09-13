@@ -167,6 +167,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'Les_toilettes_secretes_de_42',
                 "message": f"{self.scope['user'].username} joined room {self.match_room_name}",
+                "player1": data.get('player1'), 
+                "player2": data.get('player2') 
             }
         )
 
@@ -174,8 +176,11 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         print(f"{self.scope['user'].username} is in room {self.match_room_name}")
         await self.send(text_data=json.dumps({
                 'type': 'player_joined',
-                'message': event['message']
-            })) 
+                'message': event['message'],
+                'player1': event['player1'],
+                'player2': event['player2']
+            }))
+         
 
     async def match_accepted(self, event):
         """     
@@ -242,9 +247,9 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         print(f"Player 2 in handle_make move: {player2}")
         print (" OK ON EST BON OU PAS ?")
 
-        #if not self.scope['user'].username:
-            #player2 = data.get('player2')
-        #print(f"Player 2: {player2}")
+        if not self.scope['user'].username:
+            player2 = data.get('player2')
+        print(f"Player 2: {player2}")
 
         print(f"Move made by player {player_class} at cell {cell_index}")
         await self.channel_layer.group_send(
@@ -257,7 +262,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'player2': player2
             }
         )
-        print(" in consumers player1: ", self.player1, "player2: ", self.player2)
+        print(" in consumers player1: ", player1, "player2: ", player2)
         print(f"Move sent to room {self.match_room_name}")
 
     async def game_move(self, event):
@@ -273,6 +278,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'player1': player1,
             'player2':  player2
         }))
+        print(" in game_move player1: ", player1, "player2: ", player2)
         print(f"Move sent to frontend: {cell_index} for player {event['player']}")
 
 

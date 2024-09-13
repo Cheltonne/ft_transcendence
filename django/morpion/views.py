@@ -7,6 +7,9 @@ from django.db import models
 from django.db.models import Count
 from accounts.models import CustomUser
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 def render_game(request):
     return render(request, 'morpion.html')
@@ -35,12 +38,35 @@ def save_score(request):
         return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
 
 @login_required
-def create_match(request): #rajout de player1...avois s'il faut le retirer (ouais ne fonctionne pas)
+def create_match(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            player2_username = data.get("player2")
+            
+            if not player2_username:
+                return JsonResponse({'error': 'Player 2 is missing.'}, status=400)
+
+            try:
+                player2 = User.objects.get(username=player2_username)
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'Player 2 does not exist.'}, status=404)
+
+            # Create a new Match instance
+            new_match = Match.objects.create(player1=request.user, player2=player2)
+
+            return JsonResponse({'match_id': new_match.id}, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
+
+    return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
+    
+"""def create_match(request): 
     data = json.loads(request.body)
     player2 = Match.objects.get(player2=data.get("player2"))
-    #player1 = Match.objects.get(player1=data.get("player1"))
-    new_match = Match.objects.create(player1=request.user, player2=player2) #, player1=player1)
-    return JsonResponse({'match_id': new_match.id})
+    new_match = Match.objects.create(player1=request.user, player2=player2)
+    return JsonResponse({'match_id': new_match.id})"""
 
 def save_score_ai(request):
     if request.method == 'POST':
@@ -69,26 +95,3 @@ def save_score_ai(request):
 def create_match_ai(request):
     new_match = MatchAI.objects.create(player1=request.user)
     return JsonResponse({'match_id': new_match.id})
-
-
-"""@login_required
-def start_matchmaking(request):
-    user = request.user
-    online_users = CustomUser.objects.filter(is_online=True).exclude(id=user.id)
-    
-    potential_matches = online_users.annotate(
-        game_count=Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
-                    Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
-    ).order_by('game_count')
-
-    if potential_matches.exists():
-        player2 = potential_matches.first()
-        new_match = Match.objects.create(player1=user, player2=player2) 
-        return JsonResponse({
-            "status": "Match found", 
-            "player2": player2.username,
-            "match_id": new_match.id})
-
-    else:
-        match_ai = MatchAI.objects.create(player1=user)
-        return JsonResponse({"status": "No players available, start game with AI"})"""

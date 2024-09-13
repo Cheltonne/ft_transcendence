@@ -180,8 +180,10 @@ export function handleSeverMesssage(data) {
 	console.log('message in HandleSErver:', data);
 		console.log('Invitation object is HERE ===> ', data.message);
 		if (data.message.player2 === getUserFromStorage().username){
+			//console.log('WHOS IS PLAYER 1:', data.message.player1);
 			morpionSocket.send(JSON.stringify({ 
 				type: 'p2_join_room' ,
+				player1: data.message.player1,
 				player2: getUserFromStorage().username,
 				room_name: data.message.room_name,
 			}));
