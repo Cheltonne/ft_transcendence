@@ -2,7 +2,7 @@ export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
 export const ctx = canvas.getContext("2d");
-const MAX_ROUNDS = 20;
+const MAX_ROUNDS = 3;
 let currentRound = 1;
 var ReDrawStatic = true;
 var gameEnding = false;
@@ -38,6 +38,7 @@ import { getCookie } from "../utils.js";
 let playerId = null;
 let socket = null;
 let OnlinePath = false;
+let OnlineMatchFinished = false;
 let Millenium = "ffukcereefwfdwwq";
 
 ////////////////////////////////////////////////////////
@@ -303,6 +304,7 @@ function EnterScreen(){
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
     start.style.display = "none";
+    MenuButton.style.display = "none"; // ??
     ctx.save();
     myButton.style.display = "inline-block";
     LiveButton.style.display = "none";
@@ -691,6 +693,7 @@ function GameLoop() {
         if (!title)
             GameEndingScreen();
         title = false;
+
         return;
     }
 
@@ -1120,7 +1123,7 @@ function updateBallPosition(ball_pos, ball_velocity) {
 }
 
 function handleServerMessage(message) {
-    console.log('Received message from server:', message);
+    //console.log('Received message from server:', message);
 
     if (message.message === 'Room created') {
         joinRoom();
@@ -1283,6 +1286,8 @@ function GameLoopOnline() {
         console.log("Game Ending condition met");
         gameEnding = true;
         RequestFrame = false;
+        OnlineMatchFinished = true;
+
         if (!title)
             GameEndingScreen();
         title = false;
@@ -1330,6 +1335,7 @@ function updateScore(score1, score2) {
 
 export function joinRoom() {
     drawStaticElements();
+    OnlineMatchFinished = false;
     //UpdateUserName();
     const roomName = Millenium;
     socket.send(JSON.stringify({
@@ -1406,7 +1412,7 @@ function DisconnectEndingScreen() {
             MenuChoice();
             DestroyRoom(Millenium);
         }
-        else if (OnlinePath) {
+        else if (!OnlineMatchFinished) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.save();
                 ctx.fillStyle = '#fff';
@@ -1438,3 +1444,14 @@ export async function DestroyRoom(room_name) {
     }));
     }
 }
+
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && OnlinePath) {
+        console.log('User changed tab or minimized the browser');
+        DisconnectEndingScreen();
+        forceDisconnect();
+        $("#aliasContainer").text(" ");
+    }
+});
+
+window.addEventListener('user-logout', () => { DisconnectEndingScreen(); forceDisconnect();  $("#aliasContainer").text(" ");});
