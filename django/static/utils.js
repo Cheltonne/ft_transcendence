@@ -180,23 +180,16 @@ export function handleSeverMesssage(data) {
 	console.log('message in HandleSErver:', data);
 		console.log('Invitation object is HERE ===> ', data.message);
 		if (data.message.player2 === getUserFromStorage().username){
-			//console.log('WHOS IS PLAYER 1:', data.message.player1);
 			morpionSocket.send(JSON.stringify({ 
 				type: 'p2_join_room' ,
 				player1: data.message.player1,
 				player2: getUserFromStorage().username,
+				match_id: data.message.match_id,
 				room_name: data.message.room_name,
 			}));
 			document.querySelector('morpion-view').acceptmatch(data);
 		}
-		console.log('sent room trucmuche');
-		/*else if (data.message === 'move made') {
-			const cell_index = data.cell_index;
-			const player_class = data.player_class;
-			console.log('cellIndex:', data.cell_index, 'playerClass:', data.player_class);
-			makeMove(cell_index, player_class);
-		}*/
-	}	
+	}
 
 export function getUserFromStorage() {
 	const userData = sessionStorage.getItem(USER_STORAGE_KEY);

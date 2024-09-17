@@ -8,6 +8,8 @@ from .models import Match, MatchAI
 from channels.layers import get_channel_layer
 from accounts.utils import send_notification
 from accounts.models import CustomUser
+from django.utils.timezone import now
+from django.db.models import Q
 
 
 User = get_user_model()
@@ -88,19 +90,17 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         ##########################################################################  
 
     async def handle_match_accepted(self, data):
-        #print('in handle_match_accepted')
+        
         match_id = data.get('match_id')
         username = data.get('username')
-        #print(f"Match ID in handle match: {match_id}")
+        
         match = await sync_to_async(Match.objects.get)(id=match_id)
         match_attributes = await sync_to_async(lambda: {field.name: getattr(match, field.name) for field in match._meta.fields})()
         player1_id = str(match_attributes.get('player1'))
         player2_id = str(match_attributes.get('player2'))
-        self.player1 = str(match_attributes.get('player1'))
-        self.player2 = str(match_attributes.get('player2'))
+        
         self.match_room_name = f"room_{match_id}"
-        print("value of self.player1 in handle match  accepted: ", self.player1)
-        print("value of self.player2 in handle match  accepted: ", self.player2)
+
 
         await self.channel_layer.group_add(
             self.match_room_name,
@@ -119,9 +119,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     }
                 }
             )
-        """print(f"Room {self.room_name} created for Match ID: {match_id}")
-        print(f"Players: {player1_id}, {player2_id}")"""
-        
+ 
         message_to_send = {
             'type': 'match_accepted',
             'message': 'match_accepted',
@@ -130,7 +128,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'player1': player1_id,
             'player2': player2_id
         }
-#        print(f"Message to send: {message_to_send}")
+
         await self.channel_layer.group_send(
                 self.match_room_name,
                 {
@@ -146,6 +144,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'message': event['message']
         }))
         self.match_room_name = event['message']['room_name']
+
         if self.player_uuid == event['message']['player2'] or\
             self.player_uuid == event['message']['player1']:
             await self.channel_layer.group_add(
@@ -167,6 +166,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'Les_toilettes_secretes_de_42',
                 "message": f"{self.scope['user'].username} joined room {self.match_room_name}",
+                "match_id": data.get('match_id'),
+                "room_name": self.match_room_name,
                 "player1": data.get('player1'), 
                 "player2": data.get('player2') 
             }
@@ -177,6 +178,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
                 'type': 'player_joined',
                 'message': event['message'],
+                'match_id': event['match_id'],
+                'room_name': event['room_name'],
                 'player1': event['player1'],
                 'player2': event['player2']
             }))
@@ -239,15 +242,16 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         player_class = data['playerClass']
         player1 = data['player1']
         player2 = data['player2']
+        match_id = data['match_id']
         print(f"Player 1 in handle_make move: {player1}")
         print(f"Player 2 in handle_make move: {player2}")
-        print (" OK ON EST BON OU PAS ?")
+        
 
         if not self.scope['user'].username:
             player2 = data.get('player2')
         print(f"Player 2: {player2}")
 
-        print(f"Move made by player {player_class} at cell {cell_index}")
+    
         await self.channel_layer.group_send(
             self.match_room_name,
             {
@@ -255,27 +259,28 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'cell': cell_index,
                 'player': player_class,
                 'player1': player1,
-                'player2': player2
+                'player2': player2,
+                'match_id': match_id
             }
         )
-        print(" in consumers player1: ", player1, "player2: ", player2)
-        print(f"Move sent to room {self.match_room_name}")
+        
 
     async def game_move(self, event):
         cell_index = event['cell']
         player_class = event['player']
         player2 = event['player2']
         player1 = event['player1']
+        match_id = event['match_id']
         await self.send(text_data=json.dumps({
             'type': 'make_move',
             'message': "move made",
             'cell_index': cell_index,
             'player_class': player_class,
             'player1': player1,
-            'player2':  player2
+            'player2':  player2,
+            'match_id': match_id
         }))
-        print(" in game_move player1: ", player1, "player2: ", player2)
-        print(f"Move sent to frontend: {cell_index} for player {event['player']}")
+        
 
 
         ##########################################################################
@@ -300,6 +305,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         user = self.scope['user']
         print(f"Finding match for user: {user.username}")
 
+        #who is online and not the current user
         online_users = await sync_to_async(
             lambda: CustomUser.objects.filter(online_devices_count__gt=0).exclude(id=user.id)
         )()
@@ -307,6 +313,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         count = await sync_to_async(online_users.count)()
         print(f"Potential matches: {count}")
 
+        #who has the least amount of games with the current user
         potential_matches = await sync_to_async(
             lambda: online_users.annotate(
                 game_count=Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
@@ -316,15 +323,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
         if await sync_to_async(potential_matches.exists)():
             print(f"Match found: {await sync_to_async(lambda: potential_matches.first().username)()}")
-            return await sync_to_async(potential_matches.first)()
-        """else:
-            await self.send(text_data=json.dumps({
-                'type': 'no_match_found',
-                'message': 'SALUT. No players available. Starting game with AI.'
-            })) 
-            print("No match found")"""    
+            return await sync_to_async(potential_matches.first)()    
         return None
-    
         
         ##########################################################################
         #                                                                        #

@@ -100,6 +100,7 @@ export class MorpionComponent extends HTMLElement {
         this.isAI = false;
         this.player1Name = null;
         this.player2Name = null;
+        this.match_id = 0;
 
         this.startGame();
 
@@ -141,6 +142,7 @@ export class MorpionComponent extends HTMLElement {
     acceptmatch(data){
         this.player1Name = data.message.player1;
         this.player2Name = data.message.player2;
+        this.match_id = data.message.match_id;
         this.updatePlayerNames();
         morpionSocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -168,6 +170,7 @@ export class MorpionComponent extends HTMLElement {
             console.log('STARTMACHMAKING AFTER  onmessage:', data);
             this.player1Name = data.player1;
             this.player2Name = data.player2;
+            this.match_id = data.match_id;
             console.log('Player 1 in startMatchmaking:', this.player1Name);
             console.log('Player 2 in startMatchmaking:', this.player2Name);
             this.handleGameMessage(data);
@@ -231,10 +234,9 @@ export class MorpionComponent extends HTMLElement {
         if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
             this.placeMark(cell, currentClass);
 
-            //console.log('Player 1 Name in handleClick:', this.player1Name);
-            //console.log('Player 2 Name in handleClick:', this.player2Name);
             let player1 = this.player1Name;
             let player2 = this.player2Name;
+            let match_id = this.match_id;
         
             
             if (morpionSocket && morpionSocket.readyState === WebSocket.OPEN) {
@@ -242,8 +244,8 @@ export class MorpionComponent extends HTMLElement {
                     type: 'make_move',
                     cell: cellIndex, // Index of the clicked cell
                     playerClass: currentClass, // 'x' or 'circle''
+                    match_id: match_id,
                     player1: player1,
-                    //player2: getUserFromStorage().username
                     player2: player2
 
                 }));
