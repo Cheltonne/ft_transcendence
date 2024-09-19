@@ -3,6 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async, async_to_sync
 from accounts.models import Notification, Message, CustomUser
+from morpion.models import Match
 from django.db.models import Count
 from accounts.utils import send_notification
 from django.db import models
@@ -115,6 +116,7 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope['user']
+        self.opponent = None
         if self.user.is_authenticated:
             await self.channel_layer.group_add(
                 f'user_{self.user.id}',
@@ -134,14 +136,19 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         type = data.get('type')
         
         if type == 'matchmaking':
-            opponent = await self.find_match()
-            if opponent:
-                await self.send_match_request(opponent)
+            self.opponent = await self.find_match()
+            if self.opponent:
+                await self.send_match_request(self.opponent)
             else:
                 await self.send(text_data=json.dumps({
                     'type': 'no_match_found',
                     'message': 'No players available. Starting game with AI.'
                 }))
+        elif type == 'match_request_accepted':
+            match = Match.objects.create(self.scope['user'])
+            match.player2 = self.opponent
+            print(f"Match created with ID: {match.id}")
+            match.save()
         else:        
             await self.send(text_data=json.dumps({
                 'message': 'Notification'

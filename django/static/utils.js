@@ -141,7 +141,11 @@ export async function initializeWebSocket() {
 			console.log('Notification socket closed.');
 			notificationSocket = null;
 		};
-	} else {
+		notificationSocket.onerror = function (error) {
+			console.error('Notification WebSocket encountered error:', error);
+		}
+	}
+	else {
 		console.log('User is not authenticated.'); // Handle case where authToken is not available
 	}
 }
