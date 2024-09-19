@@ -659,10 +659,8 @@ export function onoffGame(Button){
 
     if (Button === 'off' && OnlinePath && RequestFrame )
     {
-        if (!emetteur && OnlinePath)
-            createMatch(Paddle2.score, Paddle1.score);
-        else
-            createMatch(Paddle1.score, Paddle2.score);
+        if (emetteur && OnlinePath)
+            createMatch(Paddle1.score, Paddle2.score, 1);
         RequestFrame = false;
         forceDisconnect();
         clear();
@@ -857,11 +855,11 @@ function GameEndingScreen() {
         let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
         ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
         ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
-        if (!emetteur && OnlinePath)
-            createMatch(Paddle2.score, Paddle1.score);
-        else
-            createMatch(Paddle1.score, Paddle2.score);
-
+        if (emetteur && OnlinePath)
+            createMatch(Paddle1.score, Paddle2.score, 1);
+        else if (!OnlinePath)
+            createMatch(Paddle1.score, Paddle2.score, 0);
+        
         OnlinePath = false;
         ctx.restore();
         MenuChoice();
@@ -1006,22 +1004,37 @@ export const checkAuthenticated = async () => {
     return data.authenticated;
 };
 
-export async function createMatch(user_score, alias_score) {
+export async function createMatch(user_score, alias_score, onlineTrue) {
     try {
         const isAuthenticated = await checkAuthenticated();
+        let response;
         if (!isAuthenticated) {
             console.error("User not authenticated. Cannot create match.");
             return;
         }
 
-        const response = await fetch('game/create-match/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            credentials: 'include'
-        });
+        if (onlineTrue)
+        {
+                response = await fetch('game/create-online-match/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body : JSON.stringify({'player2_username': player2Name}), 
+                credentials: 'include'
+            });
+        }
+        else {
+                response = await fetch('game/create-match/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include'
+            });
+        }
 
         if (!response.ok) {
             throw new Error(`Match creation failed: ${response.status} ${response.statusText}`);
@@ -1407,7 +1420,7 @@ function DisconnectEndingScreen() {
             ctx.fillText(`connection error!`, canvas.width / 2, canvas.height / 2 - 110);
             ctx.fillText(`${winner} wins! `, canvas.width / 2, canvas.height / 2 - 75);
             ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
-            createMatch(Paddle1.score, 0);
+            createMatch(Paddle1.score, 0, 1);
     
             ctx.restore();
             MenuChoice();

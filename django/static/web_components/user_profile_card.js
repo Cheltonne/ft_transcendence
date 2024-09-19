@@ -96,9 +96,9 @@ export class UserProfileCard extends HTMLElement {
                 matchCard.innerHTML = `
                     <h1>Pong Match ${++i}</h1>
                     <b>Opponent</b>
-                    <p>CPU</p>
+                    <p>${match.alias}</p>
                     <b>Winner</b>
-                    <p>${match.winner__username === userInfo.username ? match.winner__username : "CPU"}</p>
+                    <p>${match.winner__username === userInfo.username ? match.winner__username : match.alias}</p>
                     <b>Score</b>
                     <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
                     <b>Played at</b>

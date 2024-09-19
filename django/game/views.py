@@ -1,5 +1,6 @@
 import json
 from game.models import Match
+from accounts.models import CustomUser
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -29,4 +30,12 @@ def save_score(request):
 @login_required
 def create_match(request):
 	new_match = Match.objects.create(player=request.user)
+	return JsonResponse({'match_id': new_match.id})
+
+@login_required
+def create_online_match(request):
+	data = json.loads(request.body)
+	player2_username = data.get('player2_username')
+	player2 = CustomUser.objects.get(username=player2_username)
+	new_match = Match.objects.create(player=request.user, alias=player2)
 	return JsonResponse({'match_id': new_match.id})

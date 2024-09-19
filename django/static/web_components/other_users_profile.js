@@ -95,24 +95,28 @@ export class OtherUserProfileCard extends HTMLElement {
             let i = 0;
             userInfo.user_matches.forEach(match => {
                 console.log(match)
-                const matchDate = match.timestamp ? new Date(match.timestamp) : null;
-                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
-                const matchCard = this.shadowRoot.ownerDocument.createElement('div');
-                matchCard.classList.add('match-history-card');
-                matchCard.innerHTML = `
-                    <h1>Pong Match ${++i}</h1>
-                    <b>Opponent</b>
-                    <p>CPU</p>
-                    <b>Winner</b>
-                    <p>${match.winner__username === userInfo.username ? match.winner__username : "CPU"}</p>
-                    <b>Score</b>
-                    <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
-                    <b>Played at</b>
-                    <p>${formattedDate}</p>
-                `;
-                matchHistoryCards.appendChild(matchCard);
-            });
-        } else if (matchType === 'morpion' && userInfo.morpion_matches) {
+                fetch(`/accounts/users/${match.alias}/user-info/`)
+                .then((response) => response.json())
+                .then((data) => {
+                    const matchDate = match.timestamp ? new Date(match.timestamp) : null;
+                    const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                    const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                    matchCard.classList.add('match-history-card');
+                    matchCard.innerHTML = `
+                        <h1>Pong Match ${++i}</h1>
+                        <b>Opponent</b>
+                        <p>${data.username ? data.username : 'Phaslanus'}</p>
+                        <b>Winner</b>
+                        <p>${match.winner__username === userInfo.username ? match.winner__username : data.usename }</p>
+                        <b>Score</b>
+                        <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
+                        <b>Played at</b>
+                        <p>${formattedDate}</p>
+                    `;
+                    matchHistoryCards.appendChild(matchCard);
+                });
+            }
+        )} else if (matchType === 'morpion' && userInfo.morpion_matches) {
             let i = 0;
             userInfo.morpion_matches.forEach(match => {
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');

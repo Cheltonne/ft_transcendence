@@ -49,6 +49,8 @@ def get_user_info(request):
         user = request.user
         user_matches = list(user.matches.all().order_by('id').values
                 ('alias', 'user_score', 'alias_score', 'winner__username', 'timestamp'))
+        user_matches += list(user.matches_as2.all().order_by('id').values
+                ('alias', 'user_score', 'alias_score', 'winner__username', 'timestamp'))
         user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values
                 ('player1__username', 'player2__username', 'player1_score', 'player2_score',
                   'winner__username', 'timestamp'))
@@ -249,6 +251,8 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         user_matches = \
         list(user.matches.all().order_by('id').values('alias', 'user_score',
             'alias_score', 'winner__username', 'timestamp'))
+        user_matches += list(user.matches_as2.all().order_by('id').values
+                ('alias', 'user_score', 'alias_score', 'winner__username', 'timestamp'))
         user_morpion_matches = \
         list(user.morpion_matches_as1.all().order_by('id').values(
             'player1__username', 'player2__username', 'player1_score',
