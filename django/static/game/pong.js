@@ -642,7 +642,7 @@ export function onoffGame(Button){
         title = true;
         EnterScreen();
     }
-    if (Button === 'on' && !OnlinePath)
+    else if (Button === 'on' && !OnlinePath)
     {
         clearTourney();
         clear();
@@ -656,6 +656,7 @@ export function onoffGame(Button){
         MenuButton.style.display = "none";
         EnterScreen();
     }
+
     if (Button === 'off' && OnlinePath && RequestFrame )
     {
         if (!emetteur && OnlinePath)
@@ -666,14 +667,14 @@ export function onoffGame(Button){
         forceDisconnect();
         clear();
     }
-
-    if (Button === 'off' && OnlinePath && !RequestFrame)
+    else if (Button === 'off' && OnlinePath && !RequestFrame)
         {
             RequestFrame = false;
             //clear();
             gameEnding = true;
             //DestroyRoom();
             DestroyRoom(Millenium);
+            forceDisconnect();
             //forceDisconnect();
         }
 }
