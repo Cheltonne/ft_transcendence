@@ -3,6 +3,9 @@ from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async, async_to_sync
 from accounts.models import Notification, Message, CustomUser
+from django.db.models import Count
+from accounts.utils import send_notification
+from django.db import models
 
 User = get_user_model()
 
@@ -127,12 +130,59 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             )
 
     async def receive(self, text_data):
-        await self.send(text_data=json.dumps({
-            'message': 'Notification'
-        }))
+        data = json.loads(text_data)
+        type = data.get('type')
+        
+        if type == 'matchmaking':
+            opponent = await self.find_match()
+            if opponent:
+                await self.send_match_request(opponent)
+            else:
+                await self.send(text_data=json.dumps({
+                    'type': 'no_match_found',
+                    'message': 'No players available. Starting game with AI.'
+                }))
+        else:        
+            await self.send(text_data=json.dumps({
+                'message': 'Notification'
+            }))
 
     async def send_notification(self, event):
         await self.send(text_data=json.dumps(event["notification"]))
+
+    async def send_match_request(self, player2):
+        print(f"Sending match request from {self.scope['user'].username} to {player2.username}.")
+        await sync_to_async(send_notification)(
+            sender = self.scope['user'],
+            recipient = player2,
+            type = 'match_request',
+            message = f"{self.scope['user'].username} wants to play a morpion game with you.",
+        )
+
+    async def find_match(self):
+        user = self.scope['user']
+        print(f"Finding match for user: {user.username}")
+
+        #who is online and not the current user
+        online_users = await sync_to_async(
+            lambda: CustomUser.objects.filter(online_devices_count__gt=0).exclude(id=user.id)
+        )()
+        
+        count = await sync_to_async(online_users.count)()
+        print(f"Potential matches: {count}")
+
+        #who has the least amount of games with the current user
+        potential_matches = await sync_to_async(
+            lambda: online_users.annotate(
+                game_count=Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
+                            Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
+            ).order_by('game_count')
+        )()
+
+        if await sync_to_async(potential_matches.exists)():
+            print(f"Match found: {await sync_to_async(lambda: potential_matches.first().username)()}")
+            return await sync_to_async(potential_matches.first)()    
+        return None
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):

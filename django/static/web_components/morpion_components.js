@@ -3,7 +3,7 @@ import {
     user
 } from '../scripts.js'
 
-import { getCookie } from "../utils.js";
+import { getCookie, notificationSocket } from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
     constructor() {
@@ -126,9 +126,9 @@ export class MorpionComponent extends HTMLElement {
             this.showAlert('success', 'Starting new series of 3 games with computer');
         });
 
-        /*this.matchmakingButton.addEventListener('click', async () => {
+        this.matchmakingButton.addEventListener('click', async () => {
             await this.startMatchmaking();
-        });*/
+        });
     }
 
     async checkAuthenticated() {
@@ -161,6 +161,10 @@ export class MorpionComponent extends HTMLElement {
         this.setBoardHoverClass();
         this.winningMessageElement.classList.remove('show');
         this.seriesOver = false;
+    }
+
+    startMatchmaking() {
+        notificationSocket.send(JSON.stringify({ type: 'matchmaking' }));
     }
 
     // fonction pour gérer le clic sur une case

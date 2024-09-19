@@ -41,6 +41,7 @@ export class NotificationItem extends HTMLElement {
         const actionsContainer = this.shadowRoot.querySelector('.notification-actions');
         actionsContainer.innerHTML = '';
 
+        console.log(this.notification.type);
         switch (this.notification.type) {
             case 'friend_request':
                 actionsContainer.innerHTML = `
@@ -54,6 +55,18 @@ export class NotificationItem extends HTMLElement {
                     this.markAsRead(this.notification.id);
                 });
                 break;
+                case 'match_request':
+                    actionsContainer.innerHTML = `
+                        <button class="btn btn-success">Accept Match</button>
+                        <button class="btn btn-danger">Reject Match</button>
+                    `;
+                    actionsContainer.querySelector('.btn-success').addEventListener('click', () => {
+                        this.acceptMatchRequest(this.notification.sender_id);
+                    });
+                    actionsContainer.querySelector('.btn-danger').addEventListener('click', () => {
+                        this.declineMatchRequest(this.notification.sender_id);
+                    });
+                    break;        
             default:
                 actionsContainer.innerHTML = `
                     <button class="btn btn-primary read-btn">Mark as read</button>
@@ -93,6 +106,69 @@ export class NotificationItem extends HTMLElement {
                 console.error('Failed to mark notification as read:', error);
             });
     }
+
+    async acceptMatchRequest(senderId) {
+        this.toggleNotificationRead(this.notification.id)
+            .then(() => {
+                this.sendMatchAcceptNotification(senderId);
+                const customEvent = new CustomEvent('notificationRead', {
+                    detail: {
+                        'id': this.notification.id
+                    }
+                });
+                document.dispatchEvent(customEvent);
+                this.updateUnread();
+                this.remove();
+            })
+            .catch(error => {
+                console.error('Failed to mark notification as read:', error);
+            });
+        }
+
+    async sendMatchAcceptNotification(senderId) {
+        const response = await fetch(`/morpion/matches/${senderId}/match_accept/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include'
+        });
+        return response.json();
+    }
+
+
+    async declineMatchRequest(senderId) {
+        this.toggleNotificationRead(this.notification.id)
+            .then(() => {
+                this.sendMatchDeclineNotification(senderId);
+                const customEvent = new CustomEvent('notificationRead', {
+                    detail: {
+                        'id': this.notification.id
+                    }
+                });
+                document.dispatchEvent(customEvent);
+                this.updateUnread();
+                this.remove();
+            })
+            .catch(error => {
+                console.error('Failed to mark notification as read:', error);
+            });
+        }
+
+    async sendMatchDeclineNotification(senderId) {
+        const response = await fetch(`/morpion/matches/${senderId}/match_declined/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'include'
+        });
+        return response.json();
+    }
+
+
 
     markAsRead(notificationId) {
         this.toggleNotificationRead(notificationId)

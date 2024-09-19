@@ -4,7 +4,15 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response 
+from rest_framework.decorators import action, api_view
+from rest_framework.views import APIView
+from accounts.models import CustomUser
+from accounts.serializers import CustomUserSerializer
+from accounts.utils import send_notification
 def render_game(request):
     return render(request, 'morpion.html')
 
@@ -67,3 +75,28 @@ def save_score_ai(request):
 def create_match_ai(request):
     new_match = MatchAI.objects.create(player1=request.user)
     return JsonResponse({'match_id': new_match.id})
+
+class MatchViewSet(viewsets.ModelViewSet):
+    queryset = Match.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['post'], url_path='match_accept')
+    def match_accept(self, request, pk=None):
+        user = request.user
+        opponent = get_object_or_404(CustomUser, pk=pk)
+
+        send_notification(user, opponent, 'match_request_accepted', \
+        f'{user} accepted your match request!')
+        return Response({'detail': 'Match accepted'}, \
+        status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['post'])
+    def match_declined(self, request, pk=None):
+        user = request.user
+        opponent = get_object_or_404(CustomUser, pk=pk)
+
+        send_notification(user, opponent, 'match_request_declined', \
+        f'{user} declined your match request!')
+        return Response({'detail': 'Match declined'}, \
+        status=status.HTTP_200_OK)
