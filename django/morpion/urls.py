@@ -1,9 +1,6 @@
-from django.urls import path
 from django.urls import path, include
 from . import views
 from rest_framework.routers import DefaultRouter
-
-from . import views
 
 router = DefaultRouter()
 router.register(r'matches', views.MatchViewSet) #remember NEVER to use empty routes or else

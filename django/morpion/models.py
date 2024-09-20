@@ -18,7 +18,6 @@ class Match(models.Model):
 			else:
 				self.winner = None  # It's a draw
 			self.save()  # Ensure the match instance is saved
-
 class MatchAI(models.Model):
 	player1 = models.ForeignKey(CustomUser, related_name='morpion_ai_matches', on_delete=models.CASCADE)
 	player1_score = models.IntegerField(null=True, blank=True)

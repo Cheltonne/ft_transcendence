@@ -3,7 +3,7 @@ import {
     user
 } from '../scripts.js'
 
-import { getCookie, notificationSocket } from "../utils.js";
+import { getCookie, notificationSocket, showToast} from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
     constructor() {
@@ -90,7 +90,7 @@ export class MorpionComponent extends HTMLElement {
         this.winningMessageTextElement = this.shadowRoot.querySelector('[data-winning-message-text]');
         this.scorePlayer1 = this.shadowRoot.getElementById('scorePlayer1');
         this.scorePlayer2 = this.shadowRoot.getElementById('scorePlayer2');
-        this.maxGames = 3;
+        this.maxGames = 1;
         this.gamesPlayed = 0;
         this.scoreX = 0;
         this.scoreO = 0;
@@ -103,13 +103,20 @@ export class MorpionComponent extends HTMLElement {
 
         this.startGame();
 
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                        EVENTS LISTENERS                              // 
+        //                                                                      //
+        //////////////////////////////////////////////////////////////////////////  
+
+
         // comportement des boutons new game, AI game et restart 
         this.restartButton.addEventListener('click', () => {
             if (!this.seriesOver) {
                 this.restartGame();
             } else {
                 this.winningMessageElement.classList.remove('show');
-                this.showAlert('info', 'Series has ended. Press Start New Game to start a new series.');
+                showToast('Game has ended. Press Start New Game.');
                 this.alertShown = true;
             }
         });
@@ -117,17 +124,18 @@ export class MorpionComponent extends HTMLElement {
         this.newGameButton.addEventListener('click', () => {
             this.isAI = false;
             this.startGame();
-            this.showAlert('success', 'Starting new series of 3 games');
+            showToast('Starting new games');
         });
 
         this.newGameWithComputerButton.addEventListener('click', () => {
             this.isAI = true;
             this.startGame();
-            this.showAlert('success', 'Starting new series of 3 games with computer');
+            showToast('Starting new game with computer');
         });
 
         this.matchmakingButton.addEventListener('click', async () => {
             await this.startMatchmaking();
+            showToast('Looking for a match...');
         });
     }
 
@@ -141,6 +149,13 @@ export class MorpionComponent extends HTMLElement {
         this.scorePlayer1.textContent = this.player1Name + ': ' + this.scoreX;
         this.scorePlayer2.textContent = this.player2Name + ': ' + this.scoreO;
     }
+
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                             GAME LOGIC                               // 
+        //                                                                      //
+        //////////////////////////////////////////////////////////////////////////  
+
 
     // fonction pour commencer une partie et verifier si la serie est terminée
     startGame() {
@@ -275,6 +290,13 @@ export class MorpionComponent extends HTMLElement {
         }
     }
 
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                        DATABASE MANAGMENT                            // 
+        //                                                                      //
+        //////////////////////////////////////////////////////////////////////////  
+
+
     // fonctions pour créer un match normal ou AI
     async createMatch(user_score, alias_score) {
         const isAuthenticated = await this.checkAuthenticated();
@@ -289,13 +311,14 @@ export class MorpionComponent extends HTMLElement {
             headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
         });
         const data = await response.json();
+        console.log(data);
         if (data.match_id) {
             console.log("Match created with ID:", data.match_id);
-            this.showAlert("success", "Match created successfully!");
+            showToast("Match created successfully!");
             this.sendScoreToDjango(user_score, alias_score, data.match_id, false);
         } else {
             console.error("Error creating match");
-            this.showAlert("danger", "Failed to create match. Please try again.");
+            showToast("Failed to create match. Please try again.");
         }
     }
     
@@ -314,11 +337,11 @@ export class MorpionComponent extends HTMLElement {
         const data = await response.json();
         if (data.match_id) {
             console.log("Match created with ID:", data.match_id);
-            this.showAlert("success", "Match created successfully!");
+            showToast("Match created successfully!");
             this.sendScoreToDjango(user_score, ia_score, data.match_id, true);
         } else {
             console.error("Error creating match");
-            this.showAlert("danger", "Failed to create match. Please try again.");
+            showToast("Failed to create match. Please try again.");
         }
     }
     
@@ -343,17 +366,21 @@ export class MorpionComponent extends HTMLElement {
         .then(data => {
             if (data.message) {
                 console.log("Score saved successfully.");
-                this.showAlert("success", "Score saved successfully!");
             } else {
                 console.error("Failed to save score:", data.error);
-                this.showAlert("danger", "Failed to save score. Please try again.");
             }
         })
         .catch(error => {
             console.error("Error:", error);
-            this.showAlert("danger", "Failed to save score. Please try again.");
         });
     }
+
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                              UTILS                                   // 
+        //                                                                      //
+        ////////////////////////////////////////////////////////////////////////// 
+
 
     // fonction pour réinitialiser la série
     resetSeries() {
@@ -386,6 +413,14 @@ export class MorpionComponent extends HTMLElement {
             }
         }, duration);
     }
+
+        //////////////////////////////////////////////////////////////////////////
+        //                                                                      //
+        //                           AI GAME LOGIC                              // 
+        //                                                                      //
+        //////////////////////////////////////////////////////////////////////////  
+
+
 
     // fonction pour faire jouer l'ordinateur
     makeAIMove() {
