@@ -19,7 +19,7 @@ class Match(models.Model):
 			print(self.winner)
 			self.player.save()
 		elif self.alias_score < self.user_score:
-			self.winner = self.player
+			self.winner = self.alias
 			self.player.wins = F('wins') + 1 
 			print(self.winner)
 			self.player.save()

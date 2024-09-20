@@ -80,7 +80,10 @@ export class UserProfileCard extends HTMLElement {
         user.setUserData(getUserFromStorage());
     }
 
-
+        // match.player__username PLAYER_2
+    // userInfo.username PAGE ACTUELLE
+    // match.alias_username PLAYER 1
+    //${match.player__username === userInfo.username ? match.alias_username : 'guest'}</p>
     renderUserProfile(userInfo, matchType = 'pong') {
         console.log("renderUserProfile() called.");
         const matchHistoryCards = this.shadowRoot.querySelector('.match-history-cards');
@@ -92,15 +95,26 @@ export class UserProfileCard extends HTMLElement {
                 const matchDate = match.timestamp ? new Date(match.timestamp) : null;
                 const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                const player1 = match.alias__username === userInfo.username ? match.alias__username : match.player__username;
+                const player2 = match.alias__username === userInfo.username ? match.player__username : match.alias__username
+                const Other = userInfo.username === player1 ? player2 : player1;
+                const player1score = match.user_score;
+                const player2score = match.alias_score;
+                console.log("----")
+                console.log("match ID " + matchDate)
+                console.log("joueur 1 " + player1);
+                console.log("joueur 2 " + player2);
+                console.log("profil actuel " + userInfo.username);
+                console.log("gagnant match " + match.winner__username)
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Pong Match ${++i}</h1>
                     <b>Opponent</b>
-                    <p>${match.alias}</p>
+                    <p>${player2}</p>
                     <b>Winner</b>
-                    <p>${match.winner__username === userInfo.username ? match.winner__username : match.alias}</p>
+                    <p>${match.winner__username === player1 ? player1 : player2}</p>
                     <b>Score</b>
-                    <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
+                    <p>${player1}: ${player1score} - ${player2}: ${player2score}</p>
                     <b>Played at</b>
                     <p>${formattedDate}</p>
                 `;

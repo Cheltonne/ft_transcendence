@@ -101,13 +101,14 @@ export class OtherUserProfileCard extends HTMLElement {
                     const matchDate = match.timestamp ? new Date(match.timestamp) : null;
                     const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                     const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                    const Other = match.alias__username ? match.alias__username : 'local'
                     matchCard.classList.add('match-history-card');
                     matchCard.innerHTML = `
                         <h1>Pong Match ${++i}</h1>
                         <b>Opponent</b>
-                        <p>${data.username ? data.username : 'Phaslanus'}</p>
+                        <p>${Other}</p>
                         <b>Winner</b>
-                        <p>${match.winner__username === userInfo.username ? match.winner__username : data.usename }</p>
+                        <p>${match.winner__username === userInfo.username ? match.winner__username : Other}</p>
                         <b>Score</b>
                         <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
                         <b>Played at</b>

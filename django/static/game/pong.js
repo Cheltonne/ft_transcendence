@@ -875,7 +875,7 @@ class AIPlayer {
         constructor() {
             this.height = 100;
             this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
-            this.timeSinceLastPrediction = 0;
+            this.timeSinceLastPrediction = -1;
             this.move = false;
             this.predictionInterval = 1;
             this.paddleCenterY = 0;
@@ -1234,8 +1234,15 @@ start.addEventListener("click", function() {
 export function OnlineInvite(Player1, Player2, RoomName){
     //clear();
     MenuButton.click();
+    if (!emetteur) {
     player2Name = Player1;
     userInfo.username = Player2;
+    }
+    else 
+    {
+        player2Name = Player2;
+    userInfo.username = Player1;
+    }
     console.log(player2Name);
     console.log(userInfo.username);
     console.log(RoomName);
