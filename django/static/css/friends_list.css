@@ -38,6 +38,7 @@
 
 .friends-container ul {
     list-style-type: none;
+    font-size: 1.2em;
     padding: 0;
 }
 
@@ -46,6 +47,8 @@
 }
 
 .friends-container input[type="text"], .friends-container button {
+    width: 20%; 
+    font-size: 0.825rem; 
     margin: auto;
 }
 

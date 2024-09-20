@@ -71,15 +71,20 @@
     opacity: 1;
     display: flex;
     z-index: 43;
+    color: #e9dacbb6;
 }
 
 .match-history-card {
-    margin: 25px;
+    margin: 15px;
     padding: 10px;
     border-radius: 5px;
     background-color: rgb(240, 240, 240);
     color: #12151a;
     flex-direction: column;
+}
+.match-history-card h1 {
+    font-size: 25px; 
+    color: #12151a; 
 }
 
 .match-history-card b {

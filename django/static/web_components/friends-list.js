@@ -55,6 +55,11 @@ export class FriendsComponent extends HTMLElement {
 
         styleLink.setAttribute('rel', 'stylesheet');
         styleLink.setAttribute('href', 'static/css/friends_list.css');
+
+        const bootstrapLink = document.createElement('link');
+        bootstrapLink.setAttribute('rel', 'stylesheet');
+        bootstrapLink.setAttribute('href', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css');
+
         this.shadowRoot.innerHTML = `
             <div class="friends-container">
                 <h2>Friends</h2>
@@ -78,11 +83,12 @@ export class FriendsComponent extends HTMLElement {
                 </ul>
                 <input type="text" id="new-friend-username" placeholder="Add a friend by username">
                 <div style="height: 1rem;"></div>
-                <button id="add-friend-button">Add Friend</button>
+                <button id="add-friend-button" class="btn btn-success" >Add Friend</button>
             </div>
         `;
         this.addEventListeners();
         this.shadowRoot.appendChild(styleLink);
+        this.shadowRoot.appendChild(bootstrapLink);
     }
 
     addEventListeners() {
