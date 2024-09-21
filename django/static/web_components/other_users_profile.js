@@ -94,35 +94,37 @@ export class OtherUserProfileCard extends HTMLElement {
         if (matchType === 'pong' && userInfo.user_matches) {
             let i = 0;
             userInfo.user_matches.forEach(match => {
-                console.log(match)
-                fetch(`/accounts/users/${match.alias}/user-info/`)
-                .then((response) => response.json())
-                .then((data) => {
-                    const matchDate = match.timestamp ? new Date(match.timestamp) : null;
-                    const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
-                    const matchCard = this.shadowRoot.ownerDocument.createElement('div');
-                    const Other = match.alias__username ? match.alias__username : 'local'
-                    matchCard.classList.add('match-history-card');
-                    matchCard.innerHTML = `
-                        <h1>Pong Match ${++i}</h1>
-                        <b>Opponent</b>
-                        <p>${Other}</p>
-                        <b>Winner</b>
-                        <p>${match.winner__username === userInfo.username ? match.winner__username : Other}</p>
-                        <b>Score</b>
-                        <p>${userInfo.username}: ${match.user_score} - Opponent: ${match.alias_score}</p>
-                        <b>Played at</b>
-                        <p>${formattedDate}</p>
-                    `;
-                    matchHistoryCards.appendChild(matchCard);
-                });
-            }
-        )} else if (matchType === 'morpion' && userInfo.morpion_matches) {
+                const online_match = match.player2__username ? true : false;
+                const matchDate = match.timestamp ? new Date(match.timestamp) : null;
+                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                const matchCard = this.shadowRoot.ownerDocument.createElement('div');
+                const player1 = match.player1__username;
+                const player2 = online_match ? match.player2__username : "CPU";
+                const player1score = match.player1_score;
+                const player2score = match.player2_score;
+                matchCard.classList.add('match-history-card');
+                matchCard.innerHTML = `
+                    <h1>Pong Match ${++i}</h1>
+                    <b>Player 1</b>
+                    <p>${player1}</p>
+                    <b>Player 2</b>
+                    <p>${player2}</p>
+                    <b>Winner</b>
+                    <p>${online_match ? match.winner__username : "CPU"}</p>
+                    <b>Score</b>
+                    <p>${player1}: ${player1score} - ${player2}: ${player2score}</p>
+                    <b>Played at</b>
+                    <p>${formattedDate}</p>
+                `;
+                matchHistoryCards.appendChild(matchCard);
+            });
+        }
+        else if (matchType === 'morpion' && userInfo.morpion_matches) {
             let i = 0;
             userInfo.morpion_matches.forEach(match => {
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
                 const matchDate = match.timestamp ? new Date(match.timestamp) : null;
-                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                const formattedDate = matchDate ? matchDate.toCPUeString() : 'Date not available';
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Morpion Match ${++i}</h1>
