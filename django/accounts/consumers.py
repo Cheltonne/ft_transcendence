@@ -35,21 +35,23 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         self.room_group_name = 'users_online'
         self.user = self.scope['user']
-        await self.mark_user_offline()
 
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'new_friend_offline',
-                'id': self.user.id,
-                'username': self.user.username,
-                'is_online': False
-            }
-        )
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        if self.user.is_authenticated:
+            await self.mark_user_offline()
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'new_friend_offline',
+                    'id': self.user.id,
+                    'username': self.user.username,
+                    'is_online': False
+                }
+            )
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
 
     async def new_friend_online(self, event):
         id = event['id']
@@ -81,13 +83,16 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         self.user.refresh_from_db()
         self.user.online_devices_count += 1
         self.user.save()
+        print(f"User {self.user.username} marked online, online count: {self.user.online_devices_count}")
 
     @sync_to_async
     def mark_user_offline(self):
         # Fetch the latest user instance from the database before updating
         self.user.refresh_from_db()
-        self.user.online_devices_count -= 1
-        self.user.save()
+        if self.user.online_devices_count > 0:
+            self.user.online_devices_count -= 1
+            self.user.save()
+            print(f"User {self.user.username} marked offline, online count: {self.user.online_devices_count}")
 
     @sync_to_async
     def is_user_online(self, username):
@@ -144,17 +149,16 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                     'type': 'no_match_found',
                     'message': 'No players available. Starting game with AI.'
                 }))
-        elif type == 'match_request_accepted':
-            match = Match.objects.create(self.scope['user'])
-            match.player2 = self.opponent
-            print(f"Match created with ID: {match.id}")
-            match.save()
         else:        
             await self.send(text_data=json.dumps({
                 'message': 'Notification'
             }))
 
-    async def send_notification(self, event):
+    async def receive_notification(self, event):
+        if event['notification']['type'] == 'match_request_accepted':
+            print(f"Notification type is: {event['notification']['type']} and player2 is:\
+               {event['notification']['sender']}")
+            await self.send(text_data=json.dumps(event['notification']))
         await self.send(text_data=json.dumps(event["notification"]))
 
     async def send_match_request(self, player2):
@@ -165,30 +169,38 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             type = 'match_request',
             message = f"{self.scope['user'].username} wants to play a morpion game with you.",
         )
-
+    
     async def find_match(self):
         user = self.scope['user']
         print(f"Finding match for user: {user.username}")
 
-        #who is online and not the current user
         online_users = await sync_to_async(
-            lambda: CustomUser.objects.filter(online_devices_count__gt=0).exclude(id=user.id)
+            lambda: list(CustomUser.objects.filter(online_devices_count__gt=0).exclude(id=user.id))
         )()
-        
-        count = await sync_to_async(online_users.count)()
-        print(f"Potential matches: {count}")
 
-        #who has the least amount of games with the current user
+        for online_user in online_users:
+            await sync_to_async(online_user.refresh_from_db)()
+
+        online_users = [user for user in online_users if user.online_devices_count > 0]
+
+        count = len(online_users)
+        print(f"Potential matches (online after refresh): {count}")
+
+        if count == 0:
+            return None
+
         potential_matches = await sync_to_async(
-            lambda: online_users.annotate(
+            lambda: CustomUser.objects.filter(id__in=[user.id for user in online_users]).annotate(
                 game_count=Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
-                            Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
+                        Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
             ).order_by('game_count')
         )()
 
-        if await sync_to_async(potential_matches.exists)():
-            print(f"Match found: {await sync_to_async(lambda: potential_matches.first().username)()}")
-            return await sync_to_async(potential_matches.first)()    
+        if await sync_to_async(lambda: potential_matches.exists())():
+            match_user = await sync_to_async(lambda: potential_matches.first())()
+            print(f"Match found: {match_user.username}")
+            return match_user
+
         return None
 
 class ChatConsumer(AsyncWebsocketConsumer):

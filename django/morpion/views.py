@@ -16,7 +16,6 @@ from accounts.utils import send_notification
 def render_game(request):
     return render(request, 'morpion.html')
 
-@csrf_exempt
 def save_score(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -40,13 +39,24 @@ def save_score(request):
     else:
         return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
 
-@csrf_exempt
 @login_required
 def create_match(request):
     new_match = Match.objects.create(player1=request.user)
     return JsonResponse({'match_id': new_match.id})
 
-@csrf_exempt
+@login_required
+def create_matchmacking_match(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        print(f"data: {data}")
+        player2_username = data.get('player2')
+        player2 = CustomUser.objects.get(username=player2_username)
+        print(f"Player 2: {player2_username}")
+        match = Match.objects.create(player1=request.user, player2=player2)
+        return JsonResponse({'match_id': match.id})
+    else:
+        return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
+
 def save_score_ai(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -70,7 +80,6 @@ def save_score_ai(request):
     else:
         return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
 
-@csrf_exempt
 @login_required
 def create_match_ai(request):
     new_match = MatchAI.objects.create(player1=request.user)

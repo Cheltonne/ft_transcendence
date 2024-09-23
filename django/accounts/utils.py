@@ -2,6 +2,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import Notification
 from PIL import Image
+import json
 
 def resize_image(image_file, max_width):
     image = Image.open(image_file)
@@ -56,11 +57,12 @@ def send_notification(sender, recipient, type, message):
     async_to_sync(channel_layer.group_send)(
         f'user_{recipient.id}',
         {
-            'type': 'send_notification',
+            'type': 'receive_notification',
             'notification': {
                 'id': notification.id,
                 'message': notification.message,
                 'sender': sender_data,
+                'recipient': recipient.username,
                 'sender_pfp': sender.profile_picture.url,
                 'created_at': notification.created_at.isoformat(),
                 'is_read': notification.is_read,

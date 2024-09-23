@@ -100,6 +100,7 @@ export class MorpionComponent extends HTMLElement {
         this.isAI = false;
         this.player1Name = 'Player 1';
         this.player2Name = 'Player 2';
+        this.matchmacking = false;
 
         this.startGame();
 
@@ -180,6 +181,12 @@ export class MorpionComponent extends HTMLElement {
 
     startMatchmaking() {
         notificationSocket.send(JSON.stringify({ type: 'matchmaking' }));
+        this.matchmacking = true;
+        notificationSocket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+
+           this.player2Name = data.sender.username;
+        }
     }
 
     // fonction pour gérer le clic sur une case
@@ -197,7 +204,7 @@ export class MorpionComponent extends HTMLElement {
                 this.swapTurns();
                 this.setBoardHoverClass();  
                 if (this.isAI && this.circleTurn) {
-                    setTimeout(() => this.makeAIMove(), 300);
+                    setTimeout(() => this.makeAIMove(), 1000); // delay of 1s(subject)
                 }
             }
         }
@@ -297,8 +304,7 @@ export class MorpionComponent extends HTMLElement {
         //////////////////////////////////////////////////////////////////////////  
 
 
-    // fonctions pour créer un match normal ou AI
-    async createMatch(user_score, alias_score) {
+    /*async createMatch(user_score, alias_score, player1, player2) {
         const isAuthenticated = await this.checkAuthenticated();
         if (!isAuthenticated) {
             console.error("User not authenticated. Cannot create match.");
@@ -306,18 +312,78 @@ export class MorpionComponent extends HTMLElement {
             return;
         }
         const csrftoken = getCookie('csrftoken');
+        
+        console.log("Creating match with player1:", player1);
+        console.log("Creating match with player2:", player2);
+        
         const response = await fetch('/morpion/create-match/', {
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+            'player1': this.player1Name,
+            'player2': this.player2Name
+        })
         });
         const data = await response.json();
-        console.log(data);
+        if (data.match_id) {
+            console.log("Match created with ID:", data.match_id);
+            this.showAlert("success", "Match created successfully!");
+            this.sendScoreToDjango(user_score, alias_score, data.match_id, false);
+        } else {
+            console.error("Error creating match");
+            this.showAlert("danger", "Failed to create match. Please try again.");
+        }
+    }*/
+
+    async createMatch(user_score, alias_score,) {
+        console.log("Creating match with player1:", user.username);
+        const isAuthenticated = await this.checkAuthenticated();
+        if (!isAuthenticated) {
+            console.error("User not authenticated. Cannot create match.");
+            this.showAlert("danger", "You need to be logged in to create a match.");
+            return;
+        }
+        
+        let response;
+        const csrftoken = getCookie('csrftoken');
+        
+        if (this.matchmacking)
+        {
+            response = await fetch('/morpion/create-matchmacking-game/',
+            {
+                method: 'POST',
+                headers: { 
+                    'X-CSRFToken': csrftoken, 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'player2': this.player2Name
+                }),
+                credentials: 'include'
+            });
+        }
+        else
+        {
+            response = await fetch('/morpion/create-match/', {
+                method: 'POST',
+                headers: { 
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+        }
+        if (!response.ok) {
+            throw new Error(`Match creation failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
         if (data.match_id) {
             console.log("Match created with ID:", data.match_id);
             showToast("Match created successfully!");
             this.sendScoreToDjango(user_score, alias_score, data.match_id, false);
         } else {
-            console.error("Error creating match");
+            console.log("Error creating match");
             showToast("Failed to create match. Please try again.");
         }
     }
@@ -326,7 +392,6 @@ export class MorpionComponent extends HTMLElement {
         const isAuthenticated = await this.checkAuthenticated();
         if (!isAuthenticated) {
             console.error("User not authenticated. Cannot create match.");
-            this.showAlert("danger", "You need to be logged in to create a match.");
             return;
         }
         const csrftoken = getCookie('csrftoken');
@@ -345,7 +410,7 @@ export class MorpionComponent extends HTMLElement {
         }
     }
     
-    // functions for sending the score to the Django server
+    // function to send the score to the Django server
     sendScoreToDjango(scoreX, scoreO, match_id, isAI) {
         const csrftoken = getCookie('csrftoken');
         const endpoint = isAI ? "/morpion/save-score-ai/" : "/morpion/save-score/";
