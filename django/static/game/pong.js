@@ -1061,7 +1061,7 @@ export async function sendScoreToDjango(score, score2, match_id) {
                 "X-CSRFToken": getCookie('csrftoken')
             },
             credentials: 'include',
-            body: JSON.stringify({ user_score: score, alias_score: score2, match_id: match_id }),
+            body: JSON.stringify({ player1_score: score, player2_score: score2, match_id: match_id }),
         });
 
         if (!response.ok) {
@@ -1241,13 +1241,13 @@ export function OnlineInvite(Player1, Player2, RoomName){
     else 
     {
         player2Name = Player2;
-    userInfo.username = Player1;
+        userInfo.username = Player1;
     }
+    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
     console.log(player2Name);
     console.log(userInfo.username);
     console.log(RoomName);
     Millenium = RoomName;
-    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     //OnlineChatButton();
