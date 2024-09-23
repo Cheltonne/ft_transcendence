@@ -410,7 +410,3 @@ def is_clicked(request):
 
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
-
-
-

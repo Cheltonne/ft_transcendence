@@ -1162,9 +1162,10 @@ function handleServerMessage(message) {
                 Ball = new FakeBall(vec2(canvas.width / 2, canvas.height / 2));
                 emetteur = false;
                 StartButtonRoom();
-                
             }
         }
+        else
+        $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
     } else if (message.message === 'The game has started!') {
         if (Paddle1 && Paddle2 && Ball) {
             allButtonOk = true;
@@ -1213,7 +1214,7 @@ export function createRoom() {
     const roomName = Millenium; // ICI CHANGE ICI
     myButton.style.display = 'none';
     LiveButton.style.display = 'none';
-    //$("#aliasContainer").text(" Waiting other player...");
+    $("#aliasContainer").text(" Waiting...");
     socket.send(JSON.stringify({
         'command': 'create_room',
         'room_name': roomName
