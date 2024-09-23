@@ -137,8 +137,8 @@ export class UserChatView extends HTMLElement {
             const messageInput = this.shadowRoot.querySelector('#messageInput');
             messageInput.value = `Pong Invite: ${roomCode}`; // Set the Pong invite message in the input
         
-            navigateTo('pong', 1);
-            OnlineInvite(this._interlocutor.username, this.currentUser.username, roomCode);
+            //navigateTo('pong', 1);
+            //OnlineInvite(this._interlocutor.username, this.currentUser.username, roomCode);
         
             this.sendMessage(); 
         });

@@ -281,6 +281,7 @@ function clear(){
     document.getElementById('onlineChoiceUI').style.display = 'hidden';
     EndTourneyButton.style.display = 'none';
     NextMatchButton.style.display = 'none';
+    emetteur = false;
     //forceDisconnect();
     //online
     keysPressed = {};
@@ -673,6 +674,7 @@ export function onoffGame(Button){
             //DestroyRoom();
             DestroyRoom(Millenium);
             forceDisconnect();
+            clear();
             //forceDisconnect();
         }
 }
