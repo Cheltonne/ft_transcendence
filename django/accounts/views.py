@@ -400,6 +400,7 @@ def is_clicked(request):
 
         # Update the 'is_clicked' field
         let.is_read = True
+        let.is_clicked = True
         let.save()
 
         print(f"Message {message_id} clicked and updated.")

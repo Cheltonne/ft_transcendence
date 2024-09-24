@@ -8,6 +8,7 @@ export class UserChatView extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.handleSendMessage = this.sendMessage.bind(this);
         const template = document.createElement('template');
+        this.activeInvitation = false;
         template.innerHTML = `
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
             integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
@@ -133,6 +134,14 @@ export class UserChatView extends HTMLElement {
         });
 
         OnlineButton.addEventListener('click', () => {
+            if (this.activeInvitation) {
+                showToast('An invitation is already active', 'warning');
+                return;
+            }
+
+            this.activeInvitation = true;
+            console.log(this.activeInvitation);
+
             const roomCode = generateRandomString(); // Generate the room code
             const messageInput = this.shadowRoot.querySelector('#messageInput');
             messageInput.value = `Pong Invite: ${roomCode}`; // Set the Pong invite message in the input
@@ -193,6 +202,8 @@ export class UserChatView extends HTMLElement {
 
         if (message.startsWith("Pong Invite: ")) {
             const roomCode = message.split("Pong Invite: ")[1];
+            this.activeInvitation = true;
+
 
     
             messageElement.innerHTML = `
@@ -221,6 +232,7 @@ export class UserChatView extends HTMLElement {
                     },
                 });
             }
+            this.activeInvitation = false;
             inviteBubble.style.cursor = 'default';
             inviteBubble.querySelector('.message-text').innerText = 'Pong invite clicked';
             navigateTo('pong', 1);
