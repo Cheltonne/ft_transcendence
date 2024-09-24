@@ -101,8 +101,10 @@ export class MorpionComponent extends HTMLElement {
         this.player1Name = 'Player 1';
         this.player2Name = 'Player 2';
         this.matchmacking = false;
+        this.boardDisabled = true;
 
         this.startGame();
+        this.showAlert("info", "Welcome to Morpion des familles! Choose a game to begin.");
 
         //////////////////////////////////////////////////////////////////////////
         //                                                                      //
@@ -115,9 +117,11 @@ export class MorpionComponent extends HTMLElement {
         this.restartButton.addEventListener('click', () => {
             if (!this.seriesOver) {
                 this.restartGame();
+                this.boardDisabled = false;
             } else {
                 this.winningMessageElement.classList.remove('show');
                 showToast('Game has ended. Press Start New Game.');
+                this.boardDisabled = true;
                 this.alertShown = true;
             }
         });
@@ -128,6 +132,7 @@ export class MorpionComponent extends HTMLElement {
             this.player2Name = 'Guest';
             this.updatePlayerNames();
             this.startGame();
+            this.boardDisabled = false;
             showToast('Starting new games');
         });
 
@@ -137,11 +142,13 @@ export class MorpionComponent extends HTMLElement {
             this.player2Name = "AI";
             this.updatePlayerNames();
             this.startGame();
+            this.boardDisabled = false;
             showToast('Starting new game with computer');
         });
 
         this.matchmakingButton.addEventListener('click', async () => {
             await this.startMatchmaking();
+            this.boardDisabled = false;
             showToast('Looking for a match...');
         });
     }
@@ -190,11 +197,9 @@ export class MorpionComponent extends HTMLElement {
         this.matchmacking = true;
         notificationSocket.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            console.log(data);
 
            this.player2Name = data.sender.username;
            this.player1Name = data.recipient;
-           console.log("players", this.player1Name, this.player2Name);
            this.updatePlayerNames();
 
         }
@@ -202,7 +207,7 @@ export class MorpionComponent extends HTMLElement {
 
     // fonction pour gérer le clic sur une case
     handleClick(e) {
-        if (this.seriesOver) return;
+        if (this.seriesOver || this.boardDisabled) return;
         const cell = e.target;
         const currentClass = this.circleTurn ? this.CIRCLE_CLASS : this.X_CLASS;
         if (!cell.classList.contains(this.X_CLASS) && !cell.classList.contains(this.CIRCLE_CLASS)) {
@@ -314,37 +319,6 @@ export class MorpionComponent extends HTMLElement {
         //                                                                      //
         //////////////////////////////////////////////////////////////////////////  
 
-
-    /*async createMatch(user_score, alias_score, player1, player2) {
-        const isAuthenticated = await this.checkAuthenticated();
-        if (!isAuthenticated) {
-            console.error("User not authenticated. Cannot create match.");
-            this.showAlert("danger", "You need to be logged in to create a match.");
-            return;
-        }
-        const csrftoken = getCookie('csrftoken');
-        
-        console.log("Creating match with player1:", player1);
-        console.log("Creating match with player2:", player2);
-        
-        const response = await fetch('/morpion/create-match/', {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-            'player1': this.player1Name,
-            'player2': this.player2Name
-        })
-        });
-        const data = await response.json();
-        if (data.match_id) {
-            console.log("Match created with ID:", data.match_id);
-            this.showAlert("success", "Match created successfully!");
-            this.sendScoreToDjango(user_score, alias_score, data.match_id, false);
-        } else {
-            console.error("Error creating match");
-            this.showAlert("danger", "Failed to create match. Please try again.");
-        }
-    }*/
 
     async createMatch(user_score, alias_score,) {
         console.log("Creating match with player1:", user.username);

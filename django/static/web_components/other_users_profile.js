@@ -98,7 +98,7 @@ export class OtherUserProfileCard extends HTMLElement {
         if (matchType === 'pong' && userInfo.user_matches) {
             let i = 0;
             userInfo.user_matches.forEach(match => {
-                console.log(match)
+                
                 const matchDate = match.timestamp ? new Date(match.timestamp) : null;
                 const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
@@ -122,17 +122,31 @@ export class OtherUserProfileCard extends HTMLElement {
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
                 const matchDate = match.timestamp ? new Date(match.timestamp) : null;
                 const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                const player2Username = match.player2__username ? match.player2__username : 'Guest';
+                
+                let winnerText;
+                if (match.player1_score !== null && match.player2_score !== null) {
+                    if (match.player1_score > match.player2_score) {
+                        winnerText = match.player1__username;
+                    } else if (match.player2_score > match.player1_score) {
+                        winnerText = player2Username;
+                    } else {
+                        winnerText = 'No winner';
+                    }
+                } else {
+                    winnerText = 'No winner';
+                }
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Morpion Match ${++i}</h1>
                     <b>Player 1</b>
                     <p>${match.player1__username}</p>
                     <b>Player 2</b>
-                    <p>${match.player2__username}</p>
+                    <p>${player2Username}</p>
                     <b>Winner</b>
-                    <p>${match.winner__username}</p>
+                    <p>${winnerText}</p>
                     <b>Score</b>
-                    <p>${match.player1__username}: ${match.player1_score} - ${match.player2__username}: ${match.player2_score}</p>
+                    <p>${match.player1__username}: ${match.player1_score} - ${player2Username}: ${match.player2_score}</p>
                     <b>Played at</b>
                     <p>${formattedDate}</p>
                 `;
@@ -143,17 +157,31 @@ export class OtherUserProfileCard extends HTMLElement {
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
                 const matchDate = match.timestamp ? new Date(match.timestamp) : null;
                 const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                let winnerText;
+                if (match.player1_score !== null && match.player2_score !== null) {
+                    if (match.player1_score > match.player2_score) {
+                        winnerText = match.player1__username;
+                    } else if (match.player2_score > match.player1_score) {
+                        winnerText = player2Username;
+                    } else {
+                        winnerText = 'No winner';
+                    }
+                } else {
+                    winnerText = 'No winner';
+                }
+
+
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Morpion Ai Match ${++y}</h1>
-                    <b>Player</b>
+                    <b>Player 1</b>
                     <p>${match.player1__username}</p>
-                    <b>AI</b>
-                    <p>CPU</p>
+                    <b>Player 2</b>
+                    <p>AI</p>
                     <b>Winner</b>
-                    <p>${match.winner__username ? match.winner__username : 'AI'}</p>
+                    <p>${winnerText}</p>
                     <b>Score</b>
-                    <p>${match.player1__username}: ${match.player1_score} - CPU: ${match.ai_score}</p>
+                    <p>${match.player1__username}: ${match.player1_score} - AI: ${match.ai_score}</p>
                     <b>Played at</b>
                     <p>${formattedDate}</p>
                 `;
