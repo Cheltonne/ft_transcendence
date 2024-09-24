@@ -3,7 +3,7 @@ import {
     user
 } from '../scripts.js'
 
-import { getCookie, notificationSocket, showToast} from "../utils.js";
+import { getCookie, notificationSocket, showToast, getUserFromStorage} from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
     constructor() {
@@ -124,12 +124,18 @@ export class MorpionComponent extends HTMLElement {
 
         this.newGameButton.addEventListener('click', () => {
             this.isAI = false;
+            this.player1Name = getUserFromStorage().username;
+            this.player2Name = 'Guest';
+            this.updatePlayerNames();
             this.startGame();
             showToast('Starting new games');
         });
 
         this.newGameWithComputerButton.addEventListener('click', () => {
             this.isAI = true;
+            this.player1Name = getUserFromStorage().username;
+            this.player2Name = "AI";
+            this.updatePlayerNames();
             this.startGame();
             showToast('Starting new game with computer');
         });
@@ -184,8 +190,13 @@ export class MorpionComponent extends HTMLElement {
         this.matchmacking = true;
         notificationSocket.onmessage = (e) => {
             const data = JSON.parse(e.data);
+            console.log(data);
 
            this.player2Name = data.sender.username;
+           this.player1Name = data.recipient;
+           console.log("players", this.player1Name, this.player2Name);
+           this.updatePlayerNames();
+
         }
     }
 

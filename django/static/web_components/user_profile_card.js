@@ -118,17 +118,18 @@ export class UserProfileCard extends HTMLElement {
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
                 const matchDate = match.timestamp ? new Date(match.timestamp) : null;
                 const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
+                const player2Username = match.player2__username ? match.player2__username : 'Guest';
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Morpion Match ${++i}</h1>
                     <b>Player 1</b>
                     <p>${match.player1__username}</p>
                     <b>Player 2</b>
-                    <p>${match.player2__username}</p>
+                    <p>${player2Username}</p>
                     <b>Winner</b>
                     <p>${match.winner__username}</p>
                     <b>Score</b>
-                    <p>${match.player1__username}: ${match.player1_score} - ${match.player2__username}: ${match.player2_score}</p>
+                    <p>${match.player1__username}: ${match.player1_score} - ${player2Username}: ${match.player2_score}</p>
                     <b>Played at</b>
                     <p>${formattedDate}</p>
                 `;
@@ -142,14 +143,14 @@ export class UserProfileCard extends HTMLElement {
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Morpion Ai Match ${++y}</h1>
-                    <b>Player</b>
+                    <b>Player 1</b>
                     <p>${match.player1__username}</p>
-                    <b>AI</b>
-                    <p>CPU</p>
+                    <b>Player 2</b>
+                    <p>AI</p>
                     <b>Winner</b>
                     <p>${match.winner__username ? match.winner__username : 'AI'}</p>
                     <b>Score</b>
-                    <p>${match.player1__username}: ${match.player1_score} - CPU: ${match.ai_score}</p>
+                    <p>${match.player1__username}: ${match.player1_score} - AI: ${match.ai_score}</p>
                     <b>Played at</b>
                     <p>${formattedDate}</p>
                 `;
