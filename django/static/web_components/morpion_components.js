@@ -198,10 +198,18 @@ export class MorpionComponent extends HTMLElement {
         this.matchmacking = true;
         notificationSocket.onmessage = (e) => {
             const data = JSON.parse(e.data);
+            if (data.type === 'no_match_found') {
+                this.showAlert('warning', data.message);
+                this.isAI = false;
+                this.player2Name = 'Guest';
+                this.boardDisabled = true;
 
-           this.player2Name = data.sender.username;
-           this.player1Name = data.recipient;
-           this.updatePlayerNames();
+            }else{
+
+                this.player2Name = data.sender.username;
+                this.player1Name = data.recipient;
+                this.updatePlayerNames();
+            }
 
         }
     }
@@ -438,8 +446,8 @@ export class MorpionComponent extends HTMLElement {
         this.gamesPlayed = 0;
         this.scoreX = 0;
         this.scoreO = 0;
-        this.scorePlayer1.textContent = `${this.player1Name}: 0`;
-        this.scorePlayer2.textContent = `${this.player2Name}: 0`;
+        this.scorePlayer1.textContent = `${'Player 1'}`;
+        this.scorePlayer2.textContent = `${'Player 2'}`;
         this.restartGame();
         this.seriesOver = false;
         this.alertShown = false;

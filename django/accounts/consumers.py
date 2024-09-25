@@ -158,13 +158,14 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             else:
                 await self.send(text_data=json.dumps({
                     'type': 'no_match_found',
-                    'message': 'No players available. Starting game with AI.'
+                    'message': 'No players available. You can start a game with AI if you want.'
                 }))
         else:        
             await self.send(text_data=json.dumps({
                 'message': 'Notification'
             }))
 
+    
     async def receive_notification(self, event):
         if event['notification']['type'] == 'match_request_accepted':
             print(f"Notification type is: {event['notification']['type']} and player2 is:\
@@ -172,6 +173,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps(event['notification']))
         await self.send(text_data=json.dumps(event["notification"]))
 
+    
     async def send_match_request(self, player2):
         print(f"Sending match request from {self.scope['user'].username} to {player2.username}.")
         await sync_to_async(send_notification)(

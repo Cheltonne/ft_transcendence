@@ -155,11 +155,11 @@ export class UserProfileCard extends HTMLElement {
                 const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                 
                 let winnerText;
-                if (match.player1_score !== null && match.player2_score !== null) {
-                    if (match.player1_score > match.player2_score) {
+                if (match.player1_score !== null && match.ai_score !== null) {
+                    if (match.player1_score > match.ai_score) {
                         winnerText = match.player1__username;
-                    } else if (match.player2_score > match.player1_score) {
-                        winnerText = player2Username;
+                    } else if (match.ai_score > match.player1_score) {
+                        winnerText = 'AI';
                     } else {
                         winnerText = 'No winner';
                     }
