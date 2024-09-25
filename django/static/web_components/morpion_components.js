@@ -147,6 +147,7 @@ export class MorpionComponent extends HTMLElement {
         });
 
         this.matchmakingButton.addEventListener('click', async () => {
+            this.resetSeries();                                                            
             await this.startMatchmaking();
             this.boardDisabled = false;
             showToast('Looking for a match...');

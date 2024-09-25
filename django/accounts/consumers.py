@@ -13,7 +13,7 @@ import asyncio
 
 User = get_user_model()
 
-PING_TIMEOUT = 5
+PING_TIMEOUT = 3
 
 class OnlineStatusConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -42,7 +42,7 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         self.user = self.scope['user']
 
         if self.user.is_authenticated:
-            await self.mark_user_offline()
+            await self.reset_online_status()
 
             await self.channel_layer.group_send(
                 self.room_group_name,
@@ -88,7 +88,7 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         self.user.refresh_from_db()
         self.user.online_devices_count += 1
         self.user.save()
-        print(f"User {self.user.username} marked online, online count: {self.user.online_devices_count}")
+    
 
     @sync_to_async
     def mark_user_offline(self):
@@ -97,8 +97,14 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         if self.user.online_devices_count > 0:
             self.user.online_devices_count -= 1
             self.user.save()
-            print(f"User {self.user.username} marked offline, online count: {self.user.online_devices_count}")
-
+    
+    @sync_to_async
+    def reset_online_status(self):
+        """Set online_devices_count to 0 when the user logs out or disconnects."""
+        self.user.refresh_from_db()
+        self.user.online_devices_count = 0
+        self.user.save()
+            
     @sync_to_async
     def is_user_online(self, username):
         try:
@@ -205,90 +211,25 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             match_user = await sync_to_async(lambda: potential_matches.first())()
             print(f"Match found: {match_user.username}")
             return match_user
-
-
-    """async def find_match(self):
-        Ping users and return the first one who responds with a pong.
-        user = self.scope['user']
-        print(f"Finding match for user: {user.username}")
-
-        # Step 1: Find online users excluding the current user
-        online_users = await sync_to_async(
-            lambda: list(CustomUser.objects.filter(online_devices_count__gt=0).exclude(id=user.id))
-        )()
-
-        # Refresh users from the database to ensure they are still online
-        for online_user in online_users:
-            await sync_to_async(online_user.refresh_from_db)()
-
-        # Filter out users who are no longer online after refresh
-        online_users = [user for user in online_users if user.online_devices_count > 0]
-
-        print(f"Potential matches (online after refresh): {len(online_users)}")
-
-        if not online_users:
-            print("No online users found.")
-            return None
-
-        # Step 2: Ping each online user and return the first one who responds with a pong
-        for potential_match in online_users:
-            is_online = await self.ping_user(potential_match)
-            if is_online:
-                print(f"Match found: {potential_match.username}")
-                return potential_match
-
-        print("No responsive match found.")
         return None
 
-    async def ping_user(self, user):
-        Ping the user and wait for a pong response within a timeout period.
-        channel_layer = get_channel_layer()
-        await channel_layer.group_send(
-            f'user_{user.id}',
-            {
-                'type': 'ping',
-                'message': 'ping',
-            }
+class GameConsumer(AsyncWebsocketConsumer):
+    async def send_ping(self, player):
+        print(f"Sending ping to {player.username}")
+        await sync_to_async(send_notification)(
+            sender=self.scope['user'],
+            recipient=player,
+            type='ping',
+            message='Ping: Are you available for a match?'
         )
 
-        try:
-            # Step 3: Wait for the pong response with a timeout
-            pong = await asyncio.wait_for(self.wait_for_pong(user), timeout=PING_TIMEOUT)
-            if pong:
-                print(f"Received pong from {user.username}")
-                return True
-        except asyncio.TimeoutError:
-            print(f"Timeout waiting for pong from {user.username}")
-            return False
+    async def receive_pong(self, event):
+        if event['notification']['type'] == 'pong':
+            sender = event['notification']['sender']
+            print(f"Pong received from {sender}")
+            # Notify the matchmaking process that this player responded
+            await self.match_found.set()  # Set the event indicating that match is found
 
-    async def wait_for_pong(self, user):
-        Wait for a pong message from the user.
-        pong_future = asyncio.Future()
-
-        # Create a method to handle the pong
-        def pong_handler(event):
-            if event['type'] == 'pong' and event['user_id'] == user.id:
-                pong_future.set_result(True)
-
-        # Register the pong handler for WebSocket messages
-        self.scope['pong_handler'] = pong_handler
-
-        # Wait for the pong response
-        return await pong_future
-    
-    # Ping handler: Handle the 'ping' message type and respond with 'pong'
-    async def ping(self, event):
-        user = self.scope['user']
-        # Send pong message back to the group
-        await self.channel_layer.group_send(
-            f"user_{user.id}",
-            {
-                'type': 'pong',
-                'user_id': user.id,
-                'message': 'pong'
-            }
-        )"""    
-  
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
