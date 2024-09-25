@@ -46,7 +46,7 @@ def send_notification(sender, recipient, type, message):
         notification = Notification.objects.create(
             type=type, 
             sender=sender, 
-            recipient=recipient, 
+            recipient=recipient,
             message=message,
             is_read=True)
     sender_data = {
@@ -84,3 +84,14 @@ def request_already_sent(sender, recipient):
 
 def is_already_friends_with_recipient(sender, recipient):
     return recipient in sender.friends.all()
+
+def match_request_already_sent(sender, recipient):
+    try:
+        notification = Notification.objects.get(
+            recipient_id=recipient.id, 
+            sender_id=sender.id, 
+            type='match_request', 
+            is_read=False)
+    except Notification.DoesNotExist:
+        return False
+    return True

@@ -8,8 +8,8 @@ from django.db.models import Count
 from accounts.utils import send_notification
 from django.db import models
 from channels.layers import get_channel_layer
+from .utils import match_request_already_sent
 import asyncio
-
 
 User = get_user_model()
 
@@ -41,6 +41,7 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         self.room_group_name = 'users_online'
         self.user = self.scope['user']
 
+        print(f"{self.user} closed its connection to OnlineStatus Websocket")
         if self.user.is_authenticated:
             await self.reset_online_status()
             await self.mark_user_offline()
@@ -154,7 +155,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         
         if type == 'matchmaking':
             self.opponent = await self.find_match()
-            if self.opponent:
+            if self.opponent and not await sync_to_async(match_request_already_sent)(self.user, self.opponent):
                 await self.send_match_request(self.opponent)
             else:
                 await self.send(text_data=json.dumps({
@@ -168,12 +169,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     
     async def receive_notification(self, event):
-        if event['notification']['type'] == 'match_request_accepted':
-            print(f"Notification type is: {event['notification']['type']} and player2 is:\
-               {event['notification']['sender']}")
-            await self.send(text_data=json.dumps(event['notification']))
         await self.send(text_data=json.dumps(event["notification"]))
-
     
     async def send_match_request(self, player2):
         print(f"Sending match request from {self.scope['user'].username} to {player2.username}.")
@@ -189,13 +185,13 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         print(f"Finding match for user: {user.username}")
 
         online_users = await sync_to_async(
-            lambda: list(CustomUser.objects.filter(matchmaking_online_count__gt=0).exclude(id=user.id))
+            lambda: list(CustomUser.objects.filter(online_devices_count__gt=0).exclude(id=user.id))
         )()
 
         for online_user in online_users:
             await sync_to_async(online_user.refresh_from_db)()
 
-        online_users = [user for user in online_users if user.matchmaking_online_count > 0]
+        online_users = [user for user in online_users if user.online_devices_count > 0]
 
         count = len(online_users)
         print(f"Potential matches (online after refresh): {count}")
@@ -205,8 +201,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
         potential_matches = await sync_to_async(
             lambda: CustomUser.objects.filter(id__in=[user.id for user in online_users]).annotate(
-                game_count=Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
-                            Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
+                game_count = Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
+                             Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
             ).order_by('game_count')
         )()
 

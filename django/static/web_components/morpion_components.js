@@ -3,7 +3,7 @@ import {
     user
 } from '../scripts.js'
 
-import { getCookie, notificationSocket, showToast, getUserFromStorage} from "../utils.js";
+import { getCookie, notificationSocket, showToast, getUserFromStorage } from "../utils.js";
 
 export class MorpionComponent extends HTMLElement {
     constructor() {
@@ -208,16 +208,18 @@ export class MorpionComponent extends HTMLElement {
                 this.boardDisabled = true;
                 this.player2Name = 'Guest';
                 this.boardDisabled = true;
-
-            }else{
-
+            }
+            else {
+                if (data.message.includes("declined"))
+                    showToast(data.message, "error", 8000)
+                else
+                    showToast(data.message, "succ", 8000)
                 this.boardDisabled = false;
                 this.isAI = false;
                 this.player2Name = data.sender.username;
                 this.player1Name = data.recipient;
                 this.updatePlayerNames();
             }
-
         }
     }
 

@@ -1,3 +1,4 @@
+import json
 from .models import CustomUser, Notification, Message
 from django.http import JsonResponse
 from django.contrib.auth import logout
@@ -217,13 +218,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self): #this will only return unread notifications for performance
         user = self.request.user
         return Notification.objects.filter(recipient=user, \
-        is_read=False).order_by('-created_at')
+        is_read=False).exclude(\
+            type__in=['match_request_accepted', 'match_request_declined']).order_by('-created_at')
 
     @action(detail=False, methods=['get'], url_path='unread-count')
     def unread_count(self, request):
         user = self.request.user
         unread_count = Notification.objects.filter(recipient=user, \
-        is_read=False).count()
+        is_read=False).exclude(type__in=['match_request_accepted', 'match_request_declined']).count()
         return Response({'unread_count': unread_count})
 
 @api_view(['PUT'])
