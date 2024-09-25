@@ -43,6 +43,7 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
 
         if self.user.is_authenticated:
             await self.reset_online_status()
+            await self.mark_user_offline()
 
             await self.channel_layer.group_send(
                 self.room_group_name,
@@ -87,6 +88,7 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         # Fetch the latest user instance from the database before updating
         self.user.refresh_from_db()
         self.user.online_devices_count += 1
+        self.user.matchmaking_online_count += 1
         self.user.save()
     
 
@@ -102,7 +104,7 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
     def reset_online_status(self):
         """Set online_devices_count to 0 when the user logs out or disconnects."""
         self.user.refresh_from_db()
-        self.user.online_devices_count = 0
+        self.user.matchmaking_online_count = 0
         self.user.save()
             
     @sync_to_async

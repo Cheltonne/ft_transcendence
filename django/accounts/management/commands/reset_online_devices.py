@@ -8,4 +8,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         User.objects.update(online_devices_count=0)
+        User.objects.update(matchmaking_online_count=0)
         self.stdout.write(self.style.SUCCESS('Successfully reset online devices count for all users.'))
