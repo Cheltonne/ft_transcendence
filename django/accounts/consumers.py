@@ -102,7 +102,6 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
     
     @sync_to_async
     def reset_online_status(self):
-        """Set online_devices_count to 0 when the user logs out or disconnects."""
         self.user.refresh_from_db()
         self.user.matchmaking_online_count = 0
         self.user.save()
@@ -189,14 +188,17 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         user = self.scope['user']
         print(f"Finding match for user: {user.username}")
 
+        # Fetch users who are online for matchmaking (filtering based on matchmaking_online_count > 0)
         online_users = await sync_to_async(
-            lambda: list(CustomUser.objects.filter(online_devices_count__gt=0).exclude(id=user.id))
+            lambda: list(CustomUser.objects.filter(matchmaking_online_count__gt=0).exclude(id=user.id))
         )()
 
+        # Refresh the online users from the database
         for online_user in online_users:
             await sync_to_async(online_user.refresh_from_db)()
 
-        online_users = [user for user in online_users if user.online_devices_count > 0]
+        # Filter out users whose matchmaking_online_count might have changed after refresh
+        online_users = [user for user in online_users if user.matchmaking_online_count > 0]
 
         count = len(online_users)
         print(f"Potential matches (online after refresh): {count}")
@@ -204,36 +206,21 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         if count == 0:
             return None
 
+        # Annotate and order the potential matches based on the number of previous matches with this user
         potential_matches = await sync_to_async(
             lambda: CustomUser.objects.filter(id__in=[user.id for user in online_users]).annotate(
                 game_count=Count('morpion_matches_as1', filter=models.Q(morpion_matches_as1__player2=user)) +
-                        Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
+                            Count('morpion_matches_as2', filter=models.Q(morpion_matches_as2__player1=user))
             ).order_by('game_count')
         )()
 
+        # Return the first match if any exist
         if await sync_to_async(lambda: potential_matches.exists())():
             match_user = await sync_to_async(lambda: potential_matches.first())()
             print(f"Match found: {match_user.username}")
             return match_user
+        
         return None
-
-class GameConsumer(AsyncWebsocketConsumer):
-    async def send_ping(self, player):
-        print(f"Sending ping to {player.username}")
-        await sync_to_async(send_notification)(
-            sender=self.scope['user'],
-            recipient=player,
-            type='ping',
-            message='Ping: Are you available for a match?'
-        )
-
-    async def receive_pong(self, event):
-        if event['notification']['type'] == 'pong':
-            sender = event['notification']['sender']
-            print(f"Pong received from {sender}")
-            # Notify the matchmaking process that this player responded
-            await self.match_found.set()  # Set the event indicating that match is found
-
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):

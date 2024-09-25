@@ -123,6 +123,7 @@ export class MorpionComponent extends HTMLElement {
                 showToast('Game has ended. Press Start New Game.');
                 this.boardDisabled = true;
                 this.alertShown = true;
+                this.resetSeries();
             }
         });
 
@@ -141,15 +142,18 @@ export class MorpionComponent extends HTMLElement {
             this.player1Name = getUserFromStorage().username;
             this.player2Name = "AI";
             this.updatePlayerNames();
-            this.startGame();
+            this.resetSeries();
             this.boardDisabled = false;
+            this.startGame();
             showToast('Starting new game with computer');
         });
 
         this.matchmakingButton.addEventListener('click', async () => {
-            this.resetSeries();                                                            
+            this.resetSeries();
+            this.player1Name = 'Player 1';
+            this.player2Name = 'Player 2';
+            this.boardDisabled = false;                                                          
             await this.startMatchmaking();
-            this.boardDisabled = false;
             showToast('Looking for a match...');
         });
     }
@@ -201,11 +205,14 @@ export class MorpionComponent extends HTMLElement {
             if (data.type === 'no_match_found') {
                 this.showAlert('warning', data.message);
                 this.isAI = false;
+                this.boardDisabled = true;
                 this.player2Name = 'Guest';
                 this.boardDisabled = true;
 
             }else{
 
+                this.boardDisabled = false;
+                this.isAI = false;
                 this.player2Name = data.sender.username;
                 this.player1Name = data.recipient;
                 this.updatePlayerNames();
@@ -446,8 +453,8 @@ export class MorpionComponent extends HTMLElement {
         this.gamesPlayed = 0;
         this.scoreX = 0;
         this.scoreO = 0;
-        this.scorePlayer1.textContent = `${'Player 1'}`;
-        this.scorePlayer2.textContent = `${'Player 2'}`;
+        this.scorePlayer1.textContent = `Player 1`;
+        this.scorePlayer2.textContent = `Player 2`;
         this.restartGame();
         this.seriesOver = false;
         this.alertShown = false;
