@@ -202,7 +202,9 @@ export class MorpionComponent extends HTMLElement {
         this.matchmacking = true;
         notificationSocket.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            if (data.type === 'no_match_found') {
+            if (data.message.includes("declined"))
+                showToast(data.message, "error", 8000)
+            if (data.type === 'no_match_found' || data.message.includes("declined")) {
                 this.showAlert('warning', data.message);
                 this.isAI = false;
                 this.boardDisabled = true;
@@ -210,10 +212,7 @@ export class MorpionComponent extends HTMLElement {
                 this.boardDisabled = true;
             }
             else {
-                if (data.message.includes("declined"))
-                    showToast(data.message, "error", 8000)
-                else
-                    showToast(data.message, "succ", 8000)
+                showToast(data.message, "succ", 8000)
                 this.boardDisabled = false;
                 this.isAI = false;
                 this.player2Name = data.sender.username;
