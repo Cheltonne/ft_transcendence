@@ -189,8 +189,8 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     def retrieve_user(self, request, pk=None):
         user = self.get_object()
         serializer = self.get_serializer(user)
-        user_matches = list(user.matches.all().order_by('id').values
-                ('alias', 'user_score', 'alias_score', 'winner__username', 'timestamp'))
+        user_matches = list(user.matches_as2.all().order_by('id').values
+                ('player2', 'player1_score', 'player2_score', 'winner__username', 'timestamp', 'player2__username', 'player1__username'))
         user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values
                 ('player1__username', 'player2__username', 'player1_score', 'player2_score',
                   'winner__username', 'timestamp'))

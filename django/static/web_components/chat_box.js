@@ -34,7 +34,7 @@ export class UserChatView extends HTMLElement {
                         <button class="dropbtn">⋮</button>
                         <div id="dropdownMenu" class="dropdown-content" style="color: black; cursor: pointer;">
                             <a id="goToProfile" class="btn btn-primary">Go to User Profile</a>
-                            <a id="Online">Online</a>
+                            <a id="Online" class="btn btn-primary">Online</a>
                             <a id="blockUser" class="btn btn-danger">Block User</a>
                             <a id="unblockUser" class="btn btn-primary">Unblock User</a>
                         </div>
@@ -145,7 +145,7 @@ export class UserChatView extends HTMLElement {
 
         OnlineButton.addEventListener('click', () => {
             if (this.activeInvitation) {
-                showToast('An invitation is already active', 'warning');
+                showToast('An invitation is already active', 'error');
                 return;
             }
 

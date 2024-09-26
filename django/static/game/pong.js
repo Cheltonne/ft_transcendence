@@ -159,7 +159,7 @@ function ClearFirstButton(){
     LiveButton.style.display = 'none';
 }
 
-function updateNextMatchButton() {
+async function updateNextMatchButton() {
 let array = findMatchWithNullWinner(matches);
 
     if (array !== null) {

@@ -42,7 +42,7 @@ def broadcast_tournament(request, p1, p2):
 		admin = CustomUser.objects.get(id=2)
 		for user in active_users:
 			send_notification(admin, user, 'tournament_notice',
-					  f"Tournament broadcast: {p1} is about to face {p2} in the ultimate tournament of DEATH try head!!!!!")
+					  f"Tournament broadcast: {p1} is about to face {p2} in tournament mode !!!!!")
 		print(f"received {p1} and {p2}")
 		return JsonResponse({'message': 'Try succ HEAD'}, status=201)
 	return JsonResponse({'message': 'Liar aHEAD'}, status=400)
