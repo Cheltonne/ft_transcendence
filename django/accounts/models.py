@@ -13,11 +13,11 @@ class CustomUser(AbstractUser):
 	def __str__(self):
 		return self.username
 		
-	def block_user(self, user):
-		self.blocked_users.add(user)
+	def block_user(self, user_to_block):
+		self.blocked_users.add(user_to_block)
 
-	def unblock_user(self, user):
-		self.blocked_users.remove(user)
+	def unblock_user(self, user_to_unblock):
+		self.blocked_users.remove(user_to_unblock)
 
 class Notification(models.Model):
 	type = models.TextField()

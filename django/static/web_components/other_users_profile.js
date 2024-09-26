@@ -1,56 +1,83 @@
 import { getUserInfo, user } from '../scripts.js'
-import { navigateTo } from '../views.js'
+import { navigateTo } from '../navigation.js'
 import { UserObserver } from '../observer.js';
 import { getUserFromStorage, getCookie, showToast } from '../utils.js';
 
 export class OtherUserProfileCard extends HTMLElement {
     constructor() {
         super();
+        this.attachShadow({ mode: 'open' });
+        this.user = null;
+        this.pfpUrl = null;
+    }
+
+    async connectedCallback() {
         const template = document.createElement('template')
+        await fetch(`accounts/users/${this.getAttribute('user-id')}/profile/`)
+            .then(response => response.json())
+            .then(data => {
+                this.user = data;
+            })
+        this.pfpUrl = this.user.profile_picture;
+        if (this.pfpUrl.includes('intra.42.fr'))
+            this.pfpUrl = this.pfpUrl.replace('/media/https%3A/', 'https://');
+        const regex = /http:\/\/made-[^\/]+\/?/;
+        if (this.pfpUrl.match(regex))
+            this.pfpUrl = this.pfpUrl.replace(regex, '');
+        this.pfpUrl = this.pfpUrl.replace("http://localhost/", '');
         template.innerHTML = `
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
         <div class="user-info-card" id="user-info-card">
-            <div class='profile-picture'></div>
-            <div class="username"></div>
-            <div class="wins"></div>
-            <div class="losses"></div>
-            <button class="btn btn-light view-matches-link" id="view-pong-matches">
-                See Pong Match History
-            </button>
-            <button class="btn btn-light view-matches-link" id="view-morpion-matches">
-                See Morpion Match History
-            </button>
+            <img id="pfp" src='${this.pfpUrl}'>
+            <h1 id="username">${this.user.username}</h1>
+            <div class='container text-center'>
+                <div class="stats">
+                    Pong stats :
+                    ${this.user.wins} win(s) |   
+                    ${this.user.losses} loss(es)
+                </div>
+            </div>
+            <div class='container text-center' style="margin-top:1rem;">
+                <div>
+                    Game History:
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm text-center">
+                    <img src="media/pong_icon.png"
+                    title="Pong matches" class="icon view-matches-link"
+                    id="view-pong-matches">
+                </div>
+                <div class="col-sm text-center">
+                    <img src="media/tictactoe_icon.png"
+                    title="Tic Tac Toe matches" class="icon view-matches-link"
+                    id="view-morpion-matches">
+                </div>
+            </div>
             <button class="btn btn-danger" id="blockUserButton">Block User</button>
             <button class="btn btn-secondary" id="unblockUserButton">Unblock User</button>
         </div>
         <div class="match-history-cards"></div>
         <div class="match-history-veil"></div>
         `;
-        this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(template.content.cloneNode(true));
-        this.userId = null;
-        this.user = null;
-        this.username = this.shadowRoot.querySelector(".username");
-        this.pfp = this.shadowRoot.querySelector(".profile-picture");
-    }
-
-    connectedCallback() {
-        this.userId = this.getAttribute('user-id');
-        this.loadUserProfile();
-        this.addEventListeners();
         const styleLink = document.createElement('link');
 
         styleLink.setAttribute('rel', 'stylesheet');
         styleLink.setAttribute('href', 'static/css/user_profile.css');
         this.shadowRoot.appendChild(styleLink);
+        this.userId = this.getAttribute('user-id');
+        this.addEventListeners();
     }
 
     addEventListeners() {
         this.shadowRoot.querySelector('#blockUserButton').addEventListener('click', () => this.blockUser());
         this.shadowRoot.querySelector('#unblockUserButton').addEventListener('click', () => this.unblockUser());
         this.shadowRoot.addEventListener('click', (event) => {
-            if (!event.target.closest('.match-history-card') && 
-            this.shadowRoot.querySelector('.match-history-cards').classList.contains('active')) {
+            if (!event.target.closest('.match-history-card') &&
+                this.shadowRoot.querySelector('.match-history-cards').classList.contains('active')) {
                 this.shadowRoot.querySelector('.match-history-cards').classList.remove('active');
                 this.shadowRoot.querySelector('.match-history-veil').classList.remove('active');
             } else if (event.target.classList.contains('view-matches-link')) {
@@ -62,29 +89,6 @@ export class OtherUserProfileCard extends HTMLElement {
             }
         });
     }
-
-   async loadUserProfile() {
-        try {
-            const response = await fetch(`/accounts/users/${this.userId}/user-info/`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.user = data;
-                this.username.innerHTML = `<h1>${data.username}</h1>`;
-                this.pfp.innerHTML = `<img src="${data.profile_picture.replace('http://localhost/', '')}"></img>`;
-            } else 
-                showToast('Failed to load user profile', 'error');
-        } catch (error) {
-            console.error('Error loading user profile:', error);
-            showToast('Error loading user profile', 'error');
-        }
-    } 
 
     renderUserProfile(userInfo, matchType = 'pong') {
         console.log("renderUserProfile() called.");
@@ -166,51 +170,51 @@ export class OtherUserProfileCard extends HTMLElement {
     }
 
     async blockUser() {
-        const username = this.shadowRoot.querySelector('.username').textContent.trim();
-        try {
-            const response = await fetch(`/accounts/users/${this.userId}/block-user/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`,
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ username })
-            });
-
-            if (response.ok) {
-                showToast(`${username} has been blocked.`, 'success');
-            } else {
-                showToast('Failed to block user', 'error');
-            }
-        } catch (error) {
-            console.error('Error blocking user:', error);
-            showToast('Error blocking user', 'error');
-        }
+        const username = this.shadowRoot.querySelector('#username').textContent.trim();
+        await fetch(`/accounts/users/${this.user.id}/block-user/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('token')}`,
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ username })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message)
+                    showToast(data.message, 'success');
+                else
+                    showToast(data.error, 'error');
+            })
+            .catch(error => {
+                console.error('Error blocking user:', error);
+                showToast('Error blocking user', 'error');
+            })
     }
 
     async unblockUser() {
-        const username = this.shadowRoot.querySelector('.username').textContent.trim();
-        try {
-            const response = await fetch(`/accounts/users/${this.userId}/unblock-user/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`,
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ username })
-            });
-
-            if (response.ok) {
-                showToast(`${username} has been unblocked.`, 'success');
-            } else {
-                showToast('Failed to unblock user', 'error');
-            }
-        } catch (error) {
-            console.error('Error unblocking user:', error);
-            showToast('Error unblocking user', 'error');
-        }
+        const username = this.shadowRoot.querySelector('#username').textContent.trim();
+        await fetch(`/accounts/users/${this.user.id}/unblock-user/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('token')}`,
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ username })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message)
+                    showToast(data.message, 'success');
+                else
+                    showToast(data.error, 'error');
+            })
+            .catch(error => {
+                console.error('Error unblocking user:', error);
+                showToast('Error unblocking user', 'error');
+            })
     }
 
     disconnectedCallback() {

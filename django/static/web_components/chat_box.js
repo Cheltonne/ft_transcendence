@@ -1,5 +1,5 @@
 import { getCookie, showToast, getUserFromStorage, generateRandomString } from "../utils.js";
-import { navigateTo } from "../views.js";
+import { navigateTo } from "../navigation.js";
 import { OnlineInvite } from "../game/pong.js";
 
 export class UserChatView extends HTMLElement {
@@ -33,9 +33,10 @@ export class UserChatView extends HTMLElement {
                     <div class="dropdown">
                         <button class="dropbtn">⋮</button>
                         <div id="dropdownMenu" class="dropdown-content" style="color: black; cursor: pointer;">
-                            <a id="goToProfile">Go to User Profile</a>
+                            <a id="goToProfile" class="btn btn-primary">Go to User Profile</a>
                             <a id="Online">Online</a>
-                            <a id="unblockUser">Unblock User</a>
+                            <a id="blockUser" class="btn btn-danger">Block User</a>
+                            <a id="unblockUser" class="btn btn-primary">Unblock User</a>
                         </div>
                     </div>
 
@@ -77,6 +78,11 @@ export class UserChatView extends HTMLElement {
         this.setupEventListeners();
         this.setupWebSocketListeners();
         this.loadChatHistory();
+        console.log(this._interlocutor.username, this._interlocutor.id)
+    }
+
+    disconnectedCallback() {
+        this.socket.close();
     }
 
     set interlocutor(data) {
@@ -90,7 +96,10 @@ export class UserChatView extends HTMLElement {
         if (this.socket) {
             this.socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id, data.id);
+                if (data.sender === this._interlocutor.username)
+                    this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id, data.id);
+                else if (data.sender === 2)
+                    this.displayTournamentNotice(data);
             };
         }
     }
@@ -126,6 +135,7 @@ export class UserChatView extends HTMLElement {
         });
 
         const goToProfileButton = this.shadowRoot.querySelector('#goToProfile');
+        const blockUserButton = this.shadowRoot.querySelector('#blockUser');
         const unblockUserButton = this.shadowRoot.querySelector('#unblockUser');
         const OnlineButton = this.shadowRoot.querySelector('#Online');
 
@@ -153,7 +163,11 @@ export class UserChatView extends HTMLElement {
         });
 
         unblockUserButton.addEventListener('click', () => {
-            this.unblockUser();
+            this.unblockUser(this._interlocutor.id);
+        });
+
+        blockUserButton.addEventListener('click', () => {
+            this.blockUser(this._interlocutor.id);
         });
     }
 
@@ -193,8 +207,13 @@ export class UserChatView extends HTMLElement {
         const chatMessages = this.shadowRoot.querySelector('#chatMessages');
         const messageElement = document.createElement('div');
         const isCurrentUser = sender === this.currentUser.username;
-        const pfp = isCurrentUser ? this.currentUser.profile_picture.replace('http://localhost/', '') :
-            this._interlocutor.profile_picture.replace('http://localhost/', '');
+        let profilePictureUrl = isCurrentUser ? this.currentUser.profile_picture : this._interlocutor.profile_picture;
+        if (profilePictureUrl.includes('intra.42.fr'))
+            profilePictureUrl = profilePictureUrl.replace('media/https%3A/', 'https://');
+        const regex = /http:\/\/made-[^\/]+\/?/;
+        if (profilePictureUrl.match(regex))
+            profilePictureUrl = profilePictureUrl.replace(regex, '');
+        const pfp = profilePictureUrl.replace('http://localhost/', '');
         const username = isCurrentUser ? this.currentUser.username : sender;
         messageElement.classList.add('message', isCurrentUser ? 'sent' : 'received');
         const id = isCurrentUser ? this.currentUser.id : this._interlocutor.id;
@@ -241,7 +260,7 @@ export class UserChatView extends HTMLElement {
         } else {
             messageElement.innerHTML = `
                 <div class="message-bubble">
-                    <img src="${pfp}" 
+                    <img src="${pfp.replace('/http', 'http')}" 
                     alt="profile picture" class="profile-picture">
                     <strong class="sender-name">${username}</strong>
                     <p class="message-text">${message}</p>
@@ -261,7 +280,14 @@ export class UserChatView extends HTMLElement {
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-    
+
+    displayTournamentNotice(data)
+    {
+            const announcement = document.createElement('div');
+            announcement.innerText = `Tournament Match: ${data.player1} VS ${data.player2}`;
+            announcement.style.color = 'red';
+            this.shadowRoot.querySelector('.chat-header').appendChild(announcement);
+    }
 
     openUserProfileModal(username, pfp, id) {
         const modalBackdrop = this.shadowRoot.querySelector('#userProfileModal');
@@ -305,61 +331,56 @@ export class UserChatView extends HTMLElement {
     }
 
     async blockUser(userId) {
-        console.log(`Blocking user with ID: ${userId}`);
-        await fetch(`accounts/users/${userId}/block-user/`);
+        const username = this._interlocutor.username;
+        userId = this._interlocutor.id;
+        await fetch(`/accounts/users/${userId}/block-user/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('token')}`,
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ username })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showToast(data.message, 'success');
+                    this.loadChatHistory();
+                }
+                else
+                    showToast(data.error, 'error');
+            })
+            .catch(error => {
+                console.error('Error blocking user:', error);
+                showToast('Error blocking user', 'error');
+            })
     }
 
     async unblockUser(userId) {
-        console.log(`Unblocking user with ID: ${userId}`);
-        await fetch(`accounts/users/${userId}/unblock-user/`);
-    }
-
-    async blockUser(userId) {
-        const username = this._interlocutor.username; 
-        try {
-            const response = await fetch(`/accounts/users/${userId}/block-user/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`,
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ username })
-            });
-
-            if (response.ok) {
-                showToast(`${username} has been blocked.`, 'success');
-            } else {
-                showToast('Failed to block user', 'error');
-            }
-        } catch (error) {
-            console.error('Error blocking user:', error);
-            showToast('Error blocking user', 'error');
-        }
-    }
-
-    async unblockUser(userId) {
-        const username = this._interlocutor.username; 
-        try {
-            const response = await fetch(`/accounts/users/${userId}/unblock-user/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getCookie('token')}`,
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ username })
-            });
-
-            if (response.ok) {
-                showToast(`${username} has been unblocked.`, 'success');
-            } else {
-                showToast('Failed to unblock user', 'error');
-            }
-        } catch (error) {
-            console.error('Error unblocking user:', error);
-            showToast('Error unblocking user', 'error');
-        }
+        const username = this._interlocutor.username;
+        await fetch(`/accounts/users/${userId}/unblock-user/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('token')}`,
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ username })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showToast(data.message, 'success');
+                    this.loadChatHistory();
+                }
+                else
+                    showToast(data.error, 'error');
+            })
+            .catch(error => {
+                console.error('Error unblocking user:', error);
+                showToast('Error unblocking user', 'error');
+            })
     }
 
     sendMessage() {

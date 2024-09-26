@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import itertools
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,19 +21,36 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*@=k@^3t$sqi-0#j3@(iwkebhvirzju^4zz!*3au_=240_jcas'
+EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+POSTGRES_DB = os.environ.get('POSTGRES_DB')
+POSTGRES_HOST = os.environ.get('POSTGRES_HOST')
+POSTGRES_USER = os.environ.get('POSTGRES_USER')
+POSTGRES_PORT = os.environ.get('POSTGRES_PORT')
+POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
+combinations = itertools.product(range(1, 19), repeat=2)
+additional_allowed_hosts = [f'made-f0br{b}s{c}' for b, c in combinations]
+ALLOWED_HOSTS.extend(additional_allowed_hosts)
+
+combinations = itertools.product(range(1, 19), repeat=2)
+additional_allowed_hosts = [f'made-f0cr{b}s{c}' for b, c in combinations]
+ALLOWED_HOSTS.extend(additional_allowed_hosts)
+
+combinations = itertools.product(range(1, 19), repeat=2)
+additional_allowed_hosts = [f'made-f0ar{b}s{c}' for b, c in combinations]
+ALLOWED_HOSTS.extend(additional_allowed_hosts)
 
 # Application definition
 
 INSTALLED_APPS = [
     'daphne',
+    'oauth2_provider',
 	"accounts",
 	"game",
 	"morpion",
@@ -92,11 +110,11 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tsuioku_base',
-		'USER': 'RSO',
-		'PASSWORD': 'kauserie',
-		'HOST': 'postgres',
-		'PORT': '5432',
+        'NAME': POSTGRES_DB,
+		'USER': POSTGRES_USER,
+		'PASSWORD': POSTGRES_PASSWORD,
+		'HOST': POSTGRES_HOST,
+		'PORT': POSTGRES_PORT,
     }
 }
 
@@ -128,9 +146,9 @@ AUTHENTICATION_BACKENDS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'fr-fra'
+LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Etc/GMT-1'
 
 USE_I18N = True
 
@@ -154,5 +172,37 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ['https://fftactics','https://localhost:4343']
+CSRF_TRUSTED_ORIGINS = ['https://localhost:4343']
+
+combinations = itertools.product(range(1, 19), repeat=2)
+additional_allowed_hosts = [f'https://made-f0br{b}s{c}:4343' for b, c in combinations]
+CSRF_TRUSTED_ORIGINS.extend(additional_allowed_hosts)
+
+combinations = itertools.product(range(1, 19), repeat=2)
+additional_allowed_hosts = [f'https://made-f0cr{b}s{c}:4343' for b, c in combinations]
+CSRF_TRUSTED_ORIGINS.extend(additional_allowed_hosts)
+
+combinations = itertools.product(range(1, 19), repeat=2)
+additional_allowed_hosts = [f'https://made-f0ar{b}s{c}:4343' for b, c in combinations]
+CSRF_TRUSTED_ORIGINS.extend(additional_allowed_hosts)
+
 CSRF_COOKIE_SECURE = True
+
+OAUTH2_PROVIDER = {
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 36000,
+    'AUTHORIZATION_CODE_EXPIRE_SECONDS': 600,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 1209600,
+    'CLIENT_ID_GENERATOR_CLASS': 'oauth2_provider.generators.ClientIdGenerator',
+    'CLIENT_SECRET_GENERATOR_CLASS': 'oauth2_provider.generators.ClientSecretGenerator',
+    'SCOPES': {
+        'read': 'Read scope',
+        'write': 'Write scope',
+    },
+}
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')

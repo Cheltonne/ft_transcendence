@@ -1,61 +1,42 @@
-a {
-    font-family: monospace;
-    color: brown;
-    text-decoration: none;
+#username {
+    padding: 0.5rem;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    font-size: 4.5rem;
+    background-color: #ffffff34;
 }
 
-a:visited {
-    color: brown;
-}
-
-a:hover {
-    color: #6F86FF;
-    text-decoration: none;
-}
-
-.button {
-    background-color: #dddace;
-    color: brown;
-    padding: 5px 10px;
-    border-radius: 3px;
+.icon {
+    max-width: 64px;
+    margin-bottom: 1rem;
+    padding: 7px;
     cursor: pointer;
-    font-weight: bold;
+    text-align: center;
 }
 
-button:hover {
-    background-color: #2980b9;
+.icon:hover {
+    background-color: #12151a49;
+    border-radius: 2px;
 }
 
 .user-info-card {
     display: flex;
     flex-direction: column;
     width: 450px;
-    height: 600px;
+    height: 720px;
     margin: 50px auto;
-    background-color: rgba(228, 255, 246, 0.877);
+    background-color: #7bb6ac;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     position: relative;
 }
 
-.user-info-card img {
+#pfp {
     width: 100%;
     height: 75%;
     object-fit: cover;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
-}
-
-.user-info-card .username {
-    bottom: 0;
-    position: relative;
-    width: 100%;
-    color: rgba(247, 255, 252, 0.945);
-    background-color: rgba(47, 65, 59, 0.253);
-    font-weight: lighter;
-    border-radius: 3px;
-    font-size: 3rem;
-    text-align: left;
 }
 
 .match-history-link {
@@ -122,4 +103,22 @@ button:hover {
     opacity: 1;
     z-index: 42;
     background-color: #12151a62;
+}
+
+.updateButton {
+    background-color: #fff0e0;
+    color: brown;
+    padding: 1rem;
+}
+
+.updateButton:hover {
+    background-color: #e9dacb;
+    color: brown;
+    padding: 1rem;
+}
+
+.stats {
+    background-color: #e9dacbb6;
+    color: brown;
+    padding: 0.5rem;
 }

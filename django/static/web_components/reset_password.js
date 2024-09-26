@@ -1,7 +1,8 @@
-import { navigateTo, showForm, handleFormSubmit } from '../navigation.js';
-import { showToast } from '../utils.js';
+import { navigateTo, handleFormSubmit } from '../navigation.js';
+import { showToast, getCookie, initializeWebSocket } from '../utils.js';
+import { getUserInfo } from '../scripts.js';
 
-export class UpdateForm extends HTMLElement {
+export class ResetPasswordForm extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({
@@ -11,22 +12,21 @@ export class UpdateForm extends HTMLElement {
 
     async connectedCallback() {
         try {
-            const response = await fetch('accounts/render-update-form/', { method: 'GET' });
-            if (!response.ok) {
-		        console.log(`Error logging in: ${response.status}`);
-	        }
+            const response = await fetch('accounts/render-password-reset-form/', { method: 'GET' });
+            if (!response.ok)
+                console.log(`Error logging in: ${response.status}`);
             else {
                 const data = await response.json();
                 const token = data.token;
                 const styleLink = document.createElement('link');
 
                 styleLink.setAttribute('rel', 'stylesheet');
-                styleLink.setAttribute('href', 'static/css/pong_theme.css'); 
+                styleLink.setAttribute('href', 'static/css/pong_theme.css');
                 this.shadowRoot.innerHTML = data.form;
                 this.shadowRoot.appendChild(styleLink);
-                this.formElement = this.shadowRoot.getElementById('update-form');
+                this.formElement = this.shadowRoot.getElementById('password-reset-form');
             }
-            handleFormSubmit('update');
+            handleFormSubmit('reset_password');
             this.shadowRoot.getElementById('subBtn').addEventListener("click", () => {
                 const fields = this.formElement.querySelectorAll('input[required]');
                 let hasEmptyFields = false;
@@ -39,15 +39,18 @@ export class UpdateForm extends HTMLElement {
                     }
                 }
             });
+            this.shadowRoot.querySelector("#signinButton").addEventListener("click",
+            (event) => {
+                event.preventDefault();
+                navigateTo('signin', 2);
+            });
         }
         catch (error) {
-            console.log(`Error logging in: ${error}`);
-            showToast(`Error logging in: ${error}`, 'error');
-            if (error.response && error.response.status === 500) {
+            console.log(`Error changing password: ${error}`);
+            showToast(`Error changing password: ${error}`, 'error');
+            if (error.response && error.response.status === 500)
                 console.error("Server error encountered. Cannot redirect.");
-            }
-            navigateTo('pong', 1);
-	    }
+        }
     }
 
     getFormElement() {
@@ -55,4 +58,4 @@ export class UpdateForm extends HTMLElement {
     }
 }
 
-customElements.define('update-form', UpdateForm);
+customElements.define('reset-password-form', ResetPasswordForm);

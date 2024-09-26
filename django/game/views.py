@@ -5,6 +5,8 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from accounts.utils import send_notification
+from accounts.models import CustomUser
 
 def save_score(request):
 	if request.method == 'POST':
@@ -33,6 +35,18 @@ def create_match(request):
 	new_match = Match.objects.create(player1=request.user)
 	return JsonResponse({'match_id': new_match.id})
 
+def broadcast_tournament(request, p1, p2):
+	print("broadcast_tournament view called")
+	if request.method == 'GET':
+		active_users = CustomUser.objects.all()
+		admin = CustomUser.objects.get(id=2)
+		for user in active_users:
+			send_notification(admin, user, 'tournament_notice',
+					  f"Tournament broadcast: {p1} is about to face {p2} in the ultimate tournament of DEATH try head!!!!!")
+		print(f"received {p1} and {p2}")
+		return JsonResponse({'message': 'Try succ HEAD'}, status=201)
+	return JsonResponse({'message': 'Liar aHEAD'}, status=400)
+	
 def create_online_match(request):
 	data = json.loads(request.body)
 	player2_username = data.get('player2_username')

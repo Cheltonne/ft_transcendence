@@ -36,7 +36,13 @@ export class UserObservable extends Subject {
 
     setUserData(data) {
         this.data.username = data.username;
-        this.data.profile_picture = `<img src='${data.profile_picture}' class='profile-picture'></img>`;
+        let pfpUrl = data.profile_picture;
+        if (pfpUrl.includes('intra.42.fr'))
+            pfpUrl = pfpUrl.replace('/media/https%3A/', 'https://');
+        const regex = /http:\/\/made-[^\/]+\/?/;
+        if (pfpUrl.match(regex))
+            pfpUrl = pfpUrl.replace(regex, '');
+        this.data.profile_picture = `<img src='${pfpUrl}' class='profile-picture'></img>`;
         this.data.user_matches = data.user_matches;
         this.data.morpion_matches = data.morpion_matches;
         this.data.morpion_ai_matches = data.morpion_ai_matches;
