@@ -9,6 +9,7 @@ export class UserChatView extends HTMLElement {
         this.handleSendMessage = this.sendMessage.bind(this);
         const template = document.createElement('template');
         this.activeInvitation = false;
+        this.clickedOnLink = false;
         template.innerHTML = `
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
             integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
@@ -251,6 +252,8 @@ export class UserChatView extends HTMLElement {
                     },
                 });
             }
+            this.clickedOnLink = true;
+            console.log(this.clickedOnLink);
             this.activeInvitation = false;
             inviteBubble.style.cursor = 'default';
             inviteBubble.querySelector('.message-text').innerText = 'Pong invite clicked';

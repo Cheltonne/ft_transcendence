@@ -326,7 +326,13 @@ class PongConsumer(AsyncWebsocketConsumer):
     
     async def join_room(self, room_name):
         if room_name in self.rooms:
-            if len(self.rooms[room_name]) < 3:
+            if self.rooms[room_name].count(self.player_uuid) >= 2:
+                await self.send(text_data=json.dumps({
+                    'message': 'You are already in this room',
+                    'room_name': room_name
+                }))
+        
+            elif len(self.rooms[room_name]) < 3:
                 self.rooms[room_name].append(self.player_uuid)
                 self.room_name = room_name
 

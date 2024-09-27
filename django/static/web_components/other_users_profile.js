@@ -128,7 +128,7 @@ export class OtherUserProfileCard extends HTMLElement {
             userInfo.morpion_matches.forEach(match => {
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
                 const matchDate = match.timestamp ? new Date(match.timestamp) : null;
-                const formattedDate = matchDate ? matchDate.toCPUeString() : 'Date not available';
+                const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                 matchCard.classList.add('match-history-card');
                 matchCard.innerHTML = `
                     <h1>Morpion Match ${++i}</h1>

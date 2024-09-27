@@ -34,7 +34,7 @@ const message = document.getElementById("message");
 let roomName = null;
 const start = document.getElementById('start');
 let emetteur = false;
-import { getCookie } from "../utils.js";
+import { getCookie, showToast } from "../utils.js";
 let playerId = null;
 let socket = null;
 let OnlinePath = false;
@@ -1187,6 +1187,15 @@ function handleServerMessage(message) {
     }
     else if (message.message === 'start_button') {
         DisplayStartButton();
+    }
+    else if (message.message === 'You are already in this room')
+    {
+        showToast('You are already in this room!');
+        forceDisconnect();
+        $("#aliasContainer").text("");
+        Millenium = null;
+        clear();
+        //EnterScreen();
     }
 }
 

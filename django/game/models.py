@@ -16,15 +16,16 @@ class Match(models.Model):
 		if self.player1_score > self.player2_score:
 			self.winner = self.player1
 			self.player1.wins = F('wins') + 1 
-			print(self.winner)
 			self.player1.save()
+			if self.player2:
+				self.player2.losses = F('losses') + 1 
+				self.player2.save()
 		elif self.player2_score > self.player1_score:
 			self.winner = self.player2
-			self.player2.wins = F('wins') + 1 
-			print(self.winner)
-			self.player2.save()
+			self.player1.losses = F('losses') + 1 
+			self.player1.save()
+			if self.player2:
+				self.player2.wins = F('wins') + 1 
+				self.player2.save()
 		else:
-			print('No winner!')
 			self.winner = None
-			self.player.losses = F('losses') + 1 
-			self.player.save()
