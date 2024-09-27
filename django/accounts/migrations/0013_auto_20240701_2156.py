@@ -41,10 +41,9 @@ def create_initial_customusers(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0012_remove_customuser_is_online_and_more'),  # Replace with your app's initial migration
+        ('accounts', '0012_remove_customuser_is_online_and_more'),
         ('game', '0005_alter_match_player_alter_match_winner'),
     ]
 
     operations = [
-        migrations.RunPython(create_initial_customusers),
     ]

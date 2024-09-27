@@ -43,6 +43,7 @@ export class NotificationList extends HTMLElement {
         the same notification several times */
             this.shadowRoot.removeChild(this.shadowRoot.firstChild);
         }
+
         this.notifications.forEach ((notification) => {
             if (notification.is_read === false) {
                 const notificationItem = document.createElement('notification-item');

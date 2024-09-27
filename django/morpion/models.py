@@ -2,11 +2,14 @@ from django.db import models
 from accounts.models import CustomUser
 
 class Match(models.Model):
-	player1 = models.ForeignKey(CustomUser, related_name='morpion_matches_as1', on_delete=models.CASCADE)
-	player2 = models.ForeignKey(CustomUser, related_name='morpion_matches_as2', on_delete=models.CASCADE, null=True, blank=True)
+	player1 = models.ForeignKey(CustomUser, related_name='morpion_matches_as1',
+							  on_delete=models.CASCADE)
+	player2 = models.ForeignKey(CustomUser, related_name='morpion_matches_as2',
+							  on_delete=models.CASCADE, null=True, blank=True)
 	player1_score = models.IntegerField(null=True, blank=True)
 	player2_score = models.IntegerField(null=True, blank=True)
-	winner = models.ForeignKey(CustomUser, related_name='morpion_matches_won', on_delete=models.CASCADE, null=True, blank=True)
+	winner = models.ForeignKey(CustomUser, related_name='morpion_matches_won',
+							 on_delete=models.CASCADE, null=True, blank=True)
 	timestamp = models.DateTimeField(auto_now_add=True)
 
 	def set_winner(self):
@@ -18,9 +21,9 @@ class Match(models.Model):
 			else:
 				self.winner = None  # It's a draw
 			self.save()  # Ensure the match instance is saved
-
 class MatchAI(models.Model):
-	player1 = models.ForeignKey(CustomUser, related_name='morpion_ai_matches', on_delete=models.CASCADE)
+	player1 = models.ForeignKey(CustomUser, related_name='morpion_ai_matches',
+							  on_delete=models.CASCADE)
 	player1_score = models.IntegerField(null=True, blank=True)
 	ai_score = models.IntegerField(null=True, blank=True)
 	WINNER_CHOICES = [
@@ -29,7 +32,8 @@ class MatchAI(models.Model):
 		('draw', 'Draw')
 	]
 	winner_type = models.CharField(max_length=10, choices=WINNER_CHOICES, null=True, blank=True)
-	winner = models.ForeignKey(CustomUser, related_name='morpion_ai_matches_won', on_delete=models.CASCADE, null=True, blank=True)
+	winner = models.ForeignKey(CustomUser, related_name='morpion_ai_matches_won',
+							 on_delete=models.CASCADE, null=True, blank=True)
 	timestamp = models.DateTimeField(auto_now_add=True)
 
 	def set_winner(self):
