@@ -199,6 +199,7 @@ export class MorpionComponent extends HTMLElement {
 
     startMatchmaking() {
         notificationSocket.send(JSON.stringify({ type: 'matchmaking' }));
+        this.boardDisabled = true;
         this.matchmacking = true;
         notificationSocket.onmessage = (e) => {
             const data = JSON.parse(e.data);
@@ -218,8 +219,13 @@ export class MorpionComponent extends HTMLElement {
                 this.player2Name = data.sender.username;
                 this.player1Name = data.recipient;
                 this.updatePlayerNames();
+
+                this.cellElements.forEach(cell => {
+                    cell.removeEventListener('click', this.handleClick);
+                    cell.addEventListener('click', this.handleClick.bind(this), { once: true });
+                });
             }
-        }
+        };
     }
 
     // fonction pour gérer le clic sur une case
