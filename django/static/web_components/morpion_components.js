@@ -212,7 +212,7 @@ export class MorpionComponent extends HTMLElement {
                 this.player2Name = 'Guest';
                 this.boardDisabled = true;
             }
-            else {
+            else if (data.type === 'match_request_accepted') {
                 showToast(data.message, "succ", 8000)
                 this.boardDisabled = false;
                 this.isAI = false;
