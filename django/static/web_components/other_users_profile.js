@@ -103,7 +103,7 @@ export class OtherUserProfileCard extends HTMLElement {
                 const formattedDate = matchDate ? matchDate.toLocaleString() : 'Date not available';
                 const matchCard = this.shadowRoot.ownerDocument.createElement('div');
                 const player1 = match.player1__username;
-                const player2 = online_match ? match.player2__username : "CPU";
+                const player2 = online_match ? match.player2__username : "local";
                 const player1score = match.player1_score;
                 const player2score = match.player2_score;
                 matchCard.classList.add('match-history-card');
@@ -114,7 +114,7 @@ export class OtherUserProfileCard extends HTMLElement {
                     <b>Player 2</b>
                     <p>${player2}</p>
                     <b>Winner</b>
-                    <p>${online_match ? match.winner__username : "CPU"}</p>
+                    <p>${match.winner__username ? match.winner__username : player2}</p>
                     <b>Score</b>
                     <p>${player1}: ${player1score} - ${player2}: ${player2score}</p>
                     <b>Played at</b>

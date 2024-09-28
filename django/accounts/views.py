@@ -1,4 +1,5 @@
 import json
+from operator import itemgetter
 from .models import CustomUser, Notification, Message
 from django.http import JsonResponse
 from django.contrib.auth import logout
@@ -38,6 +39,9 @@ def get_user_info(request):
         user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values
                 ('player1__username', 'player1_score', 'ai_score', 'winner__username',
                 'timestamp'))
+        
+        user_matches = sorted(user_matches, key=itemgetter('timestamp'))
+        user_morpion_matches = sorted(user_morpion_matches, key=itemgetter('timestamp'))
         user_info = {
                 'username': user.username,
                 'profile_picture': user.profile_picture.url,
@@ -142,6 +146,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         list(user.morpion_ai_matches.all().order_by('id').values(
             'player1__username', 'player1_score', 'ai_score', 'winner__username',
             'timestamp'))
+    
         
         user_info = {
             'id': user.id,
@@ -212,6 +217,8 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values
                 ('player1__username', 'player1_score', 'ai_score', 'winner__username',
                 'timestamp'))
+        user_matches = sorted(user_matches, key=itemgetter('timestamp'))
+        user_morpion_matches = sorted(user_morpion_matches, key=itemgetter('timestamp'))
         response_data = serializer.data
         response_data['user_matches'] = user_matches
         response_data['morpion_matches'] = user_morpion_matches
