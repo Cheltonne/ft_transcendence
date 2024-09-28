@@ -48,7 +48,7 @@ def oauth_callback(request):
         return JsonResponse({'error': 'No authorization code provided'}, status=400)
 
     client_id = 'u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7'
-    client_secret = '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'
+    client_secret = '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'
     
     if 'localhost' in request.get_host():
         redirect_uri = 'https://localhost:4343/oauth/callback/'

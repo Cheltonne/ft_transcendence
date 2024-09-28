@@ -1,7 +1,11 @@
 from django.urls import path, include
-from . import views, form_views
+
+from .Views import views
+from .Views import Notifications
+from . import form_views
 from rest_framework.routers import DefaultRouter
-from .views import CustomUserViewSet, NotificationViewSet, MessageViewSet
+from .Views.views import CustomUserViewSet, MessageViewSet
+from .Views.Notifications import NotificationViewSet
 
 router = DefaultRouter()
 router.register(r'users', CustomUserViewSet) #remember NEVER to use empty routes or else
@@ -17,6 +21,6 @@ urlpatterns = [
         path("render-update-form/", form_views.render_update_form, name='render-update-form'),
         path("check-authenticated/", views.check_authenticated, name='check-authenticated'),
         path('send-friend-request/', views.FriendRequestView.as_view(), name='send_friend_request'),
-        path('notifications/<int:id>/mark_as_read/', views.mark_as_read, name='mark_as_read'),
+        path('notifications/<int:id>/mark_as_read/', Notifications.mark_as_read, name='mark_as_read'),
         path('', include(router.urls)),
 ]

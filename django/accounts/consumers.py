@@ -3,6 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async, async_to_sync
 from accounts.models import Notification, Message, CustomUser
+import bleach
 
 User = get_user_model()
 
@@ -155,7 +156,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json["message"]
+        unsanitized_message = text_data_json["message"]
+        print(f"This is the unsanitized message: {unsanitized_message}")
+        message = self.sanitize_message(unsanitized_message)
+        print(f"This is the sanitized message: {message}")
         recipient_id = text_data_json["recipient_id"]
         sender_id = text_data_json["sender_id"]
 
@@ -201,3 +205,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "timestamp": timestamp,
             "sender_profile_picture": sender_profile_picture,
         }))
+
+    def sanitize_message(self, message):
+        allowed_tags = ['b', 'i', 'u', 'a', 'p', 'br']  # Allow basic formatting tags
+        cleaned_message = bleach.clean(message, tags=allowed_tags, strip=True)
+        return cleaned_message

@@ -321,7 +321,8 @@ export class UserChatView extends HTMLElement {
 
     sendMessage() {
         const messageInput = this.shadowRoot.querySelector('#messageInput');
-        const message = messageInput.value.trim();
+        const unsanitizedMessage = messageInput.value.trim();
+        const message = unsanitizedMessage.replace(/<(?!\/?(b|i|u|a|p|br)\b)[^>]*>/gi, '');
         if (message && this._interlocutor) {
             const messageData = {
                 recipient_id: this._interlocutor.id,
