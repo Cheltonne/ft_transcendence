@@ -2,7 +2,7 @@ from django.urls import path, include
 
 from .Views import views
 from .Views import Notifications
-from . import form_views
+from .Views import form_views
 from rest_framework.routers import DefaultRouter
 from .Views.views import CustomUserViewSet, MessageViewSet
 from .Views.Notifications import NotificationViewSet

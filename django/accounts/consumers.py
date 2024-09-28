@@ -207,6 +207,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     def sanitize_message(self, message):
-        allowed_tags = ['b', 'i', 'u', 'a', 'p', 'br']  # Allow basic formatting tags
+        allowed_tags = ['b', 'i', 'u']  # Allow basic formatting tags
         cleaned_message = bleach.clean(message, tags=allowed_tags, strip=True)
         return cleaned_message

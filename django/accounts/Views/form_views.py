@@ -1,6 +1,6 @@
 from PIL import Image
 from io import BytesIO
-from .forms import CustomUserCreationForm, ChangePasswordForm,\
+from ..forms import CustomUserCreationForm, ChangePasswordForm,\
 CustomAuthenticationForm, CustomUserChangeForm
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
@@ -11,7 +11,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate
-from .utils import resize_image
+from ..utils import resize_image
 from django.urls import reverse_lazy
 
 def logout_required(function):
@@ -59,7 +59,7 @@ def render_signup_form(request):
         login(request, user)
         return JsonResponse({'success': True, 'message': 'Signup successful!'})
     else:
-        return JsonResponse({'errors': form.errors}, content_type='application/json')
+        return JsonResponse({'errors': form.errors},status=400, content_type='application/json')
 
 @login_required
 @ensure_csrf_cookie
