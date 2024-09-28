@@ -198,13 +198,16 @@ export class MorpionComponent extends HTMLElement {
     }
 
     startMatchmaking() {
-        notificationSocket.send(JSON.stringify({ type: 'matchmaking' }));
+        notificationSocket.send(JSON.stringify({ type: 'matchmaking', player_seat: window.location.hostname }));
         this.boardDisabled = true;
         this.matchmacking = true;
         notificationSocket.onmessage = (e) => {
             const data = JSON.parse(e.data);
             if (data.message.includes("declined"))
                 showToast(data.message, "error", 8000)
+            else if (data.type === 'already_sent'){
+                this.showAlert('warning', data.message);
+           }
             if (data.type === 'no_match_found' || data.message.includes("declined")) {
                 this.showAlert('warning', data.message);
                 this.isAI = false;

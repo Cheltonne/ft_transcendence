@@ -21,7 +21,7 @@ def send_friend_request_notification(sender, recipient):
     async_to_sync(channel_layer.group_send)(
         f'user_{recipient.id}',
         {
-            'type': 'send_notification',
+            'type': 'receive_notification',
             'notification': {
                 'id': notification.id,
                 'message': notification.message,

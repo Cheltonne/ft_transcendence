@@ -447,3 +447,11 @@ form a {
 #start {
   display: none;
 }
+
+#aliasContainer {
+  padding: 1px;
+  font-size: clamp(1rem, 1.75vw, 2rem);
+  text-align: center;
+  background-color: #222831;
+  width: 90%;
+}

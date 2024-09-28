@@ -48,7 +48,7 @@ export async function getUserByUsername(username) {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': 'Bearer ' + getCookie('token') // Adjust for your auth method
+            'Authorization': 'Bearer ' + getCookie('token') 
         }
     });
 

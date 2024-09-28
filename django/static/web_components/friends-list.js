@@ -109,7 +109,10 @@ export class FriendsComponent extends HTMLElement {
  
     async addFriend() {
         const sanitized_username = this.shadowRoot.querySelector('#new-friend-username').value.replace(/[^a-zA-Z0-9_]/g, '');
-        console.log(sanitized_username);
+        if (!sanitized_username) {
+            showToast('Usernames can only contain letters, numbers or undercores and can\'t be empty', 'error', 3000);
+            return;
+        }
         const user = await getUserByUsername(sanitized_username);
         if (user) {
             await this.sendFriendRequest(sanitized_username);
@@ -124,7 +127,6 @@ export class FriendsComponent extends HTMLElement {
     }
 
     async sendFriendRequest(recipientUsername) {
-
         fetch('accounts/send-friend-request/', {
             method: 'POST',
             headers: {

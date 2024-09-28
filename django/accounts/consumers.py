@@ -154,11 +154,17 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         type = data.get('type')
+        player_seat = data.get()
         
         if type == 'matchmaking':
             self.opponent = await self.find_match()
             if self.opponent and not await sync_to_async(match_request_already_sent)(self.user, self.opponent):
                 await self.send_match_request(self.opponent)
+            elif self.opponent and await sync_to_async(match_request_already_sent)(self.user, self.opponent):
+                await self.send(text_data=json.dumps({
+                    'type': 'already_sent',
+                    'message': 'Waiting for a response from another player.'
+                }))
             else:
                 await self.send(text_data=json.dumps({
                     'type': 'no_match_found',
