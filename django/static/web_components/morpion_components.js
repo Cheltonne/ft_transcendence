@@ -198,7 +198,7 @@ export class MorpionComponent extends HTMLElement {
     }
 
     startMatchmaking() {
-        notificationSocket.send(JSON.stringify({ type: 'matchmaking' }));
+        notificationSocket.send(JSON.stringify({ type: 'matchmaking', player_seat: window.location.hostname }));
         this.boardDisabled = true;
         this.matchmacking = true;
         notificationSocket.onmessage = (e) => {
