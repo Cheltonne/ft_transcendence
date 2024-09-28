@@ -1,5 +1,4 @@
 from django.urls import path, include
-
 from .Views import views
 from .Views import Notifications
 from .Views import form_views

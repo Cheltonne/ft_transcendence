@@ -1,6 +1,6 @@
 import json
 from operator import itemgetter
-from .models import CustomUser, Notification, Message
+from ..models import CustomUser, Notification, Message
 from django.http import JsonResponse
 from django.contrib.auth import logout
 from django.shortcuts import render
@@ -262,11 +262,6 @@ class MessageViewSet(viewsets.ModelViewSet):
             (Q(sender=recipient, recipient=user) & ~Q(sender__in=blocked_users))
         ).order_by('timestamp')
     
-import json
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from .models import Message
-
 def is_clicked(request):
     try:
         # Load data from the request body
