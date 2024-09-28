@@ -2,6 +2,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import Notification
 from PIL import Image
+import json
 
 def resize_image(image_file, max_width):
     image = Image.open(image_file)
@@ -45,7 +46,7 @@ def send_notification(sender, recipient, type, message):
         notification = Notification.objects.create(
             type=type, 
             sender=sender, 
-            recipient=recipient, 
+            recipient=recipient,
             message=message,
             is_read=True)
     sender_data = {
@@ -56,11 +57,12 @@ def send_notification(sender, recipient, type, message):
     async_to_sync(channel_layer.group_send)(
         f'user_{recipient.id}',
         {
-            'type': 'send_notification',
+            'type': 'receive_notification',
             'notification': {
                 'id': notification.id,
                 'message': notification.message,
                 'sender': sender_data,
+                'recipient': recipient.username,
                 'sender_pfp': sender.profile_picture.url,
                 'created_at': notification.created_at.isoformat(),
                 'is_read': notification.is_read,
@@ -82,3 +84,14 @@ def request_already_sent(sender, recipient):
 
 def is_already_friends_with_recipient(sender, recipient):
     return recipient in sender.friends.all()
+
+def match_request_already_sent(sender, recipient):
+    try:
+        notification = Notification.objects.get(
+            recipient_id=recipient.id, 
+            sender_id=sender.id, 
+            type='match_request', 
+            is_read=False)
+    except Notification.DoesNotExist:
+        return False
+    return True

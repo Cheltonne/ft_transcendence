@@ -1,3 +1,4 @@
+import json
 from .models import CustomUser, Notification, Message
 from django.http import JsonResponse
 from django.contrib.auth import logout
@@ -29,6 +30,9 @@ def get_user_info(request):
         user_matches += list(user.matches_as2.all().order_by('id').values
                 ('player2', 'player1_score', 'player2_score', 'winner__username', 'timestamp', 'player1', 'player1__username', 'player2__username'))
         user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values
+                ('player1__username', 'player2__username', 'player1_score', 'player2_score',
+                  'winner__username', 'timestamp'))
+        user_morpion_matches += list(user.morpion_matches_as2.all().order_by('id').values
                 ('player1__username', 'player2__username', 'player1_score', 'player2_score',
                   'winner__username', 'timestamp'))
         user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values
@@ -130,6 +134,10 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         list(user.morpion_matches_as1.all().order_by('id').values(
             'player1__username', 'player2__username', 'player1_score',
             'player2_score', 'winner__username', 'timestamp'))
+        user_morpion_matches += \
+        list(user.morpion_matches_as2.all().order_by('id').values(
+            'player1__username', 'player2__username', 'player1_score',
+            'player2_score', 'winner__username', 'timestamp'))
         user_morpion_ai_matches = \
         list(user.morpion_ai_matches.all().order_by('id').values(
             'player1__username', 'player1_score', 'ai_score', 'winner__username',
@@ -198,6 +206,9 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values
                 ('player1__username', 'player2__username', 'player1_score', 'player2_score',
                   'winner__username', 'timestamp'))
+        user_morpion_matches += list(user.morpion_matches_as2.all().order_by('id').values
+                ('player1__username', 'player2__username', 'player1_score', 'player2_score',
+                  'winner__username', 'timestamp'))
         user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values
                 ('player1__username', 'player1_score', 'ai_score', 'winner__username',
                 'timestamp'))
@@ -215,13 +226,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self): #this will only return unread notifications for performance
         user = self.request.user
         return Notification.objects.filter(recipient=user, \
-        is_read=False).order_by('-created_at')
+        is_read=False).exclude(\
+            type__in=['match_request_accepted', 'match_request_declined']).order_by('-created_at')
 
     @action(detail=False, methods=['get'], url_path='unread-count')
     def unread_count(self, request):
         user = self.request.user
         unread_count = Notification.objects.filter(recipient=user, \
-        is_read=False).count()
+        is_read=False).exclude(type__in=['match_request_accepted', 'match_request_declined']).count()
         return Response({'unread_count': unread_count})
 
 @api_view(['PUT'])

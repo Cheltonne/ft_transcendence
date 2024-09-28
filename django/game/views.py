@@ -3,7 +3,6 @@ from game.models import Match
 from accounts.models import CustomUser
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from accounts.utils import send_notification
 from accounts.models import CustomUser
