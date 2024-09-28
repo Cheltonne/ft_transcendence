@@ -1,5 +1,6 @@
-import { getCookie, showToast, getUserFromStorage } from "../utils.js";
+import { getCookie, showToast, getUserFromStorage, generateRandomString } from "../utils.js";
 import { navigateTo } from "../navigation.js";
+import { OnlineInvite } from "../game/pong.js";
 
 export class UserChatView extends HTMLElement {
     constructor() {
@@ -7,6 +8,8 @@ export class UserChatView extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.handleSendMessage = this.sendMessage.bind(this);
         const template = document.createElement('template');
+        this.activeInvitation = false;
+        this.clickedOnLink = false;
         template.innerHTML = `
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
             integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
@@ -32,6 +35,7 @@ export class UserChatView extends HTMLElement {
                         <button class="dropbtn">⋮</button>
                         <div id="dropdownMenu" class="dropdown-content" style="color: black; cursor: pointer;">
                             <a id="goToProfile" class="btn btn-primary">Go to User Profile</a>
+                            <a id="Online" class="btn btn-primary">Online</a>
                             <a id="blockUser" class="btn btn-danger">Block User</a>
                             <a id="unblockUser" class="btn btn-primary">Unblock User</a>
                         </div>
@@ -94,7 +98,7 @@ export class UserChatView extends HTMLElement {
             this.socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.sender === this._interlocutor.username)
-                    this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id);
+                    this.displayMessage(data.message, data.sender, data.timestamp, data.sender_id, data.id);
                 else if (data.sender === 2)
                     this.displayTournamentNotice(data);
             };
@@ -134,9 +138,29 @@ export class UserChatView extends HTMLElement {
         const goToProfileButton = this.shadowRoot.querySelector('#goToProfile');
         const blockUserButton = this.shadowRoot.querySelector('#blockUser');
         const unblockUserButton = this.shadowRoot.querySelector('#unblockUser');
+        const OnlineButton = this.shadowRoot.querySelector('#Online');
 
         goToProfileButton.addEventListener('click', () => {
             navigateTo('other-user-profile', 3, this._interlocutor.id);
+        });
+
+        OnlineButton.addEventListener('click', () => {
+            if (this.activeInvitation) {
+                showToast('An invitation is already active', 'error');
+                return;
+            }
+
+            this.activeInvitation = true;
+            console.log(this.activeInvitation);
+
+            const roomCode = generateRandomString(); // Generate the room code
+            const messageInput = this.shadowRoot.querySelector('#messageInput');
+            messageInput.value = `Pong Invite: ${roomCode}`; // Set the Pong invite message in the input
+        
+            //navigateTo('pong', 1);
+            //OnlineInvite(this._interlocutor.username, this.currentUser.username, roomCode);
+        
+            this.sendMessage(); 
         });
 
         unblockUserButton.addEventListener('click', () => {
@@ -167,7 +191,8 @@ export class UserChatView extends HTMLElement {
                         '<div class="message no-messages">No messages yet. Start the conversation!</div>';
                 } else {
                     messages.forEach(msg => {
-                        this.displayMessage(msg.content, msg.sender, msg.timestamp, msg.sender_id);
+                        if	(msg.is_read === false)
+                            this.displayMessage(msg.content, msg.sender, msg.timestamp, msg.sender_id, msg.id);
                     });
                 }
             } else {
@@ -179,7 +204,7 @@ export class UserChatView extends HTMLElement {
         }
     }
 
-    displayMessage(message, sender, timestamp, sender_id) {
+    async displayMessage(message, sender, timestamp, sender_id, clicked_id) {
         const chatMessages = this.shadowRoot.querySelector('#chatMessages');
         const messageElement = document.createElement('div');
         const isCurrentUser = sender === this.currentUser.username;
@@ -193,26 +218,68 @@ export class UserChatView extends HTMLElement {
         const username = isCurrentUser ? this.currentUser.username : sender;
         messageElement.classList.add('message', isCurrentUser ? 'sent' : 'received');
         const id = isCurrentUser ? this.currentUser.id : this._interlocutor.id;
+    
 
-        messageElement.innerHTML = `
-            <div class="message-bubble">
-                <img src="${pfp.replace('/http', 'http')}" 
-                alt="profile picture" class="profile-picture">
-                <strong class="sender-name">${username}</strong>
-                <p class="message-text">${message}</p>
-                <span class="timestamp">${new Date(timestamp).toLocaleString()}</span>
-            </div>
-        `;
+        if (message.startsWith("Pong Invite: ")) {
+            const roomCode = message.split("Pong Invite: ")[1];
+            this.activeInvitation = true;
 
+
+    
+            messageElement.innerHTML = `
+                <div class="message-bubble invite">
+                    <img src="${pfp}" 
+                    alt="profile picture" class="profile-picture">
+                    <strong class="sender-name">${username}</strong>
+                    <p class="message-text">Click here to join Pong room ${roomCode.slice(0, 5)}</p>
+                    <span class="timestamp">${new Date(timestamp).toLocaleString()}</span>
+                </div>
+            `;
+    
+            const inviteBubble = messageElement.querySelector('.message-bubble.invite');
+            inviteBubble.style.cursor = 'pointer';
+            
+            inviteBubble.addEventListener('click', () => {
+            if (sender !== this.currentUser.username)
+            {
+                fetch(`/accounts/is_clicked/`, {
+                    body: JSON.stringify({ clicked_id }),
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getCookie('token')}`,
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                });
+            }
+            this.clickedOnLink = true;
+            console.log(this.clickedOnLink);
+            this.activeInvitation = false;
+            inviteBubble.style.cursor = 'default';
+            inviteBubble.querySelector('.message-text').innerText = 'Pong invite clicked';
+            navigateTo('pong', 1);
+            OnlineInvite(this._interlocutor.username, this.currentUser.username, roomCode);
+            });
+        } else {
+            messageElement.innerHTML = `
+                <div class="message-bubble">
+                    <img src="${pfp.replace('/http', 'http')}" 
+                    alt="profile picture" class="profile-picture">
+                    <strong class="sender-name">${username}</strong>
+                    <p class="message-text">${message}</p>
+                    <span class="timestamp">${new Date(timestamp).toLocaleString()}</span>
+                </div>
+            `;
+        }
+    
         const profilePicture = messageElement.querySelector('.profile-picture');
         profilePicture.addEventListener('click', () => {
             this.openUserProfileModal(username, pfp, id);
-            console.log(id)
-        })
-
+        });
+    
         const usernameElement = messageElement.querySelector('.sender-name');
         usernameElement.addEventListener('click', () => this.openUserProfileModal(username, pfp, id));
-
+    
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
@@ -337,3 +404,4 @@ export class UserChatView extends HTMLElement {
 }
 
 customElements.define('user-chat-view', UserChatView);
+

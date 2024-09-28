@@ -1,7 +1,7 @@
 export let RequestFrame = false;
 const canvas = document.querySelector('canvas');
 const MenuButton = document.getElementById('MenuButton');
-const ctx = canvas.getContext("2d");
+export const ctx = canvas.getContext("2d");
 const MAX_ROUNDS = 3;
 let currentRound = 1;
 var ReDrawStatic = true;
@@ -28,8 +28,18 @@ let matches = [];
 const tournamentTree = document.getElementById('tournamentTree');
 const EndTourneyButton = document.getElementById("EndTourneyButton");
 const myButton = document.getElementById("myButton");
+const LiveButton = document.getElementById("LiveButton");
 let TourneyMode = false;
 const message = document.getElementById("message");
+let roomName = null;
+const start = document.getElementById('start');
+let emetteur = false;
+import { getCookie, showToast } from "../utils.js";
+let playerId = null;
+let socket = null;
+let OnlinePath = false;
+let OnlineMatchFinished = false;
+let Millenium = "ffukcereefwfdwwq";
 
 ////////////////////////////////////////////////////////
 ////////////////HTML CSS////////////////////////////////
@@ -41,6 +51,11 @@ function setCanvasSize() {
     canvas.height = 430; 
 }
 
+async function UpdateUserName(player2Name) {
+    await giveName();
+    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
+}
+
 LocalButton.addEventListener("click", function() {
     allButtonOk = true;
     console.log("local");
@@ -49,7 +64,7 @@ LocalButton.addEventListener("click", function() {
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
     player2Name = 'guest';
-    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
+    UpdateUserName(player2Name);
     clear();
     LaunchGame();
 });
@@ -63,7 +78,7 @@ AIButton.addEventListener("click", function() {
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
     hideTourneyButtons();
-    $("#aliasContainer").text(userInfo.username + " VS " + " AI");
+    UpdateUserName("AI");
     clear();
     LaunchGame();
 });
@@ -139,8 +154,13 @@ function hideTourneyButtons() {
     nextButton.style.display = 'none';
 }
 
+function ClearFirstButton(){
+    myButton.style.display = 'none';
+    LiveButton.style.display = 'none';
+}
+
 async function updateNextMatchButton() {
-    let array = findMatchWithNullWinner(matches);
+let array = findMatchWithNullWinner(matches);
 
     if (array !== null) {
         document.getElementById("aliasContainer").textContent = `${array.player1} VS ${array.player2}`;
@@ -238,7 +258,6 @@ nextButton.addEventListener("click", function() {
     }
     else {
         let savedName = alias;
-        console.log(`Saved name: ${savedName}`);
         participantNames.push(alias);
 
         nameTourney.value = "";
@@ -262,8 +281,12 @@ function clear(){
     Paddle1 = null;
     Paddle2 = null;
     nameTourney.value = "";
+    document.getElementById('onlineChoiceUI').style.display = 'hidden';
     EndTourneyButton.style.display = 'none';
     NextMatchButton.style.display = 'none';
+    emetteur = false;
+    //forceDisconnect();
+    //online
     keysPressed = {};
 }
 
@@ -278,13 +301,17 @@ function clearTourney() {
 EnterScreen();
 
 function EnterScreen(){
+    clear();
     title = false;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     LocalButton.style.display = 'none';
     AIButton.style.display = 'none';
     TourneyButton.style.display = 'none';
+    start.style.display = "none";
+    MenuButton.style.display = "none"; // ??
     ctx.save();
     myButton.style.display = "inline-block";
+    LiveButton.style.display = "none";
     ctx.fillStyle = '#fff';
     ctx.font = '100px sans-serif';
     ctx.textAlign = 'center';
@@ -298,7 +325,16 @@ document.addEventListener("DOMContentLoaded", function() {
     EnterScreen();
     myButton.addEventListener("click", function() {
         myButton.style.display = "none";
+        LiveButton.style.display = "none";
+        OnlinePath = false;
         ModeChoice();
+    });
+    LiveButton.addEventListener("click", function() {
+        LiveButton.style.display = "none";
+        myButton.style.display = "none";
+        OnlinePath = true;
+        giveName();
+        OnlineChoice();
     });
 });
 
@@ -310,8 +346,9 @@ function ModeChoice(){
     drawStaticElements();
 }
 
-function MenuChoice(){
+export function MenuChoice(){
     MenuButton.style.display = 'inline-block';
+    start.style.display = 'none';
 }
 
 MenuButton.style.display = "none";
@@ -320,9 +357,8 @@ MenuButton.addEventListener("click", function() {
     MenuButton.style.display = "none";
     $("#aliasContainer").text("");
     clearTourney();
-    ModeChoice();
+    EnterScreen();
 });
-
 
 ///////////////////////////////////////////////
 //////////////////BINDINGS/////////////////////
@@ -390,12 +426,12 @@ class PongBall {
     resetBall() {
         if (this.left)
             {
-            this.velocity = vec2(1, 1);
+            //this.velocity = vec2(1, 1);
             this.pos = vec2(Paddle1.pos.x, Paddle1.pos.y + 50);
             }
         else
             {
-            this.velocity = vec2(-1, -1);
+            //this.velocity = vec2(-1, -1);
             this.pos = vec2(Paddle2.pos.x, Paddle2.pos.y + 50);
             }
         this.resetSpeed();
@@ -428,7 +464,8 @@ class PongBall {
     launchBall() {
             this.resetSpeed();
             let direction = this.left ? 1 : -1;
-            const randomNumber = Math.random() * Math.PI / 4;
+            const randomNumber = (Math.random() - 0.5) * Math.PI / 6;
+            //const randomNumber = direction;
             this.velocity.x = direction * this.speed * Math.cos(randomNumber);
             this.velocity.y = this.speed * Math.sin(randomNumber);
             this.launch = false;
@@ -461,11 +498,14 @@ class PongBall {
                 this.speed += 0.04;
         } else {
             this.pos = this.nextPos;
+            if (emetteur)
+                sendBallPosition(this.pos, this.velocity);
         }
-    
             if (this.pos.x <= 0 && this.goal == false) {
                 this.goal = true;
                 Paddle2.score++;
+                if (emetteur)
+                    sendScoreUpdate(Paddle1.score, Paddle2.score);
                 this.left = true;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -474,6 +514,8 @@ class PongBall {
             } else if (this.pos.x > canvas.width && this.goal == false) {
                 this.goal = true;
                 Paddle1.score++;
+                if (emetteur)
+                    sendScoreUpdate(Paddle1.score, Paddle2.score);
                 this.left = false;
                 ReDrawStatic = true;
                 this.goal = false;
@@ -538,9 +580,6 @@ function Players() {
 //////////////////DESSIN//////////////////////
 //////////////////////////////////////////////
 
-
-
-
 function drawStaticElements() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#a2c11c";
@@ -582,21 +621,13 @@ function draw() {
     ctx.fillRect(Paddle1.pos.x, Paddle1.pos.y, Paddle1.width, Paddle1.height);
     ctx.fillRect(Paddle2.pos.x, Paddle2.pos.y, Paddle2.width, Paddle2.height);
 
-    // AI DRAW RED BALL
     //if (AIplayer && AIplayer.prediction) {
-    //ctx.beginPath();
-    //ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
-    //ctx.fillStyle = 'red';
-    //ctx.fill();
-    //}
+    //    ctx.beginPath();
+    //    ctx.arc(AIplayer.prediction.x, AIplayer.prediction.y, 5, 0, Math.PI * 2);
+    //    ctx.fillStyle = 'red';
+    //    ctx.fill();
+    //    }
 
-    //Draw trails and other dynamic elements
-    //for (let i = 0; i < Ball.trailPositions.length; i++) {
-    //ctx.fillStyle = `rgba(255, 255, 255, ${Ball.trailOpacity * (i / Ball.trailLength)})`;
-    //ctx.beginPath();
-    //ctx.arc(Ball.trailPositions[i].x, Ball.trailPositions[i].y, Ball.radius, 0, Math.PI * 2);
-    //ctx.fill();
-    //}
 }
 
 //////////////////////////////////////////////////////////
@@ -604,18 +635,18 @@ function draw() {
 /////////////////////////////////////////////////////////
 
 export function onoffGame(Button){
-    if (Button === 'off')
+    if (Button === 'off' && !OnlinePath)
     {
         RequestFrame = false;
         clear();
         clearTourney();
         $("#aliasContainer").text('');
-        RequestFrame = false;
+        //RequestFrame = false;
         AI = false;
         title = true;
         EnterScreen();
     }
-    if (Button === 'on')
+    else if (Button === 'on' && !OnlinePath)
     {
         clearTourney();
         clear();
@@ -629,6 +660,26 @@ export function onoffGame(Button){
         MenuButton.style.display = "none";
         EnterScreen();
     }
+
+    if (Button === 'off' && OnlinePath && RequestFrame )
+    {
+        if (emetteur && OnlinePath)
+            createMatch(Paddle1.score, Paddle2.score, 1);
+        RequestFrame = false;
+        forceDisconnect();
+        clear();
+    }
+    else if (Button === 'off' && OnlinePath && !RequestFrame)
+        {
+            RequestFrame = false;
+            //clear();
+            gameEnding = true;
+            //DestroyRoom();
+            DestroyRoom(Millenium);
+            forceDisconnect();
+            clear();
+            //forceDisconnect();
+        }
 }
     
 function GameLoop() {
@@ -646,6 +697,7 @@ function GameLoop() {
         if (!title)
             GameEndingScreen();
         title = false;
+
         return;
     }
 
@@ -662,15 +714,22 @@ function GameLoop() {
 
 function LaunchGame() {
     if (allButtonOk) {
-        Players();
+        if (!OnlinePath)
+            Players();
         draw();
         if (!RequestFrame && gameEnding) {
             gameEnding = false;
             clear();
         }
         if (!RequestFrame) {
+            start.style.display = "none";
             RequestFrame = true;
-            requestAnimationFrame(GameLoop);
+            if (OnlinePath)
+            {
+                requestAnimationFrame(GameLoopOnline);
+            }
+            else
+                requestAnimationFrame(GameLoop);
             allButtonOk = false;
         }
     }
@@ -725,6 +784,7 @@ function UpdateTourney() {
 
 function GameEndingScreen() {
     if (TourneyMode) {
+
         for (let i = 0; i < matches.length; i++) {
             if (matches[i].winner === null || matches[i].winner === undefined) {
                 matches[i].winner = (Paddle1.score > Paddle2.score) ? matches[i].player1 : matches[i].player2;
@@ -765,7 +825,6 @@ function GameEndingScreen() {
                     UpdateTourney();
                     if (matches[i].winner)
                     {
-                        console.log("nouveau truc");
                         EndTourneyButton.style.display = 'inline-block';
                         ctx.save();
                         ctx.fillStyle = '#fff';
@@ -792,11 +851,21 @@ function GameEndingScreen() {
         ctx.textBaseline = 'middle'; 
         giveName();
 
+        if (!emetteur && OnlinePath)
+        {
+            let rep = userInfo.username;
+            userInfo.username = player2Name;
+            player2Name = rep;
+        }
         let winner = (Paddle1.score > Paddle2.score) ? userInfo.username : player2Name;
         ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height / 2 - 75);
         ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
-        createMatch(Paddle1.score, Paddle2.score);
-
+        if (emetteur && OnlinePath)
+            createMatch(Paddle1.score, Paddle2.score, 1);
+        else if (!OnlinePath)
+            createMatch(Paddle1.score, Paddle2.score, 0);
+        
+        OnlinePath = false;
         ctx.restore();
         MenuChoice();
     }
@@ -811,7 +880,7 @@ class AIPlayer {
         constructor() {
             this.height = 100;
             this.prediction = {x: canvas.width / 2, y: canvas.height / 2};
-            this.timeSinceLastPrediction = 0;
+            this.timeSinceLastPrediction = -1;
             this.move = false;
             this.predictionInterval = 1;
             this.paddleCenterY = 0;
@@ -823,8 +892,10 @@ class AIPlayer {
 
         update(dt, ball, Paddle2, Paddle1) {
             this.timeSinceLastPrediction += dt;
+            //console.log(this.timeSinceLastPrediction);
 
             if (this.timeSinceLastPrediction >= this.predictionInterval) {
+                console.log(this.timeSinceLastPrediction);
                 this.timeSinceLastPrediction = 0;
                 this.paddleSeen = Paddle2.pos;
                 this.BallSeen = Ball.pos;
@@ -931,44 +1002,492 @@ const giveName = async () => {
       }
 };
 
-const checkAuthenticated = async () => {
+export const checkAuthenticated = async () => {
     const response = await fetch('/accounts/check-authenticated/');
     const data = await response.json();
     console.log(data);
     return data.authenticated;
 };
 
-async function createMatch(user_score, alias_score) {
-    const isAuthenticated = await checkAuthenticated();
-    if (!isAuthenticated) {
-    console.error("User not authenticated. Cannot create match.");
-    return;
-  }
+export async function createMatch(user_score, alias_score, onlineTrue) {
+    try {
+        const isAuthenticated = await checkAuthenticated();
+        let response;
+        if (!isAuthenticated) {
+            console.error("User not authenticated. Cannot create match.");
+            return;
+        }
 
-  const response = await fetch('game/create-match/', {
-    method: 'POST',
-  });
-  const data = await response.json();
-  if (data.match_id) {
-    console.log("Match created with ID:", data.match_id);
-    sendScoreToDjango(user_score, alias_score, data.match_id);
-  } else {
-    console.error("Error creating match");
-  }
-}
+        if (onlineTrue)
+        {
+                response = await fetch('game/create-online-match/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body : JSON.stringify({'player2_username': player2Name}), 
+                credentials: 'include'
+            });
+        }
+        else {
+                response = await fetch('game/create-match/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include'
+            });
+        }
 
-function sendScoreToDjango(score, score2, match_id) {
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "game/save-score/", true);
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      if (xhr.status === 200) {
-        console.log("Score saved successfully.");
-      } else {
-        console.error("Failed to save score:", xhr.status, xhr.statusText);
-      }
+        if (!response.ok) {
+            throw new Error(`Match creation failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (data.match_id) {
+            console.log("Match created with ID:", data.match_id);
+            await sendScoreToDjango(user_score, alias_score, data.match_id);
+        } else {
+            console.error("Error creating match:", data);
+        }
+    } catch (error) {
+        console.error("Failed to create match:", error);
     }
-  };
-  xhr.send(JSON.stringify({ user_score: score, alias_score: score2, match_id: match_id }));
 }
+
+export async function sendScoreToDjango(score, score2, match_id) {
+    try {
+        const response = await fetch("game/save-score/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            credentials: 'include',
+            body: JSON.stringify({ player1_score: score, player2_score: score2, match_id: match_id }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to save score: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Score saved successfully:", data);
+        DestroyRoom(Millenium);
+    } catch (error) {
+        console.error("Error saving score:", error);
+    }
+    //DestroyRoom();
+}
+
+
+////////////////////////////////////////////////////
+//////////////////////ONLINE////////////////////////
+////////////////////////////////////////////////////
+
+function OnlineGo() {
+    socket = new WebSocket('wss://' + window.location.host + '/ws/pong/');
+    ClearFirstButton();
+
+    socket.onopen = function(event) {
+        console.log('Connected to the WebSocket server.');
+        setPlayerName();
+        createRoom();
+    };
+
+    socket.onmessage = function(event) {
+        const message = JSON.parse(event.data);
+        handleServerMessage(message);
+    };
+
+    socket.onerror = function(error) {
+        DestroyRoom(Millenium);
+        console.error('WebSocket Error: ', error);
+        RequestFrame = false;
+        //clear();
+        gameEnding = true;
+        //DestroyRoom();
+        DisconnectEndingScreen();
+    };
+
+    socket.onclose = function(event) {
+        DestroyRoom(Millenium);
+        console.log('WebSocket connection closed.');
+        RequestFrame = false;
+        //clear();
+        gameEnding = true;
+        //DestroyRoom();
+        DestroyRoom(Millenium);
+        DisconnectEndingScreen();
+    };
+}
+
+function sendBallPosition(ball_pos, ball_velocity) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'move_ball',
+            'ball_pos': ball_pos,
+            'ball_velocity': ball_velocity
+        }));
+    }
+}
+
+function updateBallPosition(ball_pos, ball_velocity) {
+    if (Ball && !emetteur) {
+        Ball.pos = ball_pos;
+        Ball.velocity = ball_velocity;
+    }
+}
+
+function handleServerMessage(message) {
+    //console.log('Received message from server:', message);
+
+    if (message.message === 'Room created') {
+        joinRoom();
+    } else if (message.message === 'Joined room') {
+        //setPlayerName();
+        playerId = message.player_uuid;
+        //$("#aliasContainer").text(message.match_info);
+    } else if (typeof message.message === 'string' && message.message.startsWith('Player')) {
+        console.log('Player message:', message.message);
+        if (message.player_uuid === playerId) {
+            if (message.player_number === 2) {
+                Paddle1 = new OnlinePongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('w', 's'));
+                Paddle2 = new PongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('F15', 'F16'));
+                // Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+                Ball = new PongBall(vec2(canvas.width / 2, canvas.height / 2));
+                emetteur = true;
+            } else if (message.player_number === 3) {
+                Paddle1 = new OnlinePongPaddle(vec2(canvas.width - 20 - 10, (canvas.height - 100) / 2), Bindings('ArrowUp', 'ArrowDown'));
+                Paddle2 = new PongPaddle(vec2(20, (canvas.height - 100) / 2), Bindings('F15', 'F16'));
+                Ball = new FakeBall(vec2(canvas.width / 2, canvas.height / 2));
+                emetteur = false;
+                StartButtonRoom();
+            }
+        }
+        else
+        $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
+    } else if (message.message === 'The game has started!') {
+        if (Paddle1 && Paddle2 && Ball) {
+            allButtonOk = true;
+            LaunchGame();
+        }
+    } else if (message.command === 'move_paddle') {
+        if (message.sender_uuid !== playerId) {
+            updatePaddlePosition(message.paddle_pos);
+        }
+    }
+    else if (message.command === 'move_ball') {
+        updateBallPosition(message.ball_pos, message.ball_velocity);
+    }
+    else if (message.command === 'update_score') {
+        updateScore(message.score1, message.score2);
+    }
+    else if (message.message === 'start_button') {
+        DisplayStartButton();
+    }
+    else if (message.message === 'You are already in this room')
+    {
+        showToast('You are already in this room!');
+        forceDisconnect();
+        $("#aliasContainer").text("");
+        Millenium = null;
+        clear();
+        //EnterScreen();
+    }
+}
+
+export function StartButtonRoom() {
+    $("#aliasContainer").text(player2Name  + " VS " + userInfo.username);
+    socket.send(JSON.stringify({
+        'command': 'start_button',
+    }));
+}
+
+
+
+export function setPlayerName() {
+    const playerName = userInfo.username;
+    
+    socket.send(JSON.stringify({
+        'command': 'set_player_name',
+        'player_name': playerName
+    }));
+}
+
+function DisplayStartButton(){
+    start.style.display = "inline-block";
+}
+
+export function createRoom() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const roomName = Millenium; // ICI CHANGE ICI
+    myButton.style.display = 'none';
+    LiveButton.style.display = 'none';
+    $("#aliasContainer").text(" Waiting...");
+    socket.send(JSON.stringify({
+        'command': 'create_room',
+        'room_name': roomName
+    }));
+}
+
+export function startGame() {
+    drawStaticElements();
+    //$("#aliasContainer").text("");
+    socket.send(JSON.stringify({
+        'command': 'start_game'
+    }));
+}
+
+
+start.addEventListener("click", function() {
+    startGame();
+});
+
+export function OnlineInvite(Player1, Player2, RoomName){
+    //clear();
+    MenuButton.click();
+    if (!emetteur) {
+    player2Name = Player1;
+    userInfo.username = Player2;
+    }
+    else 
+    {
+        player2Name = Player2;
+        userInfo.username = Player1;
+    }
+    $("#aliasContainer").text(userInfo.username + " VS " + player2Name);
+    console.log(player2Name);
+    console.log(userInfo.username);
+    console.log(RoomName);
+    Millenium = RoomName;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //OnlineChatButton();
+    LiveButton.click();
+}
+
+export function OnlineChoice(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    OnlineChatButton();
+}
+
+class OnlinePongPaddle {
+    constructor(pos, keys) {
+        this.pos = pos;
+        this.velocity = 400;
+        this.width = 10;
+        this.height = 100;
+        this.keys = keys;
+        this.score = 0;
+    }
+
+    update(dt) {
+        let moved = false;
+
+        if (keysPressed[this.keys.up] && this.pos.y > 0) {
+            ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
+            this.pos.y -= this.velocity * dt;
+            if (this.pos.y < 0) {
+                this.pos.y = 0;
+            }
+            moved = true;
+        }
+        if (keysPressed[this.keys.down] && this.pos.y + this.height < 430) {
+            ctx.clearRect(this.pos.x, this.pos.y, this.width, this.height);
+            this.pos.y += this.velocity * dt;
+            if (this.pos.y + this.height > 430) {
+                this.pos.y = 430 - this.height;
+            }
+            moved = true;
+        }
+
+        if (moved) {
+            sendPaddlePosition(this.pos); 
+        }
+    }
+}
+
+function GameLoopOnline() {
+    const currentTime = performance.now();
+    const dt = (currentTime - lastFrameTime) / 1000;
+    lastFrameTime = currentTime;
+
+    if (!RequestFrame)
+        return;
+
+    if (Paddle1.score === MAX_ROUNDS || Paddle2.score === MAX_ROUNDS) {
+        console.log("Game Ending condition met");
+        gameEnding = true;
+        RequestFrame = false;
+        OnlineMatchFinished = true;
+
+        if (!title)
+            GameEndingScreen();
+        title = false;
+        return;
+    }
+
+    Paddle1.update(dt);
+    Paddle2.update(dt);
+    if (emetteur && Ball)
+        Ball.update(dt);
+    draw();
+
+    requestAnimationFrame(GameLoopOnline);
+}
+
+    class FakeBall {
+        constructor(pos) {
+            this.pos = pos;
+            this.prevpos = pos;
+            this.velocity = vec2(0, 0);
+            this.radius = 8;
+            this.speed = 0.5;
+            this.left = null;
+            this.LastHit = null;
+            this.trailLength = 10;
+            this.trailOpacity = 0.1;
+            this.trailPositions = [];
+            this.goal = false;
+            this.nextPos = false;
+            this.launch = true;
+            this.LastCollision = null;
+        }
+}
+
+function updatePaddlePosition(paddle_pos) {
+    if (Paddle2) { 
+        Paddle2.pos.y = paddle_pos.y;
+    }
+}
+
+function updateScore(score1, score2) {
+    Paddle1.score = score1;
+    Paddle2.score = score2;
+}
+
+export function joinRoom() {
+    drawStaticElements();
+    OnlineMatchFinished = false;
+    //UpdateUserName();
+    const roomName = Millenium;
+    socket.send(JSON.stringify({
+        'command': 'join_room',
+        'room_name': roomName
+    }));
+}
+
+start.addEventListener("click", function() {
+    //$("#aliasContainer").text("");
+    startGame();
+});
+
+export function sendPaddlePosition(pos) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'move_paddle',
+            'paddle_pos': pos
+        }));
+    }
+}
+
+
+
+/* export function DestroyRoom(room_name) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'destroy_room',
+            'room_name': room_name
+        }));
+    }
+} */
+
+export function sendScoreUpdate(score1, score2) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            'command': 'update_score',
+            'score1': score1,
+            'score2': score2,
+            'player_uuid': playerId
+        }));
+    }
+}
+
+function forceDisconnect() {
+    OnlinePath = false;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        console.log('Forcefully disconnecting...');
+        socket.close();
+    }
+}
+
+function DisconnectEndingScreen() {
+        if (!gameEnding && RequestFrame)
+        {
+            gameEnding = true;
+            RequestFrame = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.fillStyle = '#fff';
+            ctx.font = '36px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle'; 
+            //giveName();
+    
+
+            let winner = userInfo.username;
+            ctx.fillText(`connection error!`, canvas.width / 2, canvas.height / 2 - 110);
+            ctx.fillText(`${winner} wins! `, canvas.width / 2, canvas.height / 2 - 75);
+            ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
+            createMatch(Paddle1.score, 0, 1);
+    
+            ctx.restore();
+            MenuChoice();
+            DestroyRoom(Millenium);
+        }
+        else if (!OnlineMatchFinished) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.fillStyle = '#fff';
+                ctx.font = '36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle'; 
+                giveName();
+        
+    
+            //    let winner = userInfo.username;
+                ctx.fillText(`connection error!`, canvas.width / 2, canvas.height / 2 - 110);
+                //ctx.fillText(`${winner} wins! `, canvas.width / 2, canvas.height / 2 - 75);
+            //    ctx.fillText(`${Paddle1.score} - ${Paddle2.score}`, canvas.width / 2, canvas.height / 2 - 30);
+                ctx.restore();
+                MenuChoice();
+                DestroyRoom(Millenium);
+            }
+}
+
+export function OnlineChatButton() {
+    OnlineGo();
+}
+
+export async function DestroyRoom(room_name) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+        'command': 'destroy_room',
+        'room_name': room_name
+    }));
+    }
+}
+
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && OnlinePath) {
+        console.log('User changed tab or minimized the browser');
+        DisconnectEndingScreen();
+        forceDisconnect();
+        $("#aliasContainer").text(" ");
+    }
+});
+
+window.addEventListener('user-logout', () => { DisconnectEndingScreen(); forceDisconnect();  $("#aliasContainer").text(" ");});
