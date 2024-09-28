@@ -1,4 +1,5 @@
 import json
+from operator import itemgetter
 from .models import CustomUser, Notification, Message
 from django.http import JsonResponse
 from django.contrib.auth import logout
@@ -26,7 +27,9 @@ def get_user_info(request):
     if request.user.is_authenticated:
         user = request.user
         user_matches = list(user.matches.all().order_by('id').values
-                ('alias', 'user_score', 'alias_score', 'winner__username', 'timestamp'))
+                ('player2', 'player1_score', 'player2_score', 'winner__username', 'timestamp', 'player1', 'player1__username', 'player2__username'))
+        user_matches += list(user.matches_as2.all().order_by('id').values
+                ('player2', 'player1_score', 'player2_score', 'winner__username', 'timestamp', 'player1', 'player1__username', 'player2__username'))
         user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values
                 ('player1__username', 'player2__username', 'player1_score', 'player2_score',
                   'winner__username', 'timestamp'))
@@ -36,6 +39,9 @@ def get_user_info(request):
         user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values
                 ('player1__username', 'player1_score', 'ai_score', 'winner__username',
                 'timestamp'))
+        
+        user_matches = sorted(user_matches, key=itemgetter('timestamp'))
+        user_morpion_matches = sorted(user_morpion_matches, key=itemgetter('timestamp'))
         user_info = {
                 'username': user.username,
                 'profile_picture': user.profile_picture.url,
@@ -119,11 +125,15 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='user-info')
     def get_user_info(self, request, pk=None):
-        user = self.get_object()  # Retrieves the specific user by ID (pk)
+        user = self.get_object()  
         
         user_matches = \
-        list(user.matches.all().order_by('id').values('alias', 'user_score',
-            'alias_score', 'winner__username', 'timestamp'))
+        list(user.matches.all().order_by('id').values('player2', 'player1_score',
+            'player2_score', 'winner__username', 'timestamp', 'player2__username', 'player1__username'))
+        user_matches += \
+        list(user.matches_as2.all().order_by('id').values('player2', 'player1_score', 
+            'player2_score', 'winner__username', 'timestamp', 'player2__username', 'player1__username'))
+        
         user_morpion_matches = \
         list(user.morpion_matches_as1.all().order_by('id').values(
             'player1__username', 'player2__username', 'player1_score',
@@ -136,6 +146,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         list(user.morpion_ai_matches.all().order_by('id').values(
             'player1__username', 'player1_score', 'ai_score', 'winner__username',
             'timestamp'))
+    
         
         user_info = {
             'id': user.id,
@@ -194,7 +205,9 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         user = self.get_object()
         serializer = self.get_serializer(user)
         user_matches = list(user.matches.all().order_by('id').values
-                ('alias', 'user_score', 'alias_score', 'winner__username', 'timestamp'))
+                ('player2', 'player1_score', 'player2_score', 'winner__username', 'timestamp', 'player2__username', 'player1__username'))
+        user_matches += list(user.matches_as2.all().order_by('id').values
+                ('player2', 'player1_score', 'player2_score', 'winner__username', 'timestamp', 'player1', 'player1__username', 'player2__username'))
         user_morpion_matches = list(user.morpion_matches_as1.all().order_by('id').values
                 ('player1__username', 'player2__username', 'player1_score', 'player2_score',
                   'winner__username', 'timestamp'))
@@ -204,6 +217,8 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         user_morpion_ai_matches = list(user.morpion_ai_matches.all().order_by('id').values
                 ('player1__username', 'player1_score', 'ai_score', 'winner__username',
                 'timestamp'))
+        user_matches = sorted(user_matches, key=itemgetter('timestamp'))
+        user_morpion_matches = sorted(user_morpion_matches, key=itemgetter('timestamp'))
         response_data = serializer.data
         response_data['user_matches'] = user_matches
         response_data['morpion_matches'] = user_morpion_matches
@@ -281,3 +296,35 @@ class MessageViewSet(viewsets.ModelViewSet):
             (Q(sender=recipient, recipient=user) & ~Q(sender__in=blocked_users))
         ).order_by('timestamp')
     
+import json
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Message
+
+def is_clicked(request):
+    try:
+        # Load data from the request body
+        data = json.loads(request.body)
+
+        # Assuming 'id' is sent in the request data
+        message_id = data.get('clicked_id')
+
+        if not message_id:
+            return JsonResponse({'success': False, 'message': 'Message ID not provided.'}, status=400)
+
+        # Retrieve the message object
+        let = get_object_or_404(Message, id=message_id)
+
+        # Update the 'is_clicked' field
+        let.is_read = True
+        let.is_clicked = True
+        let.save()
+
+        print(f"Message {message_id} clicked and updated.")
+        return JsonResponse({'success': True, 'message': 'Update successful!'})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data.'}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

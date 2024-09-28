@@ -321,6 +321,11 @@
     border: none;
 }
 
+#Online {
+    background-color: #553280;
+    border: none;
+}
+
 #unblockUser {
     background-color: #328054;
     border: none;
