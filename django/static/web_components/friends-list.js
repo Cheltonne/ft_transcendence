@@ -91,18 +91,28 @@ export class FriendsComponent extends HTMLElement {
         this.shadowRoot.appendChild(bootstrapLink);
     }
 
-    addEventListeners() {
-        this.shadowRoot.querySelector('#add-friend-button').addEventListener('click', (data) => this.addFriend());
-        this.shadowRoot.querySelectorAll('.remove-friend').forEach(button => {
-            button.addEventListener('click', event => this.removeFriend(event.target.dataset.id));
-        });
-    }
+   addEventListeners() {
+    const inputField = this.shadowRoot.querySelector('#new-friend-username');
+    const addButton = this.shadowRoot.querySelector('#add-friend-button');
+    
+    addButton.addEventListener('click', () => this.addFriend());
+    inputField.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            this.addFriend();
+        }
+    });
 
+    this.shadowRoot.querySelectorAll('.remove-friend').forEach(button => {
+        button.addEventListener('click', event => this.removeFriend(event.target.dataset.id));
+    });
+}
+ 
     async addFriend() {
-        const username = this.shadowRoot.querySelector('#new-friend-username').value;
-        const user = await getUserByUsername(username);
+        const sanitized_username = this.shadowRoot.querySelector('#new-friend-username').value.replace(/[^a-zA-Z0-9_]/g, '');
+        console.log(sanitized_username);
+        const user = await getUserByUsername(sanitized_username);
         if (user) {
-            await this.sendFriendRequest(username);
+            await this.sendFriendRequest(sanitized_username);
         } else {
             console.log('User search failed');
         }
@@ -114,6 +124,7 @@ export class FriendsComponent extends HTMLElement {
     }
 
     async sendFriendRequest(recipientUsername) {
+
         fetch('accounts/send-friend-request/', {
             method: 'POST',
             headers: {

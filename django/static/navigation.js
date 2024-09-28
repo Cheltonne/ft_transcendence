@@ -178,9 +178,8 @@ export async function handleFormSubmit(formType) {
 						const errors = data.errors;
 						if (errors.username)
 							showToast(errors.username, 'error');
-						if (errors.email)
-							showToast(errors.email, 'error');
-						console.log(data)
+						if (errors.password2)
+							showToast(errors.password2, 'error');
 					}
 					else
 						showToast(data.message, 'error');

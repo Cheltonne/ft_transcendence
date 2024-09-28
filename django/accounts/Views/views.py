@@ -1,5 +1,4 @@
-import json
-from .models import CustomUser, Notification, Message
+from ..models import CustomUser, Message
 from django.http import JsonResponse
 from django.contrib.auth import logout
 from django.shortcuts import render
@@ -8,11 +7,11 @@ from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response 
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action
 from rest_framework.views import APIView
-from .serializers import CustomUserSerializer, \
-NotificationSerializer, MessageSerializer
-from .utils import send_friend_request_notification,\
+from ..serializers import CustomUserSerializer, \
+MessageSerializer
+from ..utils import send_friend_request_notification,\
 request_already_sent, is_already_friends_with_recipient, send_notification
 
 def index(request):
@@ -209,40 +208,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         response_data['morpion_matches'] = user_morpion_matches
         response_data['morpion_ai_matches'] = user_morpion_ai_matches
         return Response(response_data)
-
-
-class NotificationViewSet(viewsets.ModelViewSet):
-    serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self): #this will only return unread notifications for performance
-        user = self.request.user
-        return Notification.objects.filter(recipient=user, \
-        is_read=False).exclude(\
-            type__in=['match_request_accepted', 'match_request_declined']).order_by('-created_at')
-
-    @action(detail=False, methods=['get'], url_path='unread-count')
-    def unread_count(self, request):
-        user = self.request.user
-        unread_count = Notification.objects.filter(recipient=user, \
-        is_read=False).exclude(type__in=['match_request_accepted', 'match_request_declined']).count()
-        return Response({'unread_count': unread_count})
-
-@api_view(['PUT'])
-def mark_as_read(request, id):
-    if request.method != 'PUT':
-        return Response({'Error': 'Only PUT requests allowed'}, \
-        status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    try:
-        notification = Notification.objects.get(id=id)
-        serializer = NotificationSerializer(notification, context={'request': request})
-        notification.is_read = True
-        notification.save()
-        return Response(NotificationSerializer(notification,\
-         context={'request': request}).data)
-    except Notification.DoesNotExist:
-        return Response ({'Error': 'Error fetching notification. + ratio'})
 
 class FriendRequestView(APIView):
     permission_classes = [IsAuthenticated]

@@ -67,7 +67,8 @@ export function handleLogout() {
 				showToast('Successfully logged out!');
 				if (socket && socket.readyState === WebSocket.OPEN) {
 					socket.close();
-					console.log('closed socket after logout.');
+					if (notificationSocket && notificationSocket.readyState === WebSocket.OPEN)
+						notificationSocket.close();
 				}
 				removeUserFromStorage();
 				bbc.postMessage('loggedOut');
@@ -98,6 +99,7 @@ export async function initializeWebSocket() {
 		};
 
 		socket.onclose = function (event) {
+			
 			console.log('WebSocket is closed.');
 			socket = null; // Reset socket variable when closed
 		};

@@ -150,6 +150,7 @@ $(document).ready(function () {
 			profile_picture: oauth_message.profile_picture
 		};
 	}
+	console.log(window.location.hostname);
 	sessionStorage.removeItem("oauth_message");
 	sessionStorage.removeItem("host");
 });

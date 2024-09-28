@@ -3,6 +3,8 @@ from .models import CustomUser
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.exceptions import ValidationError
+import re
 
 class CustomUserCreationForm(UserCreationForm):
 	profile_picture = forms.ImageField(required=False)
@@ -17,6 +19,17 @@ class CustomUserCreationForm(UserCreationForm):
 		help_texts = {
 				'username': _("Maximum length: 15"),
 				}
+		
+	def clean_username(self):
+		username = self.cleaned_data.get('username')
+
+		if not re.match(r'^\w+$', username):  # Matches alphanumeric and underscore
+			raise ValidationError('Username can only contain letters, numbers and underscores😋')
+
+		if username.strip() != username:
+			raise ValidationError('Username cannot have leading or trailing spaces😼')
+
+		return username
 
 class CustomUserChangeForm(UserChangeForm):
 	profile_picture = forms.ImageField(widget=forms.FileInput(attrs={'class': 'form-control-file'}))
@@ -28,6 +41,17 @@ class CustomUserChangeForm(UserChangeForm):
 	class Meta:
 		model = CustomUser
 		fields = ("username", 'profile_picture')
+
+	def clean_username(self):
+		username = self.cleaned_data.get('username')
+
+		if not re.match(r'^\w+$', username):  # Matches alphanumeric and underscore
+			raise ValidationError('Username can only contain letters, numbers and underscores😋')
+
+		if username.strip() != username:
+			raise ValidationError('Username cannot have leading or trailing spaces😼')
+
+		return username
 
 
 class ChangePasswordForm(forms.Form):
