@@ -264,19 +264,15 @@ class MessageViewSet(viewsets.ModelViewSet):
     
 def is_clicked(request):
     try:
-        # Load data from the request body
         data = json.loads(request.body)
 
-        # Assuming 'id' is sent in the request data
         message_id = data.get('clicked_id')
 
         if not message_id:
             return JsonResponse({'success': False, 'message': 'Message ID not provided.'}, status=400)
 
-        # Retrieve the message object
         let = get_object_or_404(Message, id=message_id)
 
-        # Update the 'is_clicked' field
         let.is_read = True
         let.is_clicked = True
         let.save()

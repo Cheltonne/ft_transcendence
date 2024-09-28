@@ -118,12 +118,14 @@ export class MorpionComponent extends HTMLElement {
             if (!this.seriesOver) {
                 this.restartGame();
                 this.boardDisabled = false;
+                this.matchmacking = false;
             } else {
                 this.winningMessageElement.classList.remove('show');
                 showToast('Game has ended. Press Start New Game.');
                 this.boardDisabled = true;
                 this.alertShown = true;
                 this.resetSeries();
+                this.matchmacking = false;
             }
         });
 
@@ -134,6 +136,7 @@ export class MorpionComponent extends HTMLElement {
             this.updatePlayerNames();
             this.startGame();
             this.boardDisabled = false;
+            this.matchmacking = false;
             showToast('Starting new games');
         });
 
@@ -246,7 +249,7 @@ export class MorpionComponent extends HTMLElement {
                 this.swapTurns();
                 this.setBoardHoverClass();  
                 if (this.isAI && this.circleTurn) {
-                    setTimeout(() => this.makeAIMove(), 1000); // delay of 1s(subject)
+                    setTimeout(() => this.makeAIMove(), 0); // delay of 1s(subject)
                 }
             }
         }

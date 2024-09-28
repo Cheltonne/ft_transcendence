@@ -50,7 +50,6 @@ def create_matchmacking_match(request):
         print(f"data: {data}")
         player2_username = data.get('player2')
         player2 = CustomUser.objects.get(username=player2_username)
-        print(f"Player 2: {player2_username}")
         match = Match.objects.create(player1=request.user, player2=player2)
         return JsonResponse({'match_id': match.id})
     else:

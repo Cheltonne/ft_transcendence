@@ -32,6 +32,7 @@ class CustomUserCreationForm(UserCreationForm):
 		return username
 
 class CustomUserChangeForm(UserChangeForm):
+	password = None
 	profile_picture = forms.ImageField(widget=forms.FileInput(attrs={'class': 'form-control-file'}))
 	username = forms.CharField(
 		max_length=15,

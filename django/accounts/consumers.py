@@ -154,12 +154,12 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         type = data.get('type')
-        player_seat = data.get()
+        player_seat = data.get('player_seat')
         
         if type == 'matchmaking':
             self.opponent = await self.find_match()
             if self.opponent and not await sync_to_async(match_request_already_sent)(self.user, self.opponent):
-                await self.send_match_request(self.opponent)
+                await self.send_match_request(self.opponent, player_seat)
             elif self.opponent and await sync_to_async(match_request_already_sent)(self.user, self.opponent):
                 await self.send(text_data=json.dumps({
                     'type': 'already_sent',
@@ -179,13 +179,13 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     async def receive_notification(self, event):
         await self.send(text_data=json.dumps(event["notification"]))
     
-    async def send_match_request(self, player2):
+    async def send_match_request(self, player2, player_seat):
         print(f"Sending match request from {self.scope['user'].username} to {player2.username}.")
         await sync_to_async(send_notification)(
             sender = self.scope['user'],
             recipient = player2,
             type = 'match_request',
-            message = f"{self.scope['user'].username} wants to play a morpion game with you.",
+            message = f"{self.scope['user'].username} wants to play a morpion game with you at {player_seat}",
         )
     
     async def find_match(self):
