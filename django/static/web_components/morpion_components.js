@@ -205,6 +205,9 @@ export class MorpionComponent extends HTMLElement {
             const data = JSON.parse(e.data);
             if (data.message.includes("declined"))
                 showToast(data.message, "error", 8000)
+            else if (data.type === 'already_sent'){
+                this.showAlert('warning', data.message);
+           }
             if (data.type === 'no_match_found' || data.message.includes("declined")) {
                 this.showAlert('warning', data.message);
                 this.isAI = false;

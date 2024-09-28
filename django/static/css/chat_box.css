@@ -311,6 +311,15 @@
     border-radius: 0;
 }
 
+#goToProfile, #blockUser, #Online, #unblockUser {
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    background-color: #ddd;
+    border: none;
+    cursor: pointer;
+}
+
 #goToProfile {
     background-color: #48485D;
     border: none;
