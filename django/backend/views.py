@@ -47,8 +47,8 @@ def oauth_callback(request):
     if not code:
         return JsonResponse({'error': 'No authorization code provided'}, status=400)
 
-    client_id = 'u-s4t2ud-2cb98bf686a6a1bd8cae65a2f87314a831cf4fc50d2167d8dfa619008838ffa7'
-    client_secret = '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'
+    client_id = os.environ.get('AUTH42_CLIENT_ID')
+    client_secret = os.environ.get('AUTH42_CLIENT_SECRET')
     
     if 'localhost' in request.get_host():
         redirect_uri = 'https://localhost:4343/oauth/callback/'
