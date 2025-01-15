@@ -2,7 +2,7 @@
 
 ## Overview
 
-**ft_transcendence** is the final project of the common core curriculum at **42 Paris**. It challenges students to build a fully functional, secure, and interactive web application for hosting and playing the classic Pong game. The project emphasizes real-time multiplayer features, modular design, and adherence to stringent technical and security constraints.
+**ft_transcendence** is the final project of the common core curriculum at **42 Paris**. It challenges students to build a fully functional, secure, and interactive single page web application for hosting and playing the classic Pong game. The project emphasizes real-time multiplayer features, modular design, and adherence to stringent technical and security constraints.
 
 This project allowed us to deepen our understanding of full-stack web development, real-time communication, database design, and modern security practices. We implemented the following modules and technologies:
 
@@ -18,7 +18,7 @@ This project allowed us to deepen our understanding of full-stack web developmen
 
 ### 2. **Frontend Development**
 - **Framework/Toolkit**: Built with **Bootstrap** to create a responsive and visually appealing user interface.
-- **Single-Page Application**: Ensures seamless user experience by allowing navigation without full-page reloads.
+- **Single-Page Application without any JS framework**: Ensures seamless user experience by allowing navigation without full-page reloads.
 - **Real-Time Features**: Integrated WebSockets for live updates and interactive components.
 
 ---
