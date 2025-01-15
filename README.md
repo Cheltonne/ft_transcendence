@@ -82,4 +82,3 @@ We adhered to best practices to ensure a secure application:
 **ft_transcendence** represents the culmination of the common core curriculum, blending technical expertise and problem-solving skills. It demonstrates our ability to build a complex, full-stack web application with modern tools and secure practices.
 
 ![ft_transcendence grade 103/100](https://github.com/user-attachments/assets/ca667ed1-40b9-449f-b59b-f28619280e6e)
-)
