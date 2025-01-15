@@ -2,6 +2,7 @@
 
 ## Overview
 
+Made with [Philadelphi](https://github.com/philadelphi) and [Ppito16](https://github.com/Ppito16).<br>
 **ft_transcendence** is the final project of the common core curriculum at **42 Paris**. It challenges students to build a fully functional, secure, and interactive single page web application for hosting and playing the classic Pong game. The project emphasizes real-time multiplayer features, modular design, and adherence to stringent technical and security constraints.
 
 This project allowed us to deepen our understanding of full-stack web development, real-time communication, database design, and modern security practices. We implemented the following modules and technologies:
